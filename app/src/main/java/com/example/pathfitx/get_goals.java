@@ -15,6 +15,6 @@ public class get_goals extends AppCompatActivity { // Change extends Activity to
         EdgeToEdge.enable(this);
 
         // Ensure this layout name (activity_get_user) is correct for your XML file
-        setContentView(R.layout.activity_get_user);
+        setContentView(R.layout.get_goals);
     }
 }

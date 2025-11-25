@@ -6,99 +6,112 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/black"
-    android:visibility="visible"
     tools:context=".get_goals">
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/center_guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.45" />
 
     <ImageView
         android:id="@+id/bgImage"
-        android:layout_width="438dp"
-        android:layout_height="903dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:scaleType="centerCrop"
         android:src="@drawable/get_goals"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <CheckBox
-        android:id="@+id/checkBox5"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_marginStart="340dp"
-        android:layout_marginTop="584dp"
-        android:text="CheckBox"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <CheckBox
-        android:id="@+id/checkBox4"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_marginStart="340dp"
-        android:layout_marginTop="508dp"
-        android:text="CheckBox"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <CheckBox
-        android:id="@+id/checkBox3"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_marginStart="340dp"
-        android:layout_marginTop="428dp"
-        android:text="CheckBox"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ContentDescription" />
 
     <CheckBox
         android:id="@+id/checkBox"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_marginStart="340dp"
-        android:layout_marginTop="352dp"
-        android:text="CheckBox"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:text=""
+        app:layout_constraintBottom_toTopOf="@+id/checkBox2"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/center_guideline"
+        app:layout_constraintVertical_chainStyle="packed" />
 
     <CheckBox
         android:id="@+id/checkBox2"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_marginStart="340dp"
-        android:layout_marginTop="272dp"
-        android:text="CheckBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="24dp"
+        android:text=""
+        app:layout_constraintBottom_toTopOf="@+id/checkBox3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/checkBox" />
+
+    <CheckBox
+        android:id="@+id/checkBox3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="24dp"
+        android:text=""
+        app:layout_constraintBottom_toTopOf="@+id/checkBox4"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/checkBox2" />
+
+    <CheckBox
+        android:id="@+id/checkBox4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="24dp"
+        android:text=""
+        app:layout_constraintBottom_toTopOf="@+id/checkBox5"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/checkBox3" />
+
+    <CheckBox
+        android:id="@+id/checkBox5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="24dp"
+        android:text=""
+        app:layout_constraintBottom_toTopOf="@id/button1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/checkBox4" />
+
+    <ImageButton
+        android:id="@+id/button1"
+        android:layout_width="46dp"
+        android:layout_height="46dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginBottom="32dp"
+        android:background="@drawable/backbutton"
+        android:src="@drawable/back"
+        android:scaleType="centerInside"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:tint="@color/prim_red"
+        tools:ignore="ContentDescription" />
 
     <Button
-        android:id="@+id/button"
-        android:layout_width="312dp"
+        android:id="@+id/button2"
+        android:layout_width="0dp"
         android:layout_height="50dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="24dp"
         android:backgroundTint="@color/prim_red"
         android:fontFamily="@font/roboto_semibold"
         android:text="Next"
         android:textColor="#FFFFFF"
         android:textSize="16sp"
         app:cornerRadius="50dp"
+        app:layout_constraintBottom_toBottomOf="@+id/button1"
         app:layout_constraintEnd_toEndOf="parent"
-        app:rippleColor="#7d3d37"
-        tools:layout_editor_absoluteY="825dp" />
-
-    <ImageButton
-        android:id="@+id/button2"
-        app:tint="@color/prim_red"
-        android:layout_width="46dp"
-        android:layout_height="46dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginBottom="45dp"
-        android:background="@drawable/backbutton"
-        android:src="@drawable/back"
-        android:scaleType="centerInside"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"/>
-
+        app:layout_constraintStart_toEndOf="@id/button1"
+        app:layout_constraintTop_toTopOf="@+id/button1"
+        app:rippleColor="#7d3d37" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
