@@ -11,7 +11,9 @@
 
     <ImageView
         android:id="@+id/bgImage"
-        android:layout_width="0dp"                 android:layout_height="0dp"                android:scaleType="centerCrop"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:scaleType="centerCrop"
         android:src="@drawable/lp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -22,24 +24,20 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/button2"
-
         android:layout_width="0dp"
         android:layout_height="60dp"
-
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="32dp"
-
         android:backgroundTint="#FE2B15"
-
         android:text="Get Started"
-        android:textColor="#FFFFFF"              android:textSize="16sp"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
         android:textStyle="bold"
-
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-
-        app:rippleColor="#7d3d37"                 app:cornerRadius="50dp" />
+        app:rippleColor="#7d3d37"
+        app:cornerRadius="50dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
