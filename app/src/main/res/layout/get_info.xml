@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/get_infomfs">
+    android:background="@drawable/get_info">
 
 
     <ImageButton
@@ -24,8 +24,10 @@
 
     <Button
         android:id="@+id/button2"
-        android:layout_width="296dp"
+        android:layout_width="0dp"
         android:layout_height="57dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginStart="8dp"
         android:backgroundTint="@color/prim_red"
         android:fontFamily="@font/roboto_semibold"
         android:text="@string/button_next"
@@ -39,9 +41,11 @@
 
     <RadioGroup
         android:id="@+id/radioGroupFM"
-        android:layout_width="381dp"
+        android:layout_width="0dp"
         android:layout_height="80dp"
         android:layout_marginTop="246dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -49,44 +53,86 @@
 
         <RadioButton
             android:id="@+id/radioButtonM"
-            android:contentDescription="@string/Male"
-            android:layout_width="15dp"
-            android:layout_height="79dp"
-            android:layout_gravity="center"
+            style="@style/Widget.AppCompat.CompoundButton.RadioButton"  android:layout_width="0dp"
+            android:background="@drawable/bggray"
+            android:layout_height="70dp"
+            android:layout_gravity="center_vertical"
             android:layout_weight="1"
-            android:paddingStart="150dp"
-            android:paddingEnd="10dp"
-            android:rotationY="180" />
+            android:layout_marginEnd="8dp"
+            android:text="@string/Male"
+            android:textColor="?attr/colorOnSurface"
+            android:textAlignment="center"
+            android:button="@null" /> <RadioButton
+        android:id="@+id/radioButtonF"
+        style="@style/Widget.AppCompat.CompoundButton.RadioButton"  android:background="@drawable/bggray"
+        android:layout_width="0dp"
+        android:layout_height="70dp"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="1"
+        android:layout_marginStart="8dp"
+        android:text="@string/Female"
+        android:textColor="?attr/colorOnSurface"
+        android:textAlignment="center"
+        android:button="@null" /> </RadioGroup>
 
-        <RadioButton
-            android:id="@+id/radioButtonF"
-            android:contentDescription="@string/Female"
-            android:layout_width="18dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:layout_weight="1"
-            android:paddingStart="10dp"
-            android:paddingEnd="50dp"
-
-            android:rotationY="180" />
-    </RadioGroup>
+    <TextView
+        android:id="@+id/textViewAgeLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="24dp"
+        android:text="How old are you?"
+        android:textColor="@color/black"
+        android:textSize="14sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/radioGroupFM" />
 
     <EditText
         android:id="@+id/editTextText3"
-        android:layout_width="366dp"
-        android:layout_height="57dp"
+        android:layout_width="0dp"
+        android:layout_height="50dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/edittext_selector"
         android:ems="10"
+        android:fontFamily="@font/roboto_regular"
         android:hint="@string/enter_your_age"
-        android:textColorHint="#616161"
+        android:importantForAutofill="no"
         android:inputType="number"
         android:maxLength="3"
-        android:importantForAutofill="no"
-        app:layout_constraintBottom_toTopOf="@+id/button2"
+        android:textColor="@android:color/black"
+        android:textColorHint="@android:color/secondary_text_light"
+        android:textSize="13dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.555"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/radioGroupFM"
-        app:layout_constraintVertical_bias="0.1" />
+        app:layout_constraintTop_toBottomOf="@+id/textViewAgeLabel"
+        app:layout_constraintBottom_toTopOf="@+id/button2"
+        app:layout_constraintVertical_bias="0.0" />
 
+    <TextView
+        android:id="@+id/textViewLocationLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="24dp"
+        android:text="Where do you live?"
+        android:textColor="@color/black"
+        android:textSize="14sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextText3" />
+
+    <Spinner
+        android:id="@+id/country_spinner"
+        android:layout_width="0dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/edittext_selector"
+        android:minHeight="48dp"
+        android:textColor="@android:color/black"  app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewLocationLabel" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
