@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 
-public class get_info extends AppCompatActivity {
+public class activity_get_info extends AppCompatActivity {
 
     // Tinanggal ang RadioGroup, RadioButton, at CardView declarations dahil wala nang color logic
 

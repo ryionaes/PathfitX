@@ -44,7 +44,7 @@ public class activity_get_user extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // Navigate to the get_goals activity
-                Intent intent = new Intent(activity_get_user.this, get_goals.class);
+                Intent intent = new Intent(activity_get_user.this, activity_get_goals.class);
                 startActivity(intent);
                 // Do not call finish() here if you want the user to be able to press 'Back'
             }

@@ -63,7 +63,7 @@
             android:textAlignment="center"
             android:fontFamily="@font/roboto_black"
 
-            android:background="@drawable/radio_selector_bg"
+            android:background="@drawable/radio_selector_bg_getinfo"
             android:textColor="@color/radio_text_selector"
             android:checked="false"
 
@@ -82,7 +82,7 @@
             android:textAlignment="center"
             android:fontFamily="@font/roboto_black"
 
-            android:background="@drawable/radio_selector_bg"
+            android:background="@drawable/radio_selector_bg_getinfo"
             android:textColor="@color/radio_text_selector"
 
             android:elevation="6dp"

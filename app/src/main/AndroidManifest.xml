@@ -13,7 +13,7 @@
         android:theme="@style/Theme.PathfitX">
 
         <activity
-            android:name=".get_info"
+            android:name=".activity_get_info"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -30,7 +30,7 @@
             android:exported="false" />
 
         <activity
-            android:name=".get_goals"
+            android:name=".activity_get_goals"
             android:exported="false" />
 
     </application>
