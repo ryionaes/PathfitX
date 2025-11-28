@@ -1,20 +1,24 @@
 package com.example.pathfitx;
 
 import android.os.Bundle;
+
 import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity; // Import the correct base class
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
-public class get_goals extends AppCompatActivity { // Change extends Activity to AppCompatActivity
-
+public class get_goals extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Enables edge-to-edge display (part of AndroidX)
         EdgeToEdge.enable(this);
-
-        // Ensure this layout name (activity_get_user) is correct for your XML file
-        setContentView(R.layout.get_goals);
+        setContentView(R.layout.activity_get_goals);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
     }
 }
