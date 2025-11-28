@@ -53,27 +53,27 @@
 
         <RadioButton
             android:id="@+id/radioButtonM"
-            style="@style/Widget.AppCompat.CompoundButton.RadioButton"  android:layout_width="0dp"
-            android:background="@drawable/bggray"
+            style="@style/Widget.AppCompat.CompoundButton.RadioButton"
+            android:layout_width="0dp"
             android:layout_height="70dp"
             android:layout_gravity="center_vertical"
             android:layout_weight="1"
             android:layout_marginEnd="8dp"
             android:text="@string/Male"
-            android:textColor="?attr/colorOnSurface"
-            android:textAlignment="center"
-            android:button="@null" /> <RadioButton
-        android:id="@+id/radioButtonF"
-        style="@style/Widget.AppCompat.CompoundButton.RadioButton"  android:background="@drawable/bggray"
-        android:layout_width="0dp"
-        android:layout_height="70dp"
-        android:layout_gravity="center_vertical"
-        android:layout_weight="1"
-        android:layout_marginStart="8dp"
-        android:text="@string/Female"
-        android:textColor="?attr/colorOnSurface"
-        android:textAlignment="center"
-        android:button="@null" /> </RadioGroup>
+            android:textAlignment="center" />
+
+        <RadioButton
+            android:id="@+id/radioButtonF"
+            style="@style/Widget.AppCompat.CompoundButton.RadioButton"
+
+            android:layout_width="0dp"
+            android:layout_height="70dp"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="@string/Female"
+            android:textAlignment="center" />
+    </RadioGroup>
 
     <TextView
         android:id="@+id/textViewAgeLabel"
