@@ -1,7 +1,11 @@
 package com.example.pathfitx;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.Spinner;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -16,6 +20,24 @@ public class activity_get_info extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_get_info);
+
+        ImageButton backBtn;
+        Button nextBtn;
+
+        nextBtn = findViewById(R.id.nextButton);
+        backBtn = findViewById(R.id.backButton);
+
+        backBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Navigate back to getUser
+                Intent intent = new Intent(activity_get_info.this, activity_get_goals.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                finish();
+            }
+        });
+
 
         setupLocationSpinner();
 

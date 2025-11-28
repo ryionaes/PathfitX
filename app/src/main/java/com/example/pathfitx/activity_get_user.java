@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton; // Import for ImageButton
 
 import androidx.activity.EdgeToEdge;
@@ -13,8 +14,9 @@ import androidx.appcompat.app.AppCompatActivity;
 public class activity_get_user extends AppCompatActivity {
 
     // Define variables for the UI elements
-    private ImageButton backButton; // Corresponds to button1
-    private Button nextButton;      // Corresponds to button2
+    ImageButton backButton;
+     Button nextButton;
+     EditText getUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,11 +24,11 @@ public class activity_get_user extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_get_user);
 
-        // 1. Find the views by their IDs from the XML layout
         backButton = findViewById(R.id.backButton);
         nextButton = findViewById(R.id.nextButton);
+        getUser = findViewById(R.id.inputText);
 
-        // 2. Set the click listener for the BACK button (button1)
+        // Back Button
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -38,14 +40,19 @@ public class activity_get_user extends AppCompatActivity {
             }
         });
 
-        // 3. Set the click listener for the NEXT button (button2)
+        // Next Button
         nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //Setting the user input for next screen
+                String username = getUser.getText().toString().trim();
                 Intent intent = new Intent(activity_get_user.this, activity_get_goals.class);
+                intent.putExtra("USERNAME", username);
                 startActivity(intent);
             }
         });
+
+
 
 
         // Existing OnBackPressed logic for the physical/system back button

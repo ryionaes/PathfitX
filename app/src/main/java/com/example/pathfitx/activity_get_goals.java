@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,9 +23,17 @@ public class activity_get_goals extends AppCompatActivity {
 
         Button nextBtn;
         ImageButton backBtn;
+        TextView setUser;
 
         nextBtn = findViewById(R.id.nextButton);
         backBtn = findViewById(R.id.backButton);
+        setUser = findViewById(R.id.setUser);
+
+        //Getting the user input from previous screen
+        String name = getIntent().getStringExtra("USERNAME");
+        String greeting = "Hey, " + name + ". 👋 Let‘s start with your goals.";
+        setUser.setText(greeting);
+
 
         backBtn.setOnClickListener(new View.OnClickListener() {
             @Override

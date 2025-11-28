@@ -31,7 +31,7 @@
         app:srcCompat="@drawable/pb_getgoals" />
 
     <TextView
-        android:id="@+id/textView3"
+        android:id="@+id/setUser"
         android:layout_width="340dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -54,7 +54,7 @@
         android:textSize="12sp"
         android:fontFamily="@font/roboto_medium"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView3" />
+        app:layout_constraintTop_toBottomOf="@+id/setUser" />
 
 
     <LinearLayout
