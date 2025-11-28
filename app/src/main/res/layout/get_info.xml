@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/get_infomfs">
+
+
+    <ImageButton
+        android:id="@+id/imageButton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="28dp"
+        android:layout_marginBottom="36dp"
+        android:background="@drawable/backbutton"
+        android:scaleType="centerInside"
+        android:src="@drawable/back"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:tint="@color/prim_red"
+        android:contentDescription="@string/back_button_desc"
+        tools:ignore="ImageContrastCheck"/>
+
+    <Button
+        android:id="@+id/button2"
+        android:layout_width="296dp"
+        android:layout_height="57dp"
+        android:backgroundTint="@color/prim_red"
+        android:fontFamily="@font/roboto_semibold"
+        android:text="@string/button_next"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        app:cornerRadius="50dp"
+        app:layout_constraintBottom_toBottomOf="@+id/imageButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/imageButton"
+        app:layout_constraintTop_toTopOf="@+id/imageButton" />
+
+    <RadioGroup
+        android:id="@+id/radioGroupFM"
+        android:layout_width="381dp"
+        android:layout_height="80dp"
+        android:layout_marginTop="246dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <RadioButton
+            android:id="@+id/radioButtonM"
+            android:contentDescription="@string/Male"
+            android:layout_width="15dp"
+            android:layout_height="79dp"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:paddingStart="150dp"
+            android:paddingEnd="10dp"
+            android:rotationY="180" />
+
+        <RadioButton
+            android:id="@+id/radioButtonF"
+            android:contentDescription="@string/Female"
+            android:layout_width="18dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:paddingStart="10dp"
+            android:paddingEnd="50dp"
+
+            android:rotationY="180" />
+    </RadioGroup>
+
+    <EditText
+        android:id="@+id/editTextText3"
+        android:layout_width="366dp"
+        android:layout_height="57dp"
+        android:ems="10"
+        android:hint="@string/enter_your_age"
+        android:textColorHint="#616161"
+        android:inputType="number"
+        android:maxLength="3"
+        android:importantForAutofill="no"
+        app:layout_constraintBottom_toTopOf="@+id/button2"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.555"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/radioGroupFM"
+        app:layout_constraintVertical_bias="0.1" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
