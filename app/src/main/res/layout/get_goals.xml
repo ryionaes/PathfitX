@@ -12,7 +12,7 @@
         android:id="@+id/textView6"
         android:layout_width="358dp"
         android:layout_height="37dp"
-        android:text="@string/Hey, User. 👋 Let ‘s start with your goals."
+        android:text="@string/HeyUser"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.084"
         app:layout_constraintStart_toStartOf="parent"
