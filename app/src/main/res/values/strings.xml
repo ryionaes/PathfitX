@@ -3,7 +3,7 @@
     <string name="button_next">Next</string>
     <string name="enter_your_age">Enter your age</string>
     <string name="back_button_desc">Back</string>
-    <string name="Male">Back</string>
-    <string name="Female">Back</string>
+    <string name="Male">Male</string>
+    <string name="Female">Female</string>
 
 </resources>
