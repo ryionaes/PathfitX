@@ -20,17 +20,13 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // Find the button using its ID
-        Button getStartedButton = findViewById(R.id.button2);
+        Button getStartedButton = findViewById(R.id.getStartedBtn);
 
         // Set an OnClickListener to handle the button press
         getStartedButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // 4. Create an Intent to switch activities
-                // Intent(Context source, Class destination)
                 Intent intent = new Intent(MainActivity.this, activity_get_user.class);
-
-                // 5. Start the new Activity
                 startActivity(intent);
             }
         });

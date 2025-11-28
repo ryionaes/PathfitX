@@ -23,8 +23,8 @@ public class activity_get_user extends AppCompatActivity {
         setContentView(R.layout.activity_get_user);
 
         // 1. Find the views by their IDs from the XML layout
-        backButton = findViewById(R.id.button1);
-        nextButton = findViewById(R.id.button2);
+        backButton = findViewById(R.id.backButton);
+        nextButton = findViewById(R.id.nextButton);
 
         // 2. Set the click listener for the BACK button (button1)
         backButton.setOnClickListener(new View.OnClickListener() {
@@ -32,10 +32,9 @@ public class activity_get_user extends AppCompatActivity {
             public void onClick(View v) {
                 // Navigate back to MainActivity
                 Intent intent = new Intent(activity_get_user.this, MainActivity.class);
-                // Use flags to clear the activity stack and prevent buildup
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
-                finish(); // Close the current activity
+                finish();
             }
         });
 
@@ -43,10 +42,8 @@ public class activity_get_user extends AppCompatActivity {
         nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Navigate to the get_goals activity
                 Intent intent = new Intent(activity_get_user.this, activity_get_goals.class);
                 startActivity(intent);
-                // Do not call finish() here if you want the user to be able to press 'Back'
             }
         });
 

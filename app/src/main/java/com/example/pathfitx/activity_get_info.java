@@ -11,24 +11,17 @@ import java.util.List;
 
 public class activity_get_info extends AppCompatActivity {
 
-    // Tinanggal ang RadioGroup, RadioButton, at CardView declarations dahil wala nang color logic
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_get_info);
 
-        // Wala na ang code para sa gender selection listener
-
-        // 4. Setup ng Spinner
         setupLocationSpinner();
+
     }
 
-    // Tinanggal ang updateGenderSelection() method
-
-    // ---------------------------------------------------------------------------------------------
     // SPINNER LOGIC (Kept as is)
-    // ---------------------------------------------------------------------------------------------
     private void setupLocationSpinner() {
         String[] locationData = getResources().getStringArray(R.array.location_array);
         List<String> combinedList = new ArrayList<>(Arrays.asList(locationData));
