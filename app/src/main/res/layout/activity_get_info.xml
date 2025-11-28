@@ -64,7 +64,7 @@
             android:fontFamily="@font/roboto_black"
 
             android:background="@drawable/radio_selector_bg_getinfo"
-            android:textColor="@color/radio_text_selector"
+            android:textColor="@color/radio_text_selector_getinfo"
             android:checked="false"
 
             android:elevation="6dp"
@@ -83,7 +83,7 @@
             android:fontFamily="@font/roboto_black"
 
             android:background="@drawable/radio_selector_bg_getinfo"
-            android:textColor="@color/radio_text_selector"
+            android:textColor="@color/radio_text_selector_getinfo"
 
             android:elevation="6dp"
             android:outlineProvider="background" />
