@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -24,6 +25,7 @@ public class activity_get_goals extends AppCompatActivity {
         Button nextBtn;
         ImageButton backBtn;
         TextView setUser;
+        CheckBox chLoseWeight, chGainWeight, chMaintainWeight, chGainMuscle, chStayActive, chImproveFlexibility, chIncreaseEndurance, chBoostEnergyLevel;
 
         nextBtn = findViewById(R.id.nextButton);
         backBtn = findViewById(R.id.backButton);
