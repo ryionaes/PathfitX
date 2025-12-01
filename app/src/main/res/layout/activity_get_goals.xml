@@ -79,7 +79,7 @@
                 android:orientation="horizontal"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:background="@drawable/card_goals">
+                android:background="@drawable/bg_card_goals">
 
                 <TextView
                     android:id="@+id/txtLoseWeight"
@@ -113,7 +113,7 @@
                 android:orientation="horizontal"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:background="@drawable/card_goals">
+                android:background="@drawable/bg_card_goals">
 
                 <TextView
                     android:id="@+id/txtMaintainWeight"
@@ -147,7 +147,7 @@
                 android:orientation="horizontal"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:background="@drawable/card_goals">
+                android:background="@drawable/bg_card_goals">
 
                 <TextView
                     android:id="@+id/txtGainWeight"
@@ -181,7 +181,7 @@
                 android:orientation="horizontal"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:background="@drawable/card_goals">
+                android:background="@drawable/bg_card_goals">
 
                 <TextView
                     android:id="@+id/txtGainMuscle"
@@ -215,7 +215,7 @@
                 android:orientation="horizontal"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:background="@drawable/card_goals">
+                android:background="@drawable/bg_card_goals">
 
                 <TextView
                     android:id="@+id/txtStayActive"
@@ -249,7 +249,7 @@
                 android:orientation="horizontal"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:background="@drawable/card_goals">
+                android:background="@drawable/bg_card_goals">
 
                 <TextView
                     android:id="@+id/txtImproveFlexibility"
@@ -283,7 +283,7 @@
                 android:orientation="horizontal"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:background="@drawable/card_goals">
+                android:background="@drawable/bg_card_goals">
 
                 <TextView
                     android:id="@+id/txtIncreaseEndurance"
@@ -317,7 +317,7 @@
                 android:orientation="horizontal"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:background="@drawable/card_goals">
+                android:background="@drawable/bg_card_goals">
 
                 <TextView
                     android:id="@+id/textBoostEnergyLevels"
@@ -357,7 +357,7 @@
         android:layout_height="46dp"
         android:layout_marginStart="16dp"
         android:layout_marginBottom="15dp"
-        android:background="@drawable/backbutton"
+        android:background="@drawable/bg_backbutton"
         android:src="@drawable/ic_back"
         android:scaleType="centerInside"
         app:layout_constraintBottom_toBottomOf="parent"

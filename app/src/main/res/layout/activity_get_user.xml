@@ -90,7 +90,7 @@
 
     <EditText
         android:id="@+id/inputText"
-        android:background="@drawable/edittext_selector"
+        android:background="@drawable/bg_edittext_selector"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -111,7 +111,7 @@
         android:layout_height="46dp"
         android:layout_marginStart="16dp"
         android:layout_marginBottom="20dp"
-        android:background="@drawable/backbutton"
+        android:background="@drawable/bg_backbutton"
         android:src="@drawable/ic_back"
         android:scaleType="centerInside"
         app:layout_constraintBottom_toBottomOf="parent"
