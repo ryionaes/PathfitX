@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageButton
+        android:id="@+id/backButton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="20dp"
+        android:background="@drawable/bg_backbutton"
+        android:contentDescription="@string/back_button_desc"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_back"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:tint="@color/prim_red"
+        tools:ignore="ImageContrastCheck" />
+
+    <Button
+        android:id="@+id/nextButton"
+        android:layout_width="312dp"
+        android:layout_height="53dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="20dp"
+        android:backgroundTint="@color/prim_red"
+        android:cornerRadius="50dp"
+        android:fontFamily="@font/roboto_semibold"
+        android:text="@string/button_next"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="@+id/backButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/backButton"
+        app:layout_constraintTop_toTopOf="@+id/backButton" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
