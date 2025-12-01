@@ -11,7 +11,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
-public class activity_get_user extends AppCompatActivity {
+public class GetUser extends AppCompatActivity {
 
     // Define variables for the UI elements
     ImageButton backButton;
@@ -33,7 +33,7 @@ public class activity_get_user extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // Navigate back to MainActivity
-                Intent intent = new Intent(activity_get_user.this, MainActivity.class);
+                Intent intent = new Intent(GetUser.this, MainActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
                 finish();
@@ -46,7 +46,7 @@ public class activity_get_user extends AppCompatActivity {
             public void onClick(View v) {
                 //Setting the user input for next screen
                 String username = getUser.getText().toString().trim();
-                Intent intent = new Intent(activity_get_user.this, activity_get_goals.class);
+                Intent intent = new Intent(GetUser.this, GetGoals.class);
                 intent.putExtra("USERNAME", username);
                 startActivity(intent);
             }
@@ -59,7 +59,7 @@ public class activity_get_user extends AppCompatActivity {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                Intent intent = new Intent(activity_get_user.this, MainActivity.class);
+                Intent intent = new Intent(GetUser.this, MainActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
                 finish();

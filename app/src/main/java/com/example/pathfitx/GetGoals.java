@@ -20,7 +20,7 @@ import androidx.core.view.WindowInsetsCompat;
 import java.util.ArrayList;
 import java.util.List;
 
-public class activity_get_goals extends AppCompatActivity {
+public class GetGoals extends AppCompatActivity {
 
     // Variables
     Button nextBtn;
@@ -70,7 +70,7 @@ public class activity_get_goals extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // Navigate back to getUser
-                Intent intent = new Intent(activity_get_goals.this, activity_get_user.class);
+                Intent intent = new Intent(GetGoals.this, GetUser.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
                 finish();
@@ -81,7 +81,7 @@ public class activity_get_goals extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // Navigate  to getInfo
-                Intent intent = new Intent(activity_get_goals.this, activity_get_info.class);
+                Intent intent = new Intent(GetGoals.this, GetInfo.class);
                 startActivity(intent);
             }
         });
@@ -119,7 +119,7 @@ public class activity_get_goals extends AppCompatActivity {
 
                     if (count > 3) {
                         buttonView.setChecked(false);
-                        Toast.makeText(activity_get_goals.this,
+                        Toast.makeText(GetGoals.this,
                                 "You can only select up to 3 goals.",
                                 Toast.LENGTH_SHORT).show();
                     }

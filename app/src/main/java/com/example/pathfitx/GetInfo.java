@@ -13,7 +13,7 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 
-public class activity_get_info extends AppCompatActivity {
+public class GetInfo extends AppCompatActivity {
 
 
     @Override
@@ -31,7 +31,7 @@ public class activity_get_info extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // Navigate back to getUser
-                Intent intent = new Intent(activity_get_info.this, activity_get_goals.class);
+                Intent intent = new Intent(GetInfo.this, GetGoals.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
                 finish();
