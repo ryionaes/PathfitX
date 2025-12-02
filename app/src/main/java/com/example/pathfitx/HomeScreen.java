@@ -12,18 +12,18 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 public class HomeScreen extends AppCompatActivity {
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_home_screen);
+        protected void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            setContentView(R.layout.activity_home_screen);
 
-        BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
+            BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
 
-        // Loads the HomeFragment by default
-        if (savedInstanceState == null) {
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, new HomeFragment())
-                    .commit();
-        }
+            // Loads the HomeFragment by default
+            if (savedInstanceState == null) {
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, new HomeFragment())
+                        .commit();
+            }
 
         bottomNav.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override

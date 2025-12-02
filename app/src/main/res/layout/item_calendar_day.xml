@@ -30,7 +30,7 @@
         android:id="@+id/tv_month_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Nov"
+        android:text="Dec"
         android:textSize="10sp"
         android:textColor="@color/white"
         android:visibility="gone"

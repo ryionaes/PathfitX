@@ -28,7 +28,6 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="20dp"
         android:backgroundTint="@color/prim_red"
-        android:cornerRadius="50dp"
         android:fontFamily="@font/roboto_semibold"
         android:text="@string/button_next"
         android:textColor="#FFFFFF"
