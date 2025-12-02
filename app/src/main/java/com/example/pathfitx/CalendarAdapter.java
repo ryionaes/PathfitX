@@ -10,7 +10,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.ViewHolder> {
-
     private final String[] days = {"Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"};
     private final String[] dates = {"1", "2", "3", "4", "5", "6", "7"};
     private int selectedPosition = 3; // Setting "Tue 4" as selected by default
@@ -20,6 +19,15 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.ViewHo
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_calendar_day, parent, false);
+
+        // Get the total width of the RecyclerView (the screen width)
+        int parentWidth = parent.getMeasuredWidth();
+
+        // Force the item to be exactly 1/7th of the width
+        ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
+        layoutParams.width = parentWidth / 7;
+        view.setLayoutParams(layoutParams);
+
         return new ViewHolder(view);
     }
 
