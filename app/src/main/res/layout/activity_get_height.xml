@@ -85,6 +85,7 @@
         android:layout_marginEnd="8dp"
         android:background="@drawable/bg_edittext_selector"
         android:ems="10"
+        android:hint="ft"
         android:inputType="numberDecimal"
         android:paddingStart="12dp"
         android:paddingEnd="12dp"
@@ -100,6 +101,7 @@
         android:layout_marginEnd="8dp"
         android:background="@drawable/bg_edittext_selector"
         android:ems="10"
+        android:hint="in"
         android:inputType="numberDecimal"
         android:paddingStart="12dp"
         android:paddingEnd="12dp"
@@ -120,7 +122,7 @@
 
         app:cornerRadius="10dp"
 
-        app:rippleColor="@color/prim_red"
+        app:rippleColor="#ff2d15"
 
         app:backgroundTint="#FEEAEA"
 
@@ -155,7 +157,7 @@
         android:background="@drawable/bg_edittext_selector"
         android:ems="10"
         android:inputType="numberDecimal"
-        android:hint="Select country"
+        android:hint="Enter weight here"
         android:paddingStart="12dp"
         android:paddingEnd="12dp"
         app:layout_constraintEnd_toStartOf="@+id/button_kg"
@@ -173,7 +175,7 @@
         android:textColor="@color/prim_red"
         android:textSize="16sp"
         app:cornerRadius="10dp"
-        app:rippleColor="@color/prim_red"
+        app:rippleColor="#ff2d15"
         app:backgroundTint="#FEEAEA"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/edit_text_weight"
