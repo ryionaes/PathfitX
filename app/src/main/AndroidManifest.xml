@@ -12,16 +12,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.PathfitX">
 
+        <!-- NEW LAUNCHER ACTIVITY: .WelcomePage -->
         <activity
-            android:name=".HomeScreen"
-            android:exported="true" />
-
-        <activity
-            android:name=".GetInfo"
-            android:exported="false" />
-
-        <activity
-            android:name=".GetHeight"
+            android:name=".WelcomePage"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -29,9 +22,23 @@
             </intent-filter>
         </activity>
 
+        <!-- .HomeScreen is now a regular activity -->
+        <activity
+            android:name=".HomeScreen"
+            android:exported="true" />
+        <activity
+            android:name=".GetInfo"
+            android:exported="false" />
+
+        <!-- .GetHeight is now a regular activity (removed Launcher filter) -->
+        <activity
+            android:name=".GetHeight"
+            android:exported="true" />
+
         <activity
             android:name=".MainActivity"
             android:exported="false">
+
         </activity>
         <activity
             android:name=".GetUser"

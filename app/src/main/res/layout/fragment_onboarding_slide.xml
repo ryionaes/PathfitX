@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <!-- Slide Image/Preview -->
+    <ImageView
+        android:id="@+id/image_slide"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:scaleType="fitCenter"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:contentDescription="App preview slide"
+        />
+
+    <!-- Note: In a real app, you might add title/description TextViews here
+         and hide the ones in activity_welcome_page.xml, but we'll use
+         only the ImageView to keep it simple for now. -->
+
+</androidx.constraintlayout.widget.ConstraintLayout>
