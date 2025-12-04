@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
-public class HomeFragment extends Fragment {
+public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClickListener, EditExerciseDialog.DialogListener{
 
     private RecyclerView rvCalendar;
     private RecyclerView rvExercises;
@@ -68,18 +68,11 @@ public class HomeFragment extends Fragment {
 
     // This method now only initializes the empty list and adapter
     private void setupExercises() {
-        // Initialize the list (Empty for now)
         exerciseList = new ArrayList<>();
-
-        // Initialize the adapter with the empty list
-        exerciseAdapter = new ExerciseAdapter(exerciseList);
-
-        // Setup RecyclerView
+        // Pass 'this' as the listener to the adapter
+        exerciseAdapter = new ExerciseAdapter(exerciseList, this);
         rvExercises.setLayoutManager(new LinearLayoutManager(getContext()));
         rvExercises.setAdapter(exerciseAdapter);
-
-        // Note: We removed the "Dummy Data" block here because
-        // we want to load the real data from the Repository instead.
     }
 
     // NEW: Helper method to pull data from the Repository
@@ -116,5 +109,28 @@ public class HomeFragment extends Fragment {
         } else {
             btnAddExercise.setVisibility(View.GONE);
         }
+    }
+
+    @Override
+    public void onMoreClick(Exercise exercise, int position) {
+        // Show the edit dialog, passing 'this' as the listener for save/remove events
+        EditExerciseDialog dialog = new EditExerciseDialog(exercise, position, this);
+        dialog.show(getChildFragmentManager(), "EditExerciseDialog");
+    }
+
+    // Handle "Save" from Dialog
+    @Override
+    public void onSave(Exercise updatedExercise, int position) {
+        SelectedWorkoutRepository.getInstance().updateExercise(position, updatedExercise);
+        refreshExerciseList(); // Refresh the UI
+    }
+
+    // Handle "Remove" from Dialog
+    @Override
+    public void onRemove(Exercise exerciseToRemove, int position) {
+        SelectedWorkoutRepository.getInstance().removeExercise(exerciseToRemove);
+        refreshExerciseList(); // Refresh the UI
+        // Optional: Show a confirmation toast
+        //Toast.makeText(getContext(), "Exercise removed", Toast.LENGTH_SHORT).show();
     }
 }

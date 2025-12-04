@@ -15,6 +15,18 @@ public class SelectedWorkoutRepository {
         selectedExercises = new ArrayList<>();
     }
 
+    // Update an existing exercise
+    public void updateExercise(int position, Exercise updatedExercise) {
+        if (position >= 0 && position < selectedExercises.size()) {
+            selectedExercises.set(position, updatedExercise);
+        }
+    }
+
+    // Remove an exercise
+    public void removeExercise(Exercise exercise) {
+        selectedExercises.remove(exercise);
+    }
+
     // Public method to get the single instance
     public static synchronized SelectedWorkoutRepository getInstance() {
         if (instance == null) {

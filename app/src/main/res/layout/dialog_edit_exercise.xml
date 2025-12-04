@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="24dp"
+    app:cardElevation="0dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="24dp">
+
+        <TextView
+            android:id="@+id/tv_dialog_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Edit Exercise"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
+
+        <ImageView
+            android:id="@+id/btn_close"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            app:tint="#757575"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/img_dialog_exercise"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/ic_launcher_background" scaleType="centerCrop"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_dialog_title" android:layout_marginTop="24dp"/>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginStart="16dp"
+            app:layout_constraintStart_toEndOf="@id/img_dialog_exercise"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/img_dialog_exercise"
+            app:layout_constraintBottom_toBottomOf="@id/img_dialog_exercise">
+            <TextView android:id="@+id/tv_dialog_exercise_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Exercise Name" android:textStyle="bold" android:textColor="@color/black" android:textSize="18sp"/>
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Adjust your targets" android:textColor="#757575" android:textSize="14sp"/>
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/inputs_container" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="24dp" app:layout_constraintTop_toBottomOf="@id/img_dialog_exercise">
+            <include android:id="@+id/input_sets" layout="@layout/layout_counter_input" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginEnd="8dp"/>
+            <include android:id="@+id/input_reps" layout="@layout/layout_counter_input" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginEnd="8dp"/>
+            <include android:id="@+id/input_kg" layout="@layout/layout_counter_input" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"/>
+        </LinearLayout>
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="32dp" app:layout_constraintTop_toBottomOf="@id/inputs_container">
+            <com.google.android.material.button.MaterialButton android:id="@+id/btn_dialog_remove" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.4" android:text="Remove" android:textColor="#D32F2F" app:icon="@android:drawable/ic_menu_delete" app:iconTint="#D32F2F" android:backgroundTint="#FFEBEE" app:cornerRadius="12dp" android:textAllCaps="false" style="@style/Widget.MaterialComponents.Button.TextButton" android:layout_marginEnd="16dp"/>
+            <com.google.android.material.button.MaterialButton android:id="@+id/btn_dialog_save" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.6" android:text="Save Changes" android:textColor="@color/white" app:icon="@android:drawable/ic_menu_save" app:iconTint="@color/white" android:backgroundTint="#102040" app:cornerRadius="12dp" android:textAllCaps="false"/>
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>
