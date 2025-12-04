@@ -15,6 +15,10 @@
         <!-- NEW LAUNCHER ACTIVITY: .WelcomePage -->
         <activity
             android:name=".WelcomePage"
+            android:exported="true"/>
+
+        <activity
+            android:name=".HomeScreen"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -22,15 +26,10 @@
             </intent-filter>
         </activity>
 
-        <!-- .HomeScreen is now a regular activity -->
-        <activity
-            android:name=".HomeScreen"
-            android:exported="true" />
         <activity
             android:name=".GetInfo"
             android:exported="false" />
 
-        <!-- .GetHeight is now a regular activity (removed Launcher filter) -->
         <activity
             android:name=".GetHeight"
             android:exported="true" />
