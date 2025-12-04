@@ -64,7 +64,7 @@ public class WorkoutAdapter extends RecyclerView.Adapter<WorkoutAdapter.ViewHold
                     android.widget.Toast.LENGTH_SHORT).show();
 
             // Optional: Change the button icon to a checkmark visually
-            holder.btnAdd.setImageResource(android.R.drawable.checkbox_on_background);
+            holder.btnAdd.setImageResource(R.drawable.ic_check);
         });
     }
 

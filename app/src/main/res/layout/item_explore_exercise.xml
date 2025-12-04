@@ -74,7 +74,7 @@
             android:id="@+id/btn_add"
             android:layout_width="32dp"
             android:layout_height="32dp"
-            android:src="@android:drawable/ic_input_add"
+            android:src="@drawable/ic_plus"
             android:background="@drawable/bg_circle_dark"
             app:tint="@color/white"
             android:padding="4dp"

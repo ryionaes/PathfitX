@@ -28,7 +28,7 @@
             android:id="@+id/btn_minus"
             android:layout_width="32dp"
             android:layout_height="32dp"
-            android:src="@android:drawable/ic_input_delete"
+            android:src="@drawable/ic_minus"
             android:background="?attr/selectableItemBackgroundBorderless"
             app:tint="#757575"/>
 
@@ -40,14 +40,14 @@
             android:text="0"
             android:gravity="center"
             android:textSize="18sp"
-            android:textStyle="bold"
+            android:fontFamily="@font/roboto_black"
             android:textColor="@color/black"/>
 
         <ImageButton
             android:id="@+id/btn_plus"
             android:layout_width="32dp"
             android:layout_height="32dp"
-            android:src="@android:drawable/ic_input_add"
+            android:src="@drawable/ic_plus"
             android:background="?attr/selectableItemBackgroundBorderless"
             app:tint="#757575"/>
     </LinearLayout>
