@@ -1,5 +1,6 @@
 package com.example.pathfitx;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,6 +20,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
 
     private View headerContainer;
     private View btnAddExercise;
+    private View btnStartWorkout;
 
     // These variables must be up here (Class Level) so we can access them later
     private ExerciseAdapter exerciseAdapter;
@@ -39,6 +41,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
 
         headerContainer = view.findViewById(R.id.header_container);
         btnAddExercise = view.findViewById(R.id.btn_add_exercise);
+        btnStartWorkout = view.findViewById(R.id.btn_start_workout);
 
         setupCalendar();
         setupExercises();
@@ -50,6 +53,23 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
                     .replace(R.id.fragment_container, new WorkoutFragment())
                     .addToBackStack(null) // Allows user to press Back button to return
                     .commit();
+        });
+
+        // Navigate to LiveSessionActivity
+        View btnStart = view.findViewById(R.id.btn_start_workout);
+        btnStart.setOnClickListener(v -> {
+            // VALIDATION CHECK
+            if (exerciseList == null || exerciseList.isEmpty()) {
+                // Show Toast if empty
+                android.widget.Toast.makeText(getContext(),
+                        "Please add an exercise first!",
+                        android.widget.Toast.LENGTH_SHORT).show();
+                return; // Stop here, do not proceed
+            }
+
+            // Start the new Activity
+            Intent intent = new Intent(getActivity(), LiveSessionActivity.class);
+            startActivity(intent);
         });
     }
 

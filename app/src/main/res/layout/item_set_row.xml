@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/container_set_row"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:padding="12dp"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/bg_card_goals">
+
+    <TextView
+        android:id="@+id/tv_set_number"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Set 1"
+        android:textStyle="bold"
+        android:textColor="#102040"/>
+
+    <View android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1"/>
+
+    <TextView
+        android:id="@+id/tv_set_details"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="10 reps • 20 kg"
+        android:textColor="#757575"
+        android:layout_marginEnd="12dp"/>
+
+    <!-- Custom Check Circle -->
+    <ImageView
+        android:id="@+id/btn_check_set"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/bg_grey_button"
+        android:backgroundTint="#E0E0E0"/>
+
+</LinearLayout>

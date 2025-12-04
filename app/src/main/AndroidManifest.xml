@@ -11,34 +11,31 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.PathfitX">
-
+        <activity
+            android:name=".LiveSessionActivity"
+            android:exported="false" />
         <!-- NEW LAUNCHER ACTIVITY: .WelcomePage -->
         <activity
             android:name=".WelcomePage"
-            android:exported="true"/>
-
+            android:exported="true" />
         <activity
             android:name=".HomeScreen"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".GetInfo"
             android:exported="false" />
-
         <activity
             android:name=".GetHeight"
             android:exported="true" />
-
         <activity
             android:name=".MainActivity"
-            android:exported="false">
-
-        </activity>
+            android:exported="false"></activity>
         <activity
             android:name=".GetUser"
             android:exported="false" />
