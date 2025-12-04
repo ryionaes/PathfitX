@@ -52,6 +52,9 @@ public class WorkoutAdapter extends RecyclerView.Adapter<WorkoutAdapter.ViewHold
         holder.img.setImageResource(item.getImageResId());
 
         holder.btnAdd.setOnClickListener(v -> {
+            // Mark item as part of the workout
+            item.setAddedToWorkout(true);
+
             // Add to the repository
             SelectedWorkoutRepository.getInstance().addExercise(item);
 
