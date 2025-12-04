@@ -17,6 +17,9 @@ public class HomeFragment extends Fragment {
     private RecyclerView rvCalendar;
     private RecyclerView rvExercises;
 
+    private View headerContainer;
+    private View btnAddExercise;
+
     // These variables must be up here (Class Level) so we can access them later
     private ExerciseAdapter exerciseAdapter;
     private List<Exercise> exerciseList;
@@ -34,8 +37,20 @@ public class HomeFragment extends Fragment {
         rvCalendar = view.findViewById(R.id.rv_calendar);
         rvExercises = view.findViewById(R.id.rv_exercises);
 
+        headerContainer = view.findViewById(R.id.header_container);
+        btnAddExercise = view.findViewById(R.id.btn_add_exercise);
+
         setupCalendar();
         setupExercises();
+
+        // Set Click Listener to Navigate
+        btnAddExercise.setOnClickListener(v -> {
+            // Navigate to WorkoutFragment (Explore)
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new WorkoutFragment())
+                    .addToBackStack(null) // Allows user to press Back button to return
+                    .commit();
+        });
     }
 
     // This runs every time you return to this screen (e.g. back from Explore tab)
@@ -81,6 +96,25 @@ public class HomeFragment extends Fragment {
         // Tell the adapter to refresh the screen
         if (exerciseAdapter != null) {
             exerciseAdapter.notifyDataSetChanged();
+        }
+
+        // LOGIC FOR VISIBILITY
+        int count = exerciseList.size();
+
+        // RULE A: If empty (count == 0), Hide Header. Else Show Header.
+        if (count == 0) {
+            headerContainer.setVisibility(View.GONE);
+            rvExercises.setVisibility(View.GONE); // Optional: Hide list if empty
+        } else {
+            headerContainer.setVisibility(View.VISIBLE);
+            rvExercises.setVisibility(View.VISIBLE);
+        }
+
+        // RULE B: Show Add Button if items are 3 or less. Hide if more than 3.
+        if (count <= 3) {
+            btnAddExercise.setVisibility(View.VISIBLE);
+        } else {
+            btnAddExercise.setVisibility(View.GONE);
         }
     }
 }
