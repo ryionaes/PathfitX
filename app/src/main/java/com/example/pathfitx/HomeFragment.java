@@ -17,10 +17,13 @@ public class HomeFragment extends Fragment {
     private RecyclerView rvCalendar;
     private RecyclerView rvExercises;
 
+    // These variables must be up here (Class Level) so we can access them later
+    private ExerciseAdapter exerciseAdapter;
+    private List<Exercise> exerciseList;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        // Inflate the layout
         return inflater.inflate(R.layout.fragment_home, container, false);
     }
 
@@ -35,23 +38,49 @@ public class HomeFragment extends Fragment {
         setupExercises();
     }
 
+    // This runs every time you return to this screen (e.g. back from Explore tab)
+    @Override
+    public void onResume() {
+        super.onResume();
+        refreshExerciseList();
+    }
+
     private void setupCalendar() {
-        // Horizontal Layout for Calendar
         rvCalendar.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
+        // Use your existing CalendarAdapter (make sure to fix the constructor if you added a listener earlier)
         rvCalendar.setAdapter(new CalendarAdapter());
     }
 
+    // This method now only initializes the empty list and adapter
     private void setupExercises() {
-        // Create Dummy Data
-        List<Exercise> exercises = new ArrayList<>();
-        // Use R.drawable.your_image_name if you have imported assets
-        exercises.add(new Exercise("Dumbbell Bench Press", "3 Sets • 8 reps • 8 kg", R.drawable.ic_launcher_background));
-        exercises.add(new Exercise("Dumbbell Shoulder Press", "3 Sets • 8 reps • 8 kg", R.drawable.ic_launcher_background));
-        exercises.add(new Exercise("Dumbbell Tricep Extension", "3 Sets • 8 reps • 8 kg", R.drawable.ic_launcher_background));
-        exercises.add(new Exercise("Incline Press", "3 Sets • 10 reps • 12 kg", R.drawable.ic_launcher_background));
+        // Initialize the list (Empty for now)
+        exerciseList = new ArrayList<>();
 
-        // Vertical Layout for Exercises
+        // Initialize the adapter with the empty list
+        exerciseAdapter = new ExerciseAdapter(exerciseList);
+
+        // Setup RecyclerView
         rvExercises.setLayoutManager(new LinearLayoutManager(getContext()));
-        rvExercises.setAdapter(new ExerciseAdapter(exercises));
+        rvExercises.setAdapter(exerciseAdapter);
+
+        // Note: We removed the "Dummy Data" block here because
+        // we want to load the real data from the Repository instead.
+    }
+
+    // NEW: Helper method to pull data from the Repository
+    private void refreshExerciseList() {
+        // Get the exercises saved in our Repository (The "Storage Box")
+        List<Exercise> savedData = SelectedWorkoutRepository.getInstance().getSelectedExercises();
+
+        // Clear the current list on the screen
+        exerciseList.clear();
+
+        // Add the new data from the repository
+        exerciseList.addAll(savedData);
+
+        // Tell the adapter to refresh the screen
+        if (exerciseAdapter != null) {
+            exerciseAdapter.notifyDataSetChanged();
+        }
     }
 }

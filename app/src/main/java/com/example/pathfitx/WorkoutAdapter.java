@@ -52,7 +52,16 @@ public class WorkoutAdapter extends RecyclerView.Adapter<WorkoutAdapter.ViewHold
         holder.img.setImageResource(item.getImageResId());
 
         holder.btnAdd.setOnClickListener(v -> {
-            // Logic to add exercise goes here
+            // Add to the repository
+            SelectedWorkoutRepository.getInstance().addExercise(item);
+
+            // Show a feedback message
+            android.widget.Toast.makeText(v.getContext(),
+                    item.getTitle() + " added to Home!",
+                    android.widget.Toast.LENGTH_SHORT).show();
+
+            // Optional: Change the button icon to a checkmark visually
+            holder.btnAdd.setImageResource(android.R.drawable.checkbox_on_background);
         });
     }
 
