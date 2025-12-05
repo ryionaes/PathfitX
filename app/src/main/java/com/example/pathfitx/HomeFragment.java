@@ -1,28 +1,39 @@
 package com.example.pathfitx;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClickListener, EditExerciseDialog.DialogListener{
+@RequiresApi(api = Build.VERSION_CODES.O)
+public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClickListener, EditExerciseDialog.DialogListener, CalendarAdapter.OnDateClickListener {
 
     private RecyclerView rvCalendar;
     private RecyclerView rvExercises;
+    private CalendarAdapter calendarAdapter;
+    private TextView tvYear;
+    private ImageView ivProfileIcon;
 
     private View headerContainer;
     private View btnAddExercise;
     private View btnStartWorkout;
 
-    // These variables must be up here (Class Level) so we can access them later
     private ExerciseAdapter exerciseAdapter;
     private List<Exercise> exerciseList;
 
@@ -38,42 +49,45 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
 
         rvCalendar = view.findViewById(R.id.rv_calendar);
         rvExercises = view.findViewById(R.id.rv_exercises);
+        tvYear = view.findViewById(R.id.tv_year);
+        ivProfileIcon = view.findViewById(R.id.iv_profile_icon);
 
         headerContainer = view.findViewById(R.id.header_container);
         btnAddExercise = view.findViewById(R.id.btn_add_exercise);
         btnStartWorkout = view.findViewById(R.id.btn_start_workout);
 
+        // Set the current year
+        tvYear.setText(String.valueOf(LocalDate.now().getYear()));
+
         setupCalendar();
         setupExercises();
 
-        // Set Click Listener to Navigate
-        btnAddExercise.setOnClickListener(v -> {
-            // Navigate to WorkoutFragment (Explore)
+        // Set OnClickListener for the profile icon
+        ivProfileIcon.setOnClickListener(v -> {
             getParentFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, new WorkoutFragment())
-                    .addToBackStack(null) // Allows user to press Back button to return
+                    .replace(R.id.fragment_container, new ProfileFragment())
+                    .addToBackStack(null) // Optional: Allows user to press Back to return
                     .commit();
         });
 
-        // Navigate to LiveSessionActivity
+        btnAddExercise.setOnClickListener(v -> {
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new WorkoutFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
+
         View btnStart = view.findViewById(R.id.btn_start_workout);
         btnStart.setOnClickListener(v -> {
-            // VALIDATION CHECK
             if (exerciseList == null || exerciseList.isEmpty()) {
-                // Show Toast if empty
-                android.widget.Toast.makeText(getContext(),
-                        "Please add an exercise first!",
-                        android.widget.Toast.LENGTH_SHORT).show();
-                return; // Stop here, do not proceed
+                android.widget.Toast.makeText(getContext(), "Please add an exercise first!", android.widget.Toast.LENGTH_SHORT).show();
+                return;
             }
-
-            // Start the new Activity
             Intent intent = new Intent(getActivity(), LiveSessionActivity.class);
             startActivity(intent);
         });
     }
 
-    // This runs every time you return to this screen (e.g. back from Explore tab)
     @Override
     public void onResume() {
         super.onResume();
@@ -82,48 +96,61 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
 
     private void setupCalendar() {
         rvCalendar.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
-        // Use your existing CalendarAdapter (make sure to fix the constructor if you added a listener earlier)
-        rvCalendar.setAdapter(new CalendarAdapter());
+
+        List<LocalDate> dates = new ArrayList<>();
+        LocalDate today = LocalDate.now();
+        LocalDate yesterday = today.minusDays(1);
+
+        // Start the list with yesterday.
+        dates.add(yesterday);
+
+        // Add today and the next 30 days for future planning.
+        for (int i = 0; i < 30; i++) {
+            dates.add(today.plusDays(i));
+        }
+
+        // "Today" is always at position 1 in our new list.
+        int todayPosition = 1;
+
+        calendarAdapter = new CalendarAdapter(dates, todayPosition, this);
+        rvCalendar.setAdapter(calendarAdapter);
+
+        // Scroll to the beginning to show "Yesterday" and "Today".
+        rvCalendar.scrollToPosition(0);
     }
 
-    // This method now only initializes the empty list and adapter
+
     private void setupExercises() {
         exerciseList = new ArrayList<>();
-        // Pass 'this' as the listener to the adapter
         exerciseAdapter = new ExerciseAdapter(exerciseList, this);
         rvExercises.setLayoutManager(new LinearLayoutManager(getContext()));
         rvExercises.setAdapter(exerciseAdapter);
     }
 
-    // NEW: Helper method to pull data from the Repository
+    @Override
+    public void onDateClick(int position) {
+        calendarAdapter.setSelectedPosition(position);
+        // TODO: Add logic to load workout data for the selected date
+    }
+
     private void refreshExerciseList() {
-        // Get the exercises saved in our Repository (The "Storage Box")
         List<Exercise> savedData = SelectedWorkoutRepository.getInstance().getSelectedExercises();
-
-        // Clear the current list on the screen
         exerciseList.clear();
-
-        // Add the new data from the repository
         exerciseList.addAll(savedData);
 
-        // Tell the adapter to refresh the screen
         if (exerciseAdapter != null) {
             exerciseAdapter.notifyDataSetChanged();
         }
 
-        // LOGIC FOR VISIBILITY
         int count = exerciseList.size();
-
-        // RULE A: If empty (count == 0), Hide Header. Else Show Header.
         if (count == 0) {
             headerContainer.setVisibility(View.GONE);
-            rvExercises.setVisibility(View.GONE); // Optional: Hide list if empty
+            rvExercises.setVisibility(View.GONE);
         } else {
             headerContainer.setVisibility(View.VISIBLE);
             rvExercises.setVisibility(View.VISIBLE);
         }
 
-        // RULE B: Show Add Button if items are 3 or less. Hide if more than 3.
         if (count <= 3) {
             btnAddExercise.setVisibility(View.VISIBLE);
         } else {
@@ -133,24 +160,19 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
 
     @Override
     public void onMoreClick(Exercise exercise, int position) {
-        // Show the edit dialog, passing 'this' as the listener for save/remove events
         EditExerciseDialog dialog = new EditExerciseDialog(exercise, position, this);
         dialog.show(getChildFragmentManager(), "EditExerciseDialog");
     }
 
-    // Handle "Save" from Dialog
     @Override
     public void onSave(Exercise updatedExercise, int position) {
         SelectedWorkoutRepository.getInstance().updateExercise(position, updatedExercise);
-        refreshExerciseList(); // Refresh the UI
+        refreshExerciseList();
     }
 
-    // Handle "Remove" from Dialog
     @Override
     public void onRemove(Exercise exerciseToRemove, int position) {
         SelectedWorkoutRepository.getInstance().removeExercise(exerciseToRemove);
-        refreshExerciseList(); // Refresh the UI
-        // Optional: Show a confirmation toast
-        //Toast.makeText(getContext(), "Exercise removed", Toast.LENGTH_SHORT).show();
+        refreshExerciseList();
     }
 }

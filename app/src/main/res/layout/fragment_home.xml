@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white">
@@ -9,30 +10,47 @@
     <!-- 1. Header (User Info) -->
     <LinearLayout
         android:id="@+id/header_layout"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:layout_marginTop="27dp"
         android:padding="16dp"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <ImageView
+            android:id="@+id/iv_profile_icon"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:src="@drawable/ic_launcher_foreground"
             android:background="@drawable/bg_selected_date"
-            android:backgroundTint="#E0E0E0"/> <!-- Placeholder for circle avatar -->
+            android:backgroundTint="#E0E0E0"/>
 
-        <TextView
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="saturei"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="@color/black"
-            android:layout_marginStart="12dp"/>
+            android:orientation="vertical"
+            android:layout_marginStart="12dp">
+
+            <TextView
+                android:id="@+id/tv_user_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="saturei"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/black"/>
+
+            <TextView
+                android:id="@+id/tv_year"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/gray_500"
+                tools:text="2024" />
+        </LinearLayout>
 
         <ImageView
             android:layout_width="24dp"
@@ -43,77 +61,85 @@
     <!-- 2. Calendar Strip -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_calendar"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:paddingStart="16dp"
         android:clipToPadding="false"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintTop_toBottomOf="@id/header_layout"/>
+        app:layout_constraintTop_toBottomOf="@id/header_layout"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:listitem="@layout/item_calendar_day"
+        tools:layout_height="80dp"/>
 
     <!-- 3. Main Content (The "Sheet") -->
-    <!-- We use a ScrollView because the list might get long and we want the header to scroll with it -->
     <androidx.core.widget.NestedScrollView
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="@drawable/bg_main_sheet"
         android:paddingTop="20dp"
-        android:backgroundTint="@null"
         app:layout_constraintTop_toBottomOf="@id/rv_calendar"
-        app:layout_constraintBottom_toBottomOf="parent">
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:padding="20dp">
 
-            <LinearLayout
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/header_container"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:id="@+id/tv_push_day"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Push Day"
-                            android:textSize="24sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/black"/>
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="6 Exercises • 3 Muscles"
-                            android:textColor="@color/gray_500"/>
-                    </LinearLayout>
+                    android:text="Push Day"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/black"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"/>
 
-                    <com.google.android.material.button.MaterialButton
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Swap"
-                        app:icon="@android:drawable/ic_menu_rotate"
-                        style="@style/Widget.MaterialComponents.Button.TextButton"
-                        android:backgroundTint="@color/prim_soft"
-                        android:textColor="@color/black"
-                        app:iconTint="@color/black"/>
-                </LinearLayout>
+                <TextView
+                    android:id="@+id/tv_exercise_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="6 Exercises • 3 Muscles"
+                    android:textColor="@color/gray_500"
+                    app:layout_constraintTop_toBottomOf="@+id/tv_push_day"
+                    app:layout_constraintStart_toStartOf="parent"/>
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_swap"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="@color/prim_soft"
+                    android:text="Swap"
+                    android:textColor="@color/black"
+                    app:icon="@android:drawable/ic_menu_rotate"
+                    app:iconTint="@color/black"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/tv_push_day"
+                    app:layout_constraintBottom_toBottomOf="@id/tv_exercise_count"/>
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chips_layout"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:orientation="horizontal">
+                    app:layout_constraintTop_toBottomOf="@id/tv_exercise_count"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent">
+
                     <com.google.android.material.chip.Chip
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -126,18 +152,23 @@
                         android:text="Equipment"
                         android:layout_marginStart="8dp"
                         app:chipBackgroundColor="@color/white"/>
-                </LinearLayout>
-            </LinearLayout>
+                </com.google.android.material.chip.ChipGroup>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_exercises"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:nestedScrollingEnabled="false"
-                android:layout_marginTop="16dp"/>
+                android:layout_marginTop="16dp"
+                app:layout_constraintTop_toBottomOf="@id/header_container"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"/>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_add_exercise"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="50dp"
                 android:text="+ Add Exercise"
                 android:textColor="@color/prim_red"
@@ -146,16 +177,19 @@
                 android:layout_marginTop="24dp"
                 android:textAllCaps="false"
                 android:textSize="16sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                app:layout_constraintTop_toBottomOf="@id/rv_exercises"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"/>
 
             <Space
                 android:layout_width="match_parent"
-                android:layout_height="80dp"/>
+                android:layout_height="80dp"
+                app:layout_constraintTop_toBottomOf="@id/btn_add_exercise" />
 
-        </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- 5. Floating Action Button (Extended) -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_start_workout"
         android:layout_width="wrap_content"
