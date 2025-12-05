@@ -8,5 +8,7 @@
     </style>
 
     <style name="Theme.PathfitX" parent="Base.Theme.PathfitX" />
+    <style name="Theme.PathFitX" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+    </style>
 
 </resources>
