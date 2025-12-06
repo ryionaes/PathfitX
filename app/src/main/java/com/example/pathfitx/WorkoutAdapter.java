@@ -12,15 +12,20 @@ import java.util.List;
 
 public class WorkoutAdapter extends RecyclerView.Adapter<WorkoutAdapter.ViewHolder> {
 
-    private List<Exercise> originalList; // Keep a copy of all data
-    private List<Exercise> filteredList; // The data currently being shown
+    private List<Exercise> originalList;
+    private List<Exercise> filteredList;
+    private final OnExerciseAddListener addListener;
 
-    public WorkoutAdapter(List<Exercise> list) {
-        this.originalList = list;
-        this.filteredList = new ArrayList<>(list); // Start with full list
+    public interface OnExerciseAddListener {
+        void onExerciseAdd(Exercise exercise);
     }
 
-    // Method to filter the list based on search text
+    public WorkoutAdapter(List<Exercise> list, OnExerciseAddListener listener) {
+        this.originalList = list;
+        this.filteredList = new ArrayList<>(list);
+        this.addListener = listener;
+    }
+
     public void filter(String text) {
         filteredList.clear();
         if (text.isEmpty()) {
@@ -52,19 +57,10 @@ public class WorkoutAdapter extends RecyclerView.Adapter<WorkoutAdapter.ViewHold
         holder.img.setImageResource(item.getImageResId());
 
         holder.btnAdd.setOnClickListener(v -> {
-            // Mark item as part of the workout
-            item.setAddedToWorkout(true);
-
-            // Add to the repository
-            SelectedWorkoutRepository.getInstance().addExercise(item);
-
-            // Show a feedback message
-            android.widget.Toast.makeText(v.getContext(),
-                    item.getTitle() + " added to Home!",
-                    android.widget.Toast.LENGTH_SHORT).show();
-
-            // Optional: Change the button icon to a checkmark visually
-            holder.btnAdd.setImageResource(R.drawable.ic_check);
+            if (addListener != null) {
+                addListener.onExerciseAdd(item);
+                holder.btnAdd.setImageResource(R.drawable.ic_check);
+            }
         });
     }
 

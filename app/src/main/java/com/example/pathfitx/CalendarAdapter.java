@@ -20,7 +20,6 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.ViewHo
     private int selectedPosition;
     private final OnDateClickListener onDateClickListener;
 
-    // Interface for click events
     public interface OnDateClickListener {
         void onDateClick(int position);
     }
@@ -48,20 +47,16 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.ViewHo
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         LocalDate date = dates.get(position);
 
-        // EEE for day name (e.g., "Sat"), d for day number
         holder.tvDayName.setText(date.format(DateTimeFormatter.ofPattern("EEE")));
         holder.tvDayNumber.setText(date.format(DateTimeFormatter.ofPattern("d")));
 
         if (position == selectedPosition) {
-            // Selected Style
             holder.container.setBackgroundResource(R.drawable.bg_selected_date);
             holder.tvDayName.setTextColor(Color.WHITE);
             holder.tvDayNumber.setTextColor(Color.WHITE);
-            // MMM for month abbreviation (e.g., "Dec")
             holder.tvMonthName.setText(date.format(DateTimeFormatter.ofPattern("MMM")));
             holder.tvMonthName.setVisibility(View.VISIBLE);
         } else {
-            // Unselected Style
             holder.container.setBackground(null);
             holder.tvDayName.setTextColor(Color.parseColor("#757575"));
             holder.tvDayNumber.setTextColor(Color.BLACK);
@@ -74,12 +69,15 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.ViewHo
         return dates.size();
     }
 
-    // Method to update the selected position
     public void setSelectedPosition(int position) {
         int previousPos = selectedPosition;
         selectedPosition = position;
         notifyItemChanged(previousPos);
         notifyItemChanged(selectedPosition);
+    }
+
+    public LocalDate getDateAt(int position) {
+        return dates.get(position);
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {

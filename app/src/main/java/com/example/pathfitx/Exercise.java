@@ -1,47 +1,73 @@
 package com.example.pathfitx;
 
-public class Exercise {
-    String title;
-    String details;
-    // In a real app, this would be a URL string or resource ID
-    int imageResId;
-    private String tags; // e.g., "Legs • Hard" for the Explore screen
+import java.io.Serializable;
 
-    // New fields for editable data
-    private int sets = 3; // Default values
+public class Exercise implements Serializable {
+    private static final long serialVersionUID = 1L; // Add this for serialization
+
+    private String title;
+    private String details; // This will now be used for the display text
+    private int imageResId;
+    private String tags; // e.g., "Legs • Hard"
+
+    private int sets = 3;
     private int reps = 10;
     private int kg = 10;
 
     private boolean isAddedToWorkout = false;
 
-    public Exercise(String title, String details, int imageResId) {
+    // No-argument constructor required for Firestore
+    public Exercise() {}
+
+    public Exercise(String title, String tags, int imageResId) {
         this.title = title;
-        this.details = details;
+        this.tags = tags;
         this.imageResId = imageResId;
+        updateDetails();
     }
 
     // Getters
     public String getTitle() { return title; }
+    public String getDetails() { return details; }
     public int getImageResId() { return imageResId; }
+    public String getTags() { return tags; }
     public int getSets() { return sets; }
     public int getReps() { return reps; }
     public int getKg() { return kg; }
-
-    // Smart getter for details string based on context
-    public String getDetails() {
-        if (isAddedToWorkout) {
-            return sets + " Sets • " + reps + " Reps • " + kg + " kg";
-        } else {
-            return tags;
-        }
-    }
+    public boolean isAddedToWorkout() { return isAddedToWorkout; }
 
     // Setters
-    public void setSets(int sets) { this.sets = Math.max(0, sets); }
-    public void setReps(int reps) { this.reps = Math.max(0, reps); }
-    public void setKg(int kg) { this.kg = Math.max(0, kg); }
+    public void setTitle(String title) { this.title = title; }
+    public void setDetails(String details) { this.details = details; }
+    public void setImageResId(int imageResId) { this.imageResId = imageResId; }
+    public void setTags(String tags) { this.tags = tags; }
+
+    public void setSets(int sets) {
+        this.sets = Math.max(0, sets);
+        updateDetails();
+    }
+
+    public void setReps(int reps) {
+        this.reps = Math.max(0, reps);
+        updateDetails();
+    }
+
+    public void setKg(int kg) {
+        this.kg = Math.max(0, kg);
+        updateDetails();
+    }
 
     public void setAddedToWorkout(boolean added) {
-        this.isAddedToWorkout = added;
+        isAddedToWorkout = added;
+        updateDetails();
+    }
+
+    // Helper to update the details string
+    private void updateDetails() {
+        if (isAddedToWorkout) {
+            this.details = sets + " Sets • " + reps + " Reps • " + kg + " kg";
+        } else {
+            this.details = this.tags;
+        }
     }
 }

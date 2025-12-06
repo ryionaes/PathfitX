@@ -3,12 +3,13 @@ package com.example.pathfitx;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.widget.ProgressBar; // Import this
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.button.MaterialButton;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -57,7 +58,7 @@ public class LiveSessionActivity extends AppCompatActivity {
         rvLiveWorkout = findViewById(R.id.rv_live_workout);
 
         setupTimer();
-        setupListAndProgress(); // This now handles list AND counting sets
+        setupListAndProgress();
 
         findViewById(R.id.btn_finish).setOnClickListener(v -> finish());
     }
@@ -68,13 +69,11 @@ public class LiveSessionActivity extends AppCompatActivity {
 
         btnPause.setOnClickListener(v -> {
             if (isRunning) {
-                // PAUSE
                 timeSwapBuff += System.currentTimeMillis() - startTime;
                 timerHandler.removeCallbacks(updateTimerThread);
                 btnPause.setIconResource(android.R.drawable.ic_media_play);
                 isRunning = false;
             } else {
-                // RESUME
                 startTime = System.currentTimeMillis();
                 timerHandler.postDelayed(updateTimerThread, 0);
                 btnPause.setIconResource(android.R.drawable.ic_media_pause);
@@ -84,18 +83,20 @@ public class LiveSessionActivity extends AppCompatActivity {
     }
 
     private void setupListAndProgress() {
-        List<Exercise> workoutList = SelectedWorkoutRepository.getInstance().getSelectedExercises();
+        List<Exercise> workoutList = (List<Exercise>) getIntent().getSerializableExtra("exerciseList");
+        if (workoutList == null) {
+            workoutList = new ArrayList<>(); // Avoid null pointer exception
+        }
 
         // 1. Calculate Total Sets
         totalSets = 0;
         for (Exercise ex : workoutList) {
             totalSets += ex.getSets();
         }
-        progressBar.setMax(totalSets); // Set the max value of progress bar
+        progressBar.setMax(totalSets);
 
         // 2. Setup Adapter with Listener
         LiveAdapter adapter = new LiveAdapter(workoutList, isCompleted -> {
-            // This code runs whenever a checkbox is clicked
             if (isCompleted) {
                 completedSets++;
             } else {
@@ -106,13 +107,11 @@ public class LiveSessionActivity extends AppCompatActivity {
 
         rvLiveWorkout.setLayoutManager(new LinearLayoutManager(this));
         rvLiveWorkout.setAdapter(adapter);
+        updateProgress(); // Initial progress update
     }
 
     private void updateProgress() {
-        // Update Bar
         progressBar.setProgress(completedSets);
-
-        // Update Text (Calculate percentage safely)
         int percent = (totalSets > 0) ? (completedSets * 100 / totalSets) : 0;
         tvProgressText.setText("Progress  " + percent + "%");
     }
