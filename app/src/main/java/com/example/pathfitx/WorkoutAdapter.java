@@ -12,32 +12,26 @@ import java.util.List;
 
 public class WorkoutAdapter extends RecyclerView.Adapter<WorkoutAdapter.ViewHolder> {
 
-    private List<Exercise> originalList;
-    private List<Exercise> filteredList;
-    private final OnExerciseAddListener addListener;
+    private List<Exercise> exercises;
+    private final OnExerciseInteractionListener listener;
 
-    public interface OnExerciseAddListener {
-        void onExerciseAdd(Exercise exercise);
+    public interface OnExerciseInteractionListener {
+        void onExerciseAdd(Exercise exercise, AddExerciseCallback callback);
+        void onExerciseClick(Exercise exercise);
     }
 
-    public WorkoutAdapter(List<Exercise> list, OnExerciseAddListener listener) {
-        this.originalList = list;
-        this.filteredList = new ArrayList<>(list);
-        this.addListener = listener;
+    // Callback interface to report the result of the add operation
+    public interface AddExerciseCallback {
+        void onResult(boolean success);
     }
 
-    public void filter(String text) {
-        filteredList.clear();
-        if (text.isEmpty()) {
-            filteredList.addAll(originalList);
-        } else {
-            text = text.toLowerCase();
-            for (Exercise item : originalList) {
-                if (item.getTitle().toLowerCase().contains(text)) {
-                    filteredList.add(item);
-                }
-            }
-        }
+    public WorkoutAdapter(List<Exercise> list, OnExerciseInteractionListener listener) {
+        this.exercises = new ArrayList<>(list);
+        this.listener = listener;
+    }
+
+    public void setExercises(List<Exercise> exercises) {
+        this.exercises = new ArrayList<>(exercises);
         notifyDataSetChanged();
     }
 
@@ -51,22 +45,33 @@ public class WorkoutAdapter extends RecyclerView.Adapter<WorkoutAdapter.ViewHold
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Exercise item = filteredList.get(position);
+        Exercise item = exercises.get(position);
         holder.tvName.setText(item.getTitle());
-        holder.tvTags.setText(item.getDetails()); // Reusing 'details' field for tags
+        holder.tvTags.setText(item.getDetails());
         holder.img.setImageResource(item.getImageResId());
 
+        holder.btnAdd.setImageResource(R.drawable.ic_plus);
+
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onExerciseClick(item);
+            }
+        });
+
         holder.btnAdd.setOnClickListener(v -> {
-            if (addListener != null) {
-                addListener.onExerciseAdd(item);
-                holder.btnAdd.setImageResource(R.drawable.ic_check);
+            if (listener != null) {
+                listener.onExerciseAdd(item, success -> {
+                    if (success) {
+                        holder.btnAdd.setImageResource(R.drawable.ic_check);
+                    }
+                });
             }
         });
     }
 
     @Override
     public int getItemCount() {
-        return filteredList.size();
+        return exercises.size();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {

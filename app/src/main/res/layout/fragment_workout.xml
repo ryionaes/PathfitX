@@ -37,9 +37,9 @@
         android:textColorHint="#9E9E9E"
         app:layout_constraintTop_toBottomOf="@id/tv_header"/>
 
-    <!-- 3. Filter Chips (Horizontal Scroll) -->
+    <!-- 3. Primary Filter Chips -->
     <HorizontalScrollView
-        android:id="@+id/scroll_chips"
+        android:id="@+id/scroll_chips_primary"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -51,46 +51,112 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <!-- Selected Chip (Red) -->
             <Button
+                android:id="@+id/btn_strength"
+                style="@style/ChipStyle.Selected"
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
-                android:text="Strength"
-                android:textAllCaps="false"
-                android:backgroundTint="#D32F2F"
-                android:textColor="@color/white"
-                android:layout_marginEnd="8dp"/>
-
-            <!-- Unselected Chip (White) -->
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:text="Cardio"
-                android:textAllCaps="false"
-                android:backgroundTint="@color/white"
-                android:textColor="@color/black"
-                android:layout_marginEnd="8dp"/>
+                android:layout_marginEnd="8dp"
+                android:text="Strength"/>
 
             <Button
+                android:id="@+id/btn_cardio"
+                style="@style/ChipStyle.Unselected"
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
-                android:text="HIIT"
-                android:textAllCaps="false"
-                android:backgroundTint="@color/white"
-                android:textColor="@color/black"
-                android:layout_marginEnd="8dp"/>
+                android:layout_marginEnd="8dp"
+                android:text="Cardio"/>
 
             <Button
+                android:id="@+id/btn_hiit"
+                style="@style/ChipStyle.Unselected"
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
-                android:text="Yoga"
-                android:textAllCaps="false"
-                android:backgroundTint="@color/white"
-                android:textColor="@color/black"/>
+                android:layout_marginEnd="8dp"
+                android:text="HIIT"/>
+
+            <Button
+                android:id="@+id/btn_yoga"
+                style="@style/ChipStyle.Unselected"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="Yoga"/>
         </LinearLayout>
     </HorizontalScrollView>
 
-    <!-- 4. Subheader -->
+    <!-- 4. Secondary Filter Chips (for Strength) -->
+    <HorizontalScrollView
+        android:id="@+id/scroll_chips_secondary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:visibility="gone"
+        android:scrollbars="none"
+        app:layout_constraintTop_toBottomOf="@id/scroll_chips_primary">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btn_body_all"
+                style="@style/ChipStyle.Selected"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginEnd="8dp"
+                android:text="All"/>
+
+            <Button
+                android:id="@+id/btn_chest"
+                style="@style/ChipStyle.Unselected"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginEnd="8dp"
+                android:text="Chest"/>
+
+            <Button
+                android:id="@+id/btn_back"
+                style="@style/ChipStyle.Unselected"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginEnd="8dp"
+                android:text="Back"/>
+
+            <Button
+                android:id="@+id/btn_legs"
+                style="@style/ChipStyle.Unselected"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginEnd="8dp"
+                android:text="Legs"/>
+
+            <Button
+                android:id="@+id/btn_shoulders"
+                style="@style/ChipStyle.Unselected"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginEnd="8dp"
+                android:text="Shoulders"/>
+
+            <Button
+                android:id="@+id/btn_arms"
+                style="@style/ChipStyle.Unselected"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginEnd="8dp"
+                android:text="Arms"/>
+
+            <Button
+                android:id="@+id/btn_core"
+                style="@style/ChipStyle.Unselected"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="Core"/>
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- 5. Subheader -->
     <TextView
         android:id="@+id/tv_available"
         android:layout_width="wrap_content"
@@ -101,9 +167,9 @@
         android:textColor="@color/black"
         android:layout_marginTop="24dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/scroll_chips"/>
+        app:layout_constraintTop_toBottomOf="@id/scroll_chips_secondary"/>
 
-    <!-- 5. The List -->
+    <!-- 6. The List -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_explore"
         android:layout_width="match_parent"
@@ -113,4 +179,3 @@
         app:layout_constraintBottom_toBottomOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-

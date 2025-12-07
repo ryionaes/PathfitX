@@ -80,6 +80,16 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.ViewHo
         return dates.get(position);
     }
 
+    public int findPositionForDate(LocalDate date) {
+        if (date == null) return -1;
+        for (int i = 0; i < dates.size(); i++) {
+            if (dates.get(i).isEqual(date)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     public class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvDayName, tvDayNumber, tvMonthName;
         LinearLayout container;
