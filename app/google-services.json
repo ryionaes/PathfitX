@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "750652798076",
+    "project_id": "pathfitx",
+    "storage_bucket": "pathfitx.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:750652798076:android:f2df2fb084df7de08f45f9",
+        "android_client_info": {
+          "package_name": "com.example.pathfitx"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBvnB_ZT89cKq71oYZq8iU9YJ1E0ZgFZtk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
