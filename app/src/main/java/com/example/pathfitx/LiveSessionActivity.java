@@ -88,10 +88,15 @@ public class LiveSessionActivity extends AppCompatActivity {
             workoutList = new ArrayList<>(); // Avoid null pointer exception
         }
 
-        // 1. Calculate Total Sets
+        // 1. Calculate Total and Completed Sets
         totalSets = 0;
+        completedSets = 0;
         for (Exercise ex : workoutList) {
             totalSets += ex.getSets();
+            // Assuming a method exists to get the number of completed sets for an exercise
+            // This part is crucial and needs to be implemented based on your data structure
+            // For example, if Exercise has a getCompletedSets() method:
+            // completedSets += ex.getCompletedSets();
         }
         progressBar.setMax(totalSets);
 
