@@ -2,20 +2,16 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- LAYER 1: The Blurred Shadow -->
-    <!-- We restrict this to the top 15dp so the gradient is concentrated and visible -->
-    <!-- angle="90" makes it fade from Bottom (Dark) to Top (Transparent) -->
     <item android:gravity="top" android:height="15dp">
         <shape android:shape="rectangle">
             <gradient
-                android:startColor="#ffafa6"
+                android:startColor="#FFE0E0"
                 android:endColor="@android:color/transparent"
                 android:angle="90" />
         </shape>
     </item>
 
     <!-- LAYER 2: The Actual White Background -->
-    <!-- We push this down by 3dp. This reveals the bottom 12dp of the gradient behind it,
-         creating a soft "blurred" shadow effect appearing above the bar. -->
     <item android:top="6dp" android:left="0dp" android:right="0dp" android:bottom="0dp">
         <shape android:shape="rectangle">
             <solid android:color="#FFFFFF"/>

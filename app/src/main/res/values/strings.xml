@@ -5,7 +5,6 @@
     <string name="back_button_desc">Back</string>
     <string name="Male">Male</string>
     <string name="Female">Female</string>
-    <string name="HeyUser">Hey, User. 👋 Let ‘s start with your goals.</string>
 
 
     <string-array name="location_array">
@@ -16,6 +15,5 @@
         <item>Other</item>
     </string-array>
     <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>

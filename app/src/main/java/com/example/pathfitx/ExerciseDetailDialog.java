@@ -9,7 +9,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -49,7 +48,6 @@ public class ExerciseDetailDialog extends DialogFragment {
 
         TextView tvExerciseName = view.findViewById(R.id.tv_exercise_name_detail);
         TextView tvExerciseTags = view.findViewById(R.id.tv_exercise_tags_detail);
-        ImageView ivExerciseImage = view.findViewById(R.id.iv_exercise_image_detail);
         TextView tvMuscleTargets = view.findViewById(R.id.tv_muscle_targets_detail);
         ImageButton btnClose = view.findViewById(R.id.btn_close_detail);
         Button btnAdd = view.findViewById(R.id.btn_add_to_workout_detail);
@@ -62,9 +60,6 @@ public class ExerciseDetailDialog extends DialogFragment {
             muscleTargetsText.append("• ").append(muscle).append("\n");
         }
         tvMuscleTargets.setText(muscleTargetsText.toString().trim());
-
-        // TODO: Load real image with Glide
-        // ivExerciseImage.setImageResource(exercise.getImageResId());
 
         builder.setView(view);
         AlertDialog dialog = builder.create();
