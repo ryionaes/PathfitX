@@ -8,6 +8,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import com.bumptech.glide.Glide;
 import java.util.List;
 
 public class ExerciseAdapter extends RecyclerView.Adapter<ExerciseAdapter.ViewHolder> {
@@ -39,7 +40,13 @@ public class ExerciseAdapter extends RecyclerView.Adapter<ExerciseAdapter.ViewHo
         Exercise exercise = exerciseList.get(position);
         holder.tvTitle.setText(exercise.getTitle());
         holder.tvDetails.setText(exercise.getDetails());
-        holder.imgExercise.setImageResource(exercise.getImageResId());
+        
+        // Use Glide to load image from URL
+        Glide.with(holder.itemView.getContext())
+                .load(exercise.getImageUrl())
+                .placeholder(R.drawable.ic_workout) // Default icon while loading
+                .error(R.drawable.ic_workout)       // Default icon if error
+                .into(holder.imgExercise);
 
         // Set click listener on the "more" button
         holder.btnMore.setOnClickListener(v -> {

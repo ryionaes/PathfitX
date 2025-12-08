@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
+import com.bumptech.glide.Glide;
 
 public class EditExerciseDialog extends DialogFragment {
 
@@ -44,7 +45,13 @@ public class EditExerciseDialog extends DialogFragment {
         View view = inflater.inflate(R.layout.dialog_edit_exercise, null);
 
         // Init Views
-        ((ImageView) view.findViewById(R.id.img_dialog_exercise)).setImageResource(exercise.getImageResId());
+        ImageView imgExercise = view.findViewById(R.id.img_dialog_exercise);
+        Glide.with(this)
+                .load(exercise.getImageUrl())
+                .placeholder(R.drawable.ic_workout)
+                .error(R.drawable.ic_workout)
+                .into(imgExercise);
+
         ((TextView) view.findViewById(R.id.tv_dialog_exercise_name)).setText(exercise.getTitle());
 
         // Setup Inputs

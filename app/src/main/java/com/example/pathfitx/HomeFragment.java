@@ -58,6 +58,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
     private MaterialButton btnSwap, btnAddExercise, btnStartWorkout;
     private Group workoutDetailsGroup;
     private View restDayContainer;
+    private View restDayCard;
 
     private ExerciseAdapter exerciseAdapter;
     private List<Exercise> exerciseList;
@@ -117,6 +118,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         tvWorkoutSubtitle = view.findViewById(R.id.tv_workout_subtitle);
         btnAddExercise = view.findViewById(R.id.btn_add_exercise);
         restDayContainer = view.findViewById(R.id.rest_day_container);
+        restDayCard = view.findViewById(R.id.rest_day_card);
         btnStartWorkout = view.findViewById(R.id.btn_start_workout);
     }
 
@@ -152,12 +154,12 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
 
     private void setupWorkoutTypes() {
         workoutTypes.clear();
-        workoutTypes.add(new WorkoutType("Push Day", R.drawable.ic_launcher_background));
-        workoutTypes.add(new WorkoutType("Pull Day", R.drawable.ic_launcher_background));
-        workoutTypes.add(new WorkoutType("Leg Day", R.drawable.ic_launcher_background));
-        workoutTypes.add(new WorkoutType("Upper Body", R.drawable.ic_launcher_background));
-        workoutTypes.add(new WorkoutType("Cardio & Core", R.drawable.ic_launcher_background));
-        workoutTypes.add(new WorkoutType("Custom Plan", R.drawable.ic_launcher_background));
+        workoutTypes.add(new WorkoutType("Push Day", "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=2070&auto=format&fit=crop"));
+        workoutTypes.add(new WorkoutType("Pull Day", "https://images.unsplash.com/photo-1598971639058-211a74a96aea?q=80&w=2070&auto=format&fit=crop"));
+        workoutTypes.add(new WorkoutType("Leg Day", "https://images.unsplash.com/photo-1574680096145-d05b474e2155?q=80&w=2069&auto=format&fit=crop"));
+        workoutTypes.add(new WorkoutType("Upper Body", "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=2070&auto=format&fit=crop"));
+        workoutTypes.add(new WorkoutType("Cardio & Core", "https://images.unsplash.com/photo-1599058945522-28d584b6f0ff?q=80&w=2069&auto=format&fit=crop"));
+        workoutTypes.add(new WorkoutType("Custom Plan", "https://plus.unsplash.com/premium_photo-1664109999537-088e7d96448d?q=80&w=1974&auto=format&fit=crop"));
         tvWorkoutTitle.setText(selectedWorkout);
     }
 
@@ -367,6 +369,17 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
                 if (muscleTargetsObj instanceof List) {
                     exercise.setMuscleTargets((List<String>) muscleTargetsObj);
                 }
+                
+                // Add imageUrl handling if needed, though ExerciseAdapter handles fetching from firestore map implicitly if fields match.
+                // Assuming "imageUrl" is saved in firestore. If not, old workouts might miss it.
+                // The parseExercisesFromMap is for parsing `workout_templates` from firestore. 
+                // We should add imageUrl parsing if the template has it.
+                
+                if (map.containsKey("imageUrl")) {
+                    exercise.setImageUrl((String) map.get("imageUrl"));
+                } else if (map.containsKey("imageResId")) {
+                    // Fallback or ignore
+                }
 
                 exercise.setAddedToWorkout(true);
                 exercises.add(exercise);
@@ -449,6 +462,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
             workoutDetailsGroup.setVisibility(View.GONE);
             btnAddExercise.setVisibility(View.GONE);
             btnSwap.setVisibility(View.GONE);
+            restDayCard.setVisibility(View.GONE); // Ensure it's visible if it was hidden
         } else if (hasWorkout) {
             tvWorkoutTitle.setText(selectedWorkout);
             int exerciseCount = exerciseList.size();
@@ -466,9 +480,21 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
             btnSwap.setText("Swap");
             btnSwap.setIconResource(R.drawable.ic_swap_horiz);
             workoutDetailsGroup.setVisibility(View.VISIBLE);
-            btnAddExercise.setVisibility(View.VISIBLE);
+            
+            // Logic to hide buttons based on count
+            if (exerciseList.size() >= 3) {
+                btnAddExercise.setVisibility(View.GONE);
+            } else {
+                btnAddExercise.setVisibility(View.VISIBLE);
+            }
+
+            if (exerciseList.size() >= 1) {
+                restDayCard.setVisibility(View.GONE);
+            } else {
+                 restDayCard.setVisibility(View.VISIBLE);
+            }
+
             btnSwap.setVisibility(View.VISIBLE);
-            restDayContainer.setVisibility(View.VISIBLE);
             btnStartWorkout.setVisibility(View.VISIBLE);
         } else { // Empty Day
             tvWorkoutTitle.setText("No Workout Planned");
@@ -479,7 +505,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
             workoutDetailsGroup.setVisibility(View.GONE);
             btnAddExercise.setVisibility(View.VISIBLE);
             btnSwap.setVisibility(View.VISIBLE);
-            restDayContainer.setVisibility(View.VISIBLE);
+            restDayCard.setVisibility(View.VISIBLE);
             btnStartWorkout.setVisibility(View.GONE);
         }
 

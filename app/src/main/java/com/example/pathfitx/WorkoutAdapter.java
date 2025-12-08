@@ -7,6 +7,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import com.bumptech.glide.Glide;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,7 +49,12 @@ public class WorkoutAdapter extends RecyclerView.Adapter<WorkoutAdapter.ViewHold
         Exercise item = exercises.get(position);
         holder.tvName.setText(item.getTitle());
         holder.tvTags.setText(item.getDetails());
-        holder.img.setImageResource(item.getImageResId());
+        
+        Glide.with(holder.itemView.getContext())
+                .load(item.getImageUrl())
+                .placeholder(R.drawable.ic_workout)
+                .error(R.drawable.ic_workout)
+                .into(holder.img);
 
         holder.btnAdd.setImageResource(R.drawable.ic_plus);
 

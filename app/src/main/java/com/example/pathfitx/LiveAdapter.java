@@ -9,6 +9,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import com.bumptech.glide.Glide;
 import java.util.List;
 
 public class LiveAdapter extends RecyclerView.Adapter<LiveAdapter.ViewHolder> {
@@ -36,7 +37,12 @@ public class LiveAdapter extends RecyclerView.Adapter<LiveAdapter.ViewHolder> {
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Exercise exercise = list.get(position);
         holder.tvTitle.setText(exercise.getTitle());
-        holder.img.setImageResource(exercise.getImageResId());
+        
+        Glide.with(holder.itemView.getContext())
+                .load(exercise.getImageUrl())
+                .placeholder(R.drawable.ic_workout)
+                .error(R.drawable.ic_workout)
+                .into(holder.img);
 
         holder.setsContainer.removeAllViews();
 

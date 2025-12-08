@@ -17,7 +17,7 @@ public class Exercise implements Serializable {
 
     private String title;
     private String details;
-    private int imageResId;
+    private String imageUrl;
     private String tags; // e.g., "Hard", "Medium", "Easy"
     private Category category;
     private BodyPart bodyPart;
@@ -31,10 +31,10 @@ public class Exercise implements Serializable {
 
     public Exercise() {}
 
-    public Exercise(String title, String tags, int imageResId, Category category, BodyPart bodyPart, List<String> muscleTargets) {
+    public Exercise(String title, String tags, String imageUrl, Category category, BodyPart bodyPart, List<String> muscleTargets) {
         this.title = title;
         this.tags = tags;
-        this.imageResId = imageResId;
+        this.imageUrl = imageUrl;
         this.category = category;
         this.bodyPart = bodyPart;
         this.muscleTargets = muscleTargets != null ? muscleTargets : new ArrayList<>();
@@ -44,7 +44,7 @@ public class Exercise implements Serializable {
     // Getters
     public String getTitle() { return title; }
     public String getDetails() { return details; }
-    public int getImageResId() { return imageResId; }
+    public String getImageUrl() { return imageUrl; }
     public String getTags() { return tags; }
     public Category getCategory() { return category; }
     public BodyPart getBodyPart() { return bodyPart; }
@@ -57,7 +57,7 @@ public class Exercise implements Serializable {
     // Setters
     public void setTitle(String title) { this.title = title; }
     public void setDetails(String details) { this.details = details; }
-    public void setImageResId(int imageResId) { this.imageResId = imageResId; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     public void setTags(String tags) { this.tags = tags; }
     public void setCategory(Category category) { this.category = category; }
     public void setBodyPart(BodyPart bodyPart) { this.bodyPart = bodyPart; }
