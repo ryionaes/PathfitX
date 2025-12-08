@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F8F9FA"
@@ -70,16 +71,19 @@
         app:layout_constraintTop_toBottomOf="@id/tv_progress_text"/>
 
     <!-- Exercise List -->
+
+    <!-- Finish Button -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_live_workout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="20dp"
         android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/btn_finish"
         app:layout_constraintTop_toBottomOf="@+id/progress_bar"
-        app:layout_constraintBottom_toTopOf="@+id/btn_finish"/>
+        app:layout_constraintVertical_bias="0.0"
+        tools:layout_editor_absoluteX="57dp" />
 
-    <!-- Finish Button -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_finish"
         android:layout_width="match_parent"
