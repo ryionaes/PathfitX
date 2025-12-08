@@ -1,49 +1,65 @@
 package com.example.pathfitx;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Spinner;
+import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class GetInfo extends AppCompatActivity {
 
+    private EditText ageEditText;
+
+    private static final String PREFS_NAME = "UserPrefs";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_get_info);
 
-        ImageButton backBtn;
-        Button nextBtn;
+        ageEditText = findViewById(R.id.ageEditText);
+        ImageButton backBtn = findViewById(R.id.backButton);
+        Button nextBtn = findViewById(R.id.nextButton);
 
-        nextBtn = findViewById(R.id.nextButton);
-        backBtn = findViewById(R.id.backButton);
+        nextBtn.setOnClickListener(v -> {
+            String age = ageEditText.getText().toString();
 
-        backBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Navigate back to getUser
-                Intent intent = new Intent(GetInfo.this, GetGoals.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-                finish();
+            if (age.isEmpty()) {
+                Toast.makeText(GetInfo.this, "Please enter your age", Toast.LENGTH_SHORT).show();
+                return;
             }
+
+            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putString("AGE", age);
+            editor.apply();
+
+            Intent intent = new Intent(GetInfo.this, GetHeight.class);
+            startActivity(intent);
         });
 
+        backBtn.setOnClickListener(v -> {
+            // Navigate back to GetGoals
+            Intent intent = new Intent(GetInfo.this, GetGoals.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            finish();
+        });
 
         setupLocationSpinner();
-
     }
 
-    // SPINNER LOGIC (Kept as is)
     private void setupLocationSpinner() {
         String[] locationData = getResources().getStringArray(R.array.location_array);
         List<String> combinedList = new ArrayList<>(Arrays.asList(locationData));

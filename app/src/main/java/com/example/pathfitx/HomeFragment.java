@@ -3,6 +3,7 @@ package com.example.pathfitx;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri; // Added for Image
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -21,6 +22,8 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide; // Added Glide
+import com.bumptech.glide.signature.ObjectKey; // Added Signature for refresh
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.switchmaterial.SwitchMaterial;
@@ -43,7 +46,8 @@ import java.util.Set;
 public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClickListener, EditExerciseDialog.DialogListener, CalendarAdapter.OnDateClickListener, OptionsBottomSheetFragment.OnOptionSelectedListener, SwapWorkoutBottomSheetFragment.OnOptionSelectedListener {
 
     private static final String TAG = "HomeFragment";
-    private static final String PREFS_NAME = "WorkoutPrefs";
+    private static final String PREFS_NAME = "WorkoutPrefs"; // For Calendar/Workouts
+    private static final String USER_PREFS_NAME = "UserPrefs"; // NEW: For Profile Data
     private static final String KEY_DEFAULT_TIME = "default_time";
     private static final String KEY_DEFAULT_EQUIPMENT = "default_equipment";
     private static final String KEY_SELECTED_DATE = "selected_date";
@@ -52,7 +56,10 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
     private RecyclerView rvCalendar;
     private RecyclerView rvExercises;
     private CalendarAdapter calendarAdapter;
-    private TextView tvYear, tvTimeOption, tvEquipmentOption, tvWorkoutTitle, tvRestDayMessage, tvExerciseCount, tvWorkoutSubtitle;
+
+    // UI Variables
+    private TextView tvYear, tvUserName; // Added tvUserName
+    private TextView tvTimeOption, tvEquipmentOption, tvWorkoutTitle, tvRestDayMessage, tvExerciseCount, tvWorkoutSubtitle;
     private ImageView ivProfileIcon;
     private SwitchMaterial switchRestDay;
     private MaterialButton btnSwap, btnAddExercise, btnStartWorkout;
@@ -89,6 +96,9 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         loadSavedDate();
         loadDefaultOptions();
 
+        // NEW: Load Profile Data (Name & Picture)
+        loadUserProfile();
+
         tvYear.setText(String.valueOf(selectedDate.getYear()));
 
         if (UPLOAD_TEMPLATES_ON_START) {
@@ -102,10 +112,62 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         setupClickListeners();
     }
 
+    // --- UPDATED: onResume to refresh Profile Data ---
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // 1. Load Profile Data (Updates Name & Picture immediately)
+        loadUserProfile();
+
+        // 2. Load Calendar/Workout Data
+        loadSavedDate();
+        int newPosition = calendarAdapter.findPositionForDate(selectedDate);
+        if (newPosition != -1) {
+            calendarAdapter.setSelectedPosition(newPosition);
+        }
+        loadWorkoutsForDate(selectedDate);
+    }
+
+    // --- NEW: Method to load Name and Picture ---
+    private void loadUserProfile() {
+        if (getContext() == null) return;
+        SharedPreferences userPrefs = getContext().getSharedPreferences(USER_PREFS_NAME, Context.MODE_PRIVATE);
+
+        // 1. Update Name (Replaces "saturei")
+        // Make sure you have a TextView with id 'tv_user_name' in fragment_home.xml
+        String username = userPrefs.getString("USERNAME", "Fitness User");
+        if (tvUserName != null) {
+            tvUserName.setText(username);
+        }
+
+        // 2. Update Profile Picture with Glide
+        String imageUriString = userPrefs.getString("PROFILE_IMAGE_URI", null);
+        if (ivProfileIcon != null) {
+            if (imageUriString != null && !imageUriString.isEmpty()) {
+                Glide.with(this)
+                        .load(Uri.parse(imageUriString))
+                        .circleCrop()
+                        .signature(new ObjectKey(System.currentTimeMillis())) // Force refresh
+                        .into(ivProfileIcon);
+            } else {
+                Glide.with(this)
+                        .load(R.drawable.ic_launcher_foreground) // Default image
+                        .circleCrop()
+                        .into(ivProfileIcon);
+            }
+        }
+    }
+
     private void initViews(View view) {
         rvCalendar = view.findViewById(R.id.rv_calendar);
         rvExercises = view.findViewById(R.id.rv_exercises);
         tvYear = view.findViewById(R.id.tv_year);
+
+        // NEW: Initialize User Name TextView
+        // IMPORTANT: Ensure your XML has android:id="@+id/tv_user_name"
+        tvUserName = view.findViewById(R.id.tv_user_name);
+
         ivProfileIcon = view.findViewById(R.id.iv_profile_icon);
         tvTimeOption = view.findViewById(R.id.tv_time_option);
         tvEquipmentOption = view.findViewById(R.id.tv_equipment_option);
@@ -122,7 +184,10 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         btnStartWorkout = view.findViewById(R.id.btn_start_workout);
     }
 
+    // ... (The rest of your code remains exactly the same below) ...
+
     private void loadSavedDate() {
+        if(getContext() == null) return;
         SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         String savedDate = prefs.getString(KEY_SELECTED_DATE, null);
         if (savedDate != null) {
@@ -133,12 +198,14 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
     }
 
     private void saveSelectedDate(LocalDate date) {
+        if(getContext() == null) return;
         SharedPreferences.Editor editor = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit();
         editor.putString(KEY_SELECTED_DATE, date.format(DateTimeFormatter.ISO_LOCAL_DATE));
         editor.apply();
     }
 
     private void loadDefaultOptions() {
+        if(getContext() == null) return;
         SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         selectedTime = prefs.getString(KEY_DEFAULT_TIME, "45 min");
         selectedEquipment = prefs.getString(KEY_DEFAULT_EQUIPMENT, "With Equipment");
@@ -199,25 +266,25 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
 
     private void swapWorkout(String workoutName) {
         if ("Custom Plan".equals(workoutName)) {
-            return; 
+            return;
         }
         isRestDay = false;
         selectedWorkout = workoutName;
 
         db.collection("workout_templates").document(workoutName)
-            .get()
-            .addOnSuccessListener(documentSnapshot -> {
-                if (documentSnapshot.exists()) {
-                    List<HashMap<String, Object>> exercisesMap = (List<HashMap<String, Object>>) documentSnapshot.get("exercises");
-                    exerciseList.clear();
-                    exerciseList.addAll(parseExercisesFromMap(exercisesMap));
-                    saveWorkoutsForDate(selectedDate);
-                    updateUI();
-                } else {
-                    Log.e(TAG, "Workout template not found: " + workoutName);
-                }
-            })
-            .addOnFailureListener(e -> Log.e(TAG, "Error getting workout template", e));
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        List<HashMap<String, Object>> exercisesMap = (List<HashMap<String, Object>>) documentSnapshot.get("exercises");
+                        exerciseList.clear();
+                        exerciseList.addAll(parseExercisesFromMap(exercisesMap));
+                        saveWorkoutsForDate(selectedDate);
+                        updateUI();
+                    } else {
+                        Log.e(TAG, "Workout template not found: " + workoutName);
+                    }
+                })
+                .addOnFailureListener(e -> Log.e(TAG, "Error getting workout template", e));
     }
 
     @Override
@@ -294,17 +361,6 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         btnSwap.setOnClickListener(v -> showSwapWorkoutBottomSheet());
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        loadSavedDate(); 
-        int newPosition = calendarAdapter.findPositionForDate(selectedDate);
-        if (newPosition != -1) {
-            calendarAdapter.setSelectedPosition(newPosition);
-        }
-        loadWorkoutsForDate(selectedDate);
-    }
-
     private void setupCalendar() {
         rvCalendar.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
         List<LocalDate> dates = new ArrayList<>();
@@ -333,7 +389,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
     public void onDateClick(int position) {
         selectedDate = calendarAdapter.getDateAt(position);
         calendarAdapter.setSelectedPosition(position);
-        saveSelectedDate(selectedDate); 
+        saveSelectedDate(selectedDate);
         loadWorkoutsForDate(selectedDate);
     }
 
@@ -369,12 +425,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
                 if (muscleTargetsObj instanceof List) {
                     exercise.setMuscleTargets((List<String>) muscleTargetsObj);
                 }
-                
-                // Add imageUrl handling if needed, though ExerciseAdapter handles fetching from firestore map implicitly if fields match.
-                // Assuming "imageUrl" is saved in firestore. If not, old workouts might miss it.
-                // The parseExercisesFromMap is for parsing `workout_templates` from firestore. 
-                // We should add imageUrl parsing if the template has it.
-                
+
                 if (map.containsKey("imageUrl")) {
                     exercise.setImageUrl((String) map.get("imageUrl"));
                 } else if (map.containsKey("imageResId")) {
@@ -462,7 +513,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
             workoutDetailsGroup.setVisibility(View.GONE);
             btnAddExercise.setVisibility(View.GONE);
             btnSwap.setVisibility(View.GONE);
-            restDayCard.setVisibility(View.GONE); // Ensure it's visible if it was hidden
+            restDayCard.setVisibility(View.GONE);
         } else if (hasWorkout) {
             tvWorkoutTitle.setText(selectedWorkout);
             int exerciseCount = exerciseList.size();
@@ -480,8 +531,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
             btnSwap.setText("Swap");
             btnSwap.setIconResource(R.drawable.ic_swap_horiz);
             workoutDetailsGroup.setVisibility(View.VISIBLE);
-            
-            // Logic to hide buttons based on count
+
             if (exerciseList.size() >= 3) {
                 btnAddExercise.setVisibility(View.GONE);
             } else {
@@ -491,7 +541,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
             if (exerciseList.size() >= 1) {
                 restDayCard.setVisibility(View.GONE);
             } else {
-                 restDayCard.setVisibility(View.VISIBLE);
+                restDayCard.setVisibility(View.VISIBLE);
             }
 
             btnSwap.setVisibility(View.VISIBLE);
@@ -551,9 +601,9 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
             templateData.put("exercises", exercises);
 
             db.collection("workout_templates").document(templateName)
-                .set(templateData)
-                .addOnSuccessListener(aVoid -> Log.d(TAG, "Template '" + templateName + "' uploaded successfully."))
-                .addOnFailureListener(e -> Log.e(TAG, "Error uploading template '" + templateName + "'", e));
+                    .set(templateData)
+                    .addOnSuccessListener(aVoid -> Log.d(TAG, "Template '" + templateName + "' uploaded successfully."))
+                    .addOnFailureListener(e -> Log.e(TAG, "Error uploading template '" + templateName + "'", e));
         }
     }
 }

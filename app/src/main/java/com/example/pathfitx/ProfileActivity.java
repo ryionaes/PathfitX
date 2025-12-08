@@ -14,7 +14,7 @@ public class ProfileActivity extends AppCompatActivity {
         setContentView(R.layout.fragment_profile);
 
         // --- 1. SETUP DROPDOWNS (Existing Code) ---
-        setupDropdown(R.id.btnNotifications, R.id.contentNotifications);
+        setupDropdown(R.id.btnNotifications, R.id.btnNotifications);
         setupDropdown(R.id.btnSettings, R.id.contentHelp);
         setupDropdown(R.id.btnPrivacy, R.id.contentAbout);
 

@@ -25,25 +25,42 @@
             app:layout_constraintTop_toTopOf="parent"
             android:layout_marginTop="20dp"/>
 
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cvProfileImage"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            app:cardCornerRadius="50dp"
-            app:cardElevation="0dp"
+        <FrameLayout
+            android:id="@+id/layoutProfileImageContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
             app:layout_constraintTop_toBottomOf="@+id/tvHeader"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
 
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cvProfileImage"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                app:cardCornerRadius="50dp"
+                app:cardElevation="4dp">
+
+                <ImageView
+                    android:id="@+id/ivProfile"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@android:drawable/sym_def_app_icon"
+                    android:scaleType="centerCrop"
+                    android:background="#EEEEEE"/>
+            </androidx.cardview.widget.CardView>
+
             <ImageView
-                android:id="@+id/ivProfile"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:src="@android:drawable/sym_def_app_icon"
-                android:scaleType="centerCrop"
-                android:background="#EEEEEE"/>
-        </androidx.cardview.widget.CardView>
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@android:drawable/ic_menu_camera"
+                android:background="@drawable/bg_card_goals"
+                android:backgroundTint="#444444"
+                android:padding="6dp"
+                android:layout_gravity="bottom|end"
+                android:elevation="6dp"
+                app:tint="#FFFFFF"/>
+        </FrameLayout>
 
         <TextView
             android:id="@+id/tvUserName"
@@ -54,7 +71,7 @@
             android:fontFamily="sans-serif-medium"
             android:textColor="#000000"
             android:layout_marginTop="12dp"
-            app:layout_constraintTop_toBottomOf="@+id/cvProfileImage"
+            app:layout_constraintTop_toBottomOf="@+id/layoutProfileImageContainer"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
 
@@ -79,6 +96,7 @@
                 android:gravity="center"
                 android:orientation="vertical">
                 <TextView
+                    android:id="@+id/tvWeight"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="65kg"
@@ -105,6 +123,7 @@
                 android:gravity="center"
                 android:orientation="vertical">
                 <TextView
+                    android:id="@+id/tvHeight"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="180cm"
@@ -131,6 +150,7 @@
                 android:gravity="center"
                 android:orientation="vertical">
                 <TextView
+                    android:id="@+id/tvAge"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="19"
@@ -151,25 +171,59 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_marginTop="32dp"
-            app:layout_constraintTop_toBottomOf="@+id/statsRow">
+            android:layout_marginBottom="24dp"
+            app:layout_constraintTop_toBottomOf="@+id/statsRow"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
-            <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/btnEditProfile"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:text="Account Information"
-                android:textColor="#000000"
-                android:textSize="16sp"
-                android:fontFamily="sans-serif-medium"
-                android:background="@drawable/bg_card_goals"
-                android:drawableStart="@android:drawable/ic_menu_edit"
-                android:drawablePadding="16dp"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp"
-                android:gravity="start|center_vertical"
-                android:textAllCaps="false"
-                android:layout_marginBottom="16dp"
-                app:drawableTint="#000000"/>
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="16dp">
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btnEditProfile"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:text="Account Information"
+                    android:textColor="#000000"
+                    android:textSize="16sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:background="@drawable/bg_card_goals"
+                    android:drawableStart="@android:drawable/ic_menu_edit"
+                    android:drawablePadding="16dp"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
+                    android:gravity="start|center_vertical"
+                    android:textAllCaps="false"
+                    android:layout_marginBottom="16dp"
+                    app:drawableTint="#000000"/>
+
+                <LinearLayout
+                    android:id="@+id/layoutAccountDetails"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    android:padding="16dp"
+                    android:background="#F0F0F0">
+
+                    <TextView
+                        android:id="@+id/contentAccountInfo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <Button
+                        android:id="@+id/btnOpenEditDialog"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Edit" />
+
+                </LinearLayout>
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -186,22 +240,51 @@
                     android:textSize="16sp"
                     android:fontFamily="sans-serif-medium"
                     android:background="@drawable/bg_card_clickable"
+                    android:backgroundTint="#FFFFFF"
                     android:gravity="start|center_vertical"
                     android:paddingStart="20dp"
-                    android:paddingEnd="20dp"
+                    android:paddingEnd="30dp"
                     android:textAllCaps="false"
                     android:drawableEnd="@android:drawable/arrow_down_float"
                     android:drawableTint="#8F90A6"
-                    android:stateListAnimator="@null"/>
+                    android:stateListAnimator="@null"
+                    android:elevation="2dp"/>
 
-                <TextView
-                    android:id="@+id/contentNotifications"
+                <LinearLayout
+                    android:id="@+id/layoutNotificationSettings"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="• Drink water reminder: ON\n• Workout alerts: OFF"
+                    android:orientation="vertical"
+                    android:background="#E8E8E8"
                     android:padding="16dp"
-                    android:background="#F0F0F0"
-                    android:visibility="gone"/>
+                    android:visibility="gone">
+
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switchWaterReminder"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Drink Water Reminder"
+                        android:textColor="#444444"
+                        android:textSize="14sp"
+                        android:checked="true"/>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#D1D1D6"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="8dp"/>
+
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switchWorkoutAlerts"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Workout Alerts"
+                        android:textColor="#444444"
+                        android:textSize="14sp"
+                        android:checked="false"/>
+
+                </LinearLayout>
             </LinearLayout>
 
             <LinearLayout

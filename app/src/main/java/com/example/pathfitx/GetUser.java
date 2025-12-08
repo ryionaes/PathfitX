@@ -1,29 +1,30 @@
 package com.example.pathfitx;
 
 import android.content.Intent;
+import android.content.SharedPreferences; // 1. Import SharedPreferences
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton; // Import for ImageButton
-import android.widget.Toast; // Import for showing messages
+import android.widget.ImageButton;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets; // Import Insets
+import androidx.core.view.ViewCompat; // Import ViewCompat
+import androidx.core.view.WindowInsetsCompat; // Import WindowInsetsCompat
 
 public class GetUser extends AppCompatActivity {
 
-    // Define constants for the navigation keys
     private static final String KEY_NAV_SOURCE = "NAV_SOURCE";
     private static final String SOURCE_PROFILE = "PROFILE";
+    private static final String PREFS_NAME = "UserPrefs"; // Name of the storage file
 
-    // Define variables for the UI elements
     ImageButton backButton;
     Button nextButton;
     EditText getUser;
-
-    // Variable to hold the source of navigation
     private String navigationSource;
 
     @Override
@@ -32,24 +33,35 @@ public class GetUser extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_get_user);
 
-        // Retrieve the navigation source flag from the Intent
-        // If coming from ProfileActivity, it will have the "PROFILE" source.
+        // Handle Window Insets (Fixes layout overlapping with system bars)
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+
         navigationSource = getIntent().getStringExtra(KEY_NAV_SOURCE);
 
         backButton = findViewById(R.id.backButton);
         nextButton = findViewById(R.id.nextButton);
         getUser = findViewById(R.id.inputText);
 
-        // --- Back Button Logic ---
+        // --- PRE-FILL DATA IF EDITING ---
+        if (SOURCE_PROFILE.equals(navigationSource)) {
+            nextButton.setText("SAVE");
+
+            // Optional: If you passed the current name from ProfileActivity, show it here
+            // String currentName = getIntent().getStringExtra("CURRENT_NAME");
+            // if(currentName != null) getUser.setText(currentName);
+        }
+
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // If editing from Profile, go back to Profile. Otherwise, go to MainActivity.
                 if (SOURCE_PROFILE.equals(navigationSource)) {
-                    finish(); // Simply closes GetUser and returns to the previous activity (ProfileActivity)
+                    finish();
                 } else {
                     Intent intent = new Intent(GetUser.this, MainActivity.class);
-                    // Flags ensure proper back stack management
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
                     finish();
@@ -57,30 +69,27 @@ public class GetUser extends AppCompatActivity {
             }
         });
 
-        // --- Next/Save Button Logic ---
         nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //Setting the user input
                 String username = getUser.getText().toString().trim();
 
                 if (username.isEmpty()) {
                     Toast.makeText(GetUser.this, "Please enter your username.", Toast.LENGTH_SHORT).show();
-                    return; // Stop execution if input is empty
+                    return;
                 }
 
-                // If coming from ProfileActivity (edit mode)
                 if (SOURCE_PROFILE.equals(navigationSource)) {
-                    // 1. Save the updated username (You'll need to implement actual data saving here, e.g., SharedPreferences)
-                    // For now, let's just show a toast:
-                    Toast.makeText(GetUser.this, "Username saved: " + username, Toast.LENGTH_SHORT).show();
+                    // *** ADDED: ACTUALLY SAVE THE DATA ***
+                    SharedPreferences.Editor editor = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit();
+                    editor.putString("USERNAME", username);
+                    editor.apply();
+                    // *************************************
 
-                    // 2. Return to the ProfileActivity
+                    Toast.makeText(GetUser.this, "Username saved!", Toast.LENGTH_SHORT).show();
                     finish();
-
                 } else {
-                    // If coming from MainActivity (new user flow)
-                    // 1. Pass the username to the next screen (GetGoals)
+                    // New User Flow
                     Intent intent = new Intent(GetUser.this, GetGoals.class);
                     intent.putExtra("USERNAME", username);
                     startActivity(intent);
@@ -88,11 +97,9 @@ public class GetUser extends AppCompatActivity {
             }
         });
 
-        // --- System Back Button Logic (OnBackPressed) ---
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                // Use the same logic as the ImageButton: return to Profile if editing, otherwise MainActivity
                 if (SOURCE_PROFILE.equals(navigationSource)) {
                     finish();
                 } else {
@@ -103,13 +110,5 @@ public class GetUser extends AppCompatActivity {
                 }
             }
         });
-
-        // --- UI Adjustment for Edit Mode ---
-        if (SOURCE_PROFILE.equals(navigationSource)) {
-            // Optional: Change button text from "Next" to "Save" when editing
-            nextButton.setText("SAVE");
-            // Optional: Pre-fill the EditText with the current user's name (requires passing current name from ProfileActivity)
-            // Example: getUser.setText("Joshua");
-        }
     }
 }
