@@ -40,6 +40,7 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
 
     private static final String TAG = "WorkoutFragment";
     private static final String PREFS_NAME = "WorkoutPrefs";
+    private static final String USER_PREFS_NAME = "UserPrefs";
     private static final String KEY_SELECTED_DATE = "selected_date";
     private static final String KEY_DEFAULT_TIME = "default_time";
     private static final String KEY_DEFAULT_EQUIPMENT = "default_equipment";
@@ -58,7 +59,7 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
 
     private FirebaseFirestore db;
     private String selectedDate;
-    private final String userId = "testUser"; // Placeholder
+    private String userId;
 
     @Nullable
     @Override
@@ -72,7 +73,7 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
         super.onViewCreated(view, savedInstanceState);
         db = FirebaseFirestore.getInstance();
         initViews(view);
-        loadSelectedDate();
+        loadUserAndDateInfo();
         setupList();
         setupSearch();
         setupCategoryFilters();
@@ -98,10 +99,24 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private void loadSelectedDate() {
+    private void loadUserAndDateInfo() {
         if (getContext() == null) return;
-        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        selectedDate = prefs.getString(KEY_SELECTED_DATE, LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
+
+        SharedPreferences userPrefs = getContext().getSharedPreferences(USER_PREFS_NAME, Context.MODE_PRIVATE);
+        userId = userPrefs.getString("USERNAME", null);
+        if (userId == null) {
+            Log.e(TAG, "User ID not found. This is a critical bug.");
+            Toast.makeText(getContext(), "Error: Not logged in.", Toast.LENGTH_SHORT).show();
+            // Optionally, navigate back to login
+            return;
+        }
+
+        if (getArguments() != null && getArguments().getString("selectedDate") != null) {
+            selectedDate = getArguments().getString("selectedDate");
+        } else {
+            SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            selectedDate = prefs.getString(KEY_SELECTED_DATE, LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
+        }
     }
 
     private void setupList() {
@@ -201,7 +216,6 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onExerciseAdd(Exercise exercise, WorkoutAdapter.AddExerciseCallback callback) {
-        loadSelectedDate(); // Always get the latest date
         addExerciseToWorkout(exercise, callback);
     }
 
@@ -213,7 +227,6 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void addExerciseToWorkout(Exercise exercise, WorkoutAdapter.AddExerciseCallback callback) {
-        loadSelectedDate(); // Always get the latest date
         exercise.setAddedToWorkout(true);
         String dateId = this.selectedDate;
         DocumentReference workoutDocRef = db.collection("users").document(userId).collection("workouts").document(dateId);

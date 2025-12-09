@@ -101,8 +101,8 @@ public class GetHeight extends AppCompatActivity {
             // 2. *** CRITICAL STEP: SAVE ALL DATA TO SHARED PREFERENCES ***
             saveUserData(heightTextCm, weightTextKg);
 
-            // 3. Navigation to the Home Screen
-            Intent nextIntent = new Intent(GetHeight.this, HomeScreen.class);
+            // 3. Navigation to the Welcome Screen
+            Intent nextIntent = new Intent(GetHeight.this, WelcomePage.class);
 
             // Passing extras is optional now that data is saved, but you can keep it
             nextIntent.putExtra("USERNAME", username);

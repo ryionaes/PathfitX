@@ -164,11 +164,11 @@ public class ProfileFragment extends Fragment {
                 SharedPreferences userPrefs = getContext().getSharedPreferences(USER_PREFS, Context.MODE_PRIVATE);
                 SharedPreferences workoutPrefs = getContext().getSharedPreferences(WORKOUT_PREFS, Context.MODE_PRIVATE);
 
-                userPrefs.edit().clear().commit(); // Clear Profile Data
-                workoutPrefs.edit().clear().commit(); // Clear Home Data
+                userPrefs.edit().clear().commit(); // Use commit for synchronous save
+                workoutPrefs.edit().clear().commit(); // Use commit for synchronous save
 
-                // 2. Navigate to Welcome Page
-                Intent intent = new Intent(getActivity(), WelcomePage.class);
+                // 2. Navigate to Main Activity
+                Intent intent = new Intent(getActivity(), MainActivity.class);
 
                 // 3. Clear the Back Stack (Cannot go back to Profile)
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

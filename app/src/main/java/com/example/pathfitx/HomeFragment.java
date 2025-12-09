@@ -71,7 +71,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
     private List<Exercise> exerciseList;
     private FirebaseFirestore db;
     private LocalDate selectedDate;
-    private final String userId = "testUser"; // Placeholder
+    private String userId;
 
     private ArrayList<String> timeOptions = new ArrayList<>(Arrays.asList("15 min", "30 min", "45 min", "1 hr", "1 hr, 30 min"));
     private ArrayList<String> equipmentOptions = new ArrayList<>(Arrays.asList("With Equipment", "No Equipment"));
@@ -137,6 +137,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         // 1. Update Name (Replaces "saturei")
         // Make sure you have a TextView with id 'tv_user_name' in fragment_home.xml
         String username = userPrefs.getString("USERNAME", "Fitness User");
+        userId = userPrefs.getString("USERNAME", "testUser");
         if (tvUserName != null) {
             tvUserName.setText(username);
         }

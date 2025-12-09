@@ -1,17 +1,22 @@
 package com.example.pathfitx;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -28,6 +33,9 @@ import java.util.Locale;
 import java.util.Map;
 
 public class LiveSessionActivity extends AppCompatActivity {
+
+    private static final String TAG = "LiveSessionActivity";
+    private static final String USER_PREFS_NAME = "UserPrefs";
 
     // UI
     private TextView tvTimer, tvProgressText;
@@ -46,7 +54,8 @@ public class LiveSessionActivity extends AppCompatActivity {
     private int totalSets = 0;
     private int completedSets = 0;
     private List<Exercise> workoutList;
-    private String workoutName = "My Workout"; // You might want to pass this in intent
+    private String workoutName = "My Workout";
+    private String userId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +68,14 @@ public class LiveSessionActivity extends AppCompatActivity {
         btnPause = findViewById(R.id.btn_pause);
         rvLiveWorkout = findViewById(R.id.rv_live_workout);
 
+        loadUserId();
+
+        if (userId == null) {
+            Toast.makeText(this, "Error: User not logged in. Cannot save progress.", Toast.LENGTH_LONG).show();
+            finish(); // Close the activity if user is not identified
+            return;
+        }
+
         if (getIntent().hasExtra("workoutName")) {
             workoutName = getIntent().getStringExtra("workoutName");
         }
@@ -67,6 +84,14 @@ public class LiveSessionActivity extends AppCompatActivity {
         setupListAndProgress();
 
         findViewById(R.id.btn_finish).setOnClickListener(v -> finishWorkout());
+    }
+
+    private void loadUserId() {
+        SharedPreferences userPrefs = getSharedPreferences(USER_PREFS_NAME, Context.MODE_PRIVATE);
+        userId = userPrefs.getString("USERNAME", null);
+        if (userId == null) {
+            Log.e(TAG, "User ID is null. This is a critical error.");
+        }
     }
 
     private void setupTimer() {
@@ -105,10 +130,9 @@ public class LiveSessionActivity extends AppCompatActivity {
     private void setupListAndProgress() {
         workoutList = (List<Exercise>) getIntent().getSerializableExtra("exerciseList");
         if (workoutList == null) {
-            workoutList = new ArrayList<>(); 
+            workoutList = new ArrayList<>();
         }
 
-        // 1. Calculate Total and Completed Sets
         totalSets = 0;
         completedSets = 0;
         for (Exercise ex : workoutList) {
@@ -116,7 +140,6 @@ public class LiveSessionActivity extends AppCompatActivity {
         }
         progressBar.setMax(totalSets);
 
-        // 2. Setup Adapter with Listener
         LiveAdapter adapter = new LiveAdapter(workoutList, isCompleted -> {
             if (isCompleted) {
                 completedSets++;
@@ -128,7 +151,7 @@ public class LiveSessionActivity extends AppCompatActivity {
 
         rvLiveWorkout.setLayoutManager(new LinearLayoutManager(this));
         rvLiveWorkout.setAdapter(adapter);
-        updateProgress(); // Initial progress update
+        updateProgress();
     }
 
     private void updateProgress() {
@@ -138,35 +161,27 @@ public class LiveSessionActivity extends AppCompatActivity {
     }
 
     private void finishWorkout() {
-        // Stop timer
         timeSwapBuff += System.currentTimeMillis() - startTime;
         timerHandler.removeCallbacks(updateTimerThread);
         isRunning = false;
 
-        // Calculate stats
         int durationSeconds = (int) (updateTime / 1000);
         int totalVolume = 0;
-        
+
         for (Exercise ex : workoutList) {
-             totalVolume += (ex.getKg() * ex.getReps() * ex.getSets()); 
+            totalVolume += (ex.getKg() * ex.getReps() * ex.getSets());
         }
 
         int completionRate = (totalSets > 0) ? (completedSets * 100 / totalSets) : 0;
         int exercisesCount = workoutList.size();
 
         showSummaryDialog(durationSeconds, totalVolume, exercisesCount, completionRate);
-        // We will save inside the dialog's Close button or when name is finalized if needed.
-        // But for simplicity, we save here with current name, but we might want to update it if user edits it.
-        // Better: Pass the data to saveWorkoutToHistory but call it AFTER dialog closes or when user confirms.
-        // However, standard UX is save immediately or save on close.
-        // Let's modify showSummaryDialog to handle saving after editing.
     }
 
     private void showSummaryDialog(int durationSeconds, int totalVolume, int exercisesCount, int completionRate) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         View view = LayoutInflater.from(this).inflate(R.layout.dialog_workout_summary, null);
 
-        // EDITABLE MODE
         EditText etTitle = view.findViewById(R.id.etWorkoutTitle);
         TextView tvTitle = view.findViewById(R.id.tvWorkoutTitle);
         ImageView ivEdit = view.findViewById(R.id.ivEditIcon);
@@ -174,7 +189,7 @@ public class LiveSessionActivity extends AppCompatActivity {
         etTitle.setVisibility(View.VISIBLE);
         tvTitle.setVisibility(View.GONE);
         ivEdit.setVisibility(View.VISIBLE);
-        
+
         etTitle.setText(workoutName);
 
         ((TextView) view.findViewById(R.id.tvDurationValue)).setText((durationSeconds / 60) + " min");
@@ -189,14 +204,13 @@ public class LiveSessionActivity extends AppCompatActivity {
         dialog.show();
 
         View.OnClickListener closeAction = v -> {
-            // Update workout name from EditText before saving
             String finalName = etTitle.getText().toString().trim();
             if (!finalName.isEmpty()) {
                 workoutName = finalName;
             }
             saveWorkoutToHistory(durationSeconds, totalVolume, completionRate, exercisesCount);
             dialog.dismiss();
-            finish(); 
+            finish();
         };
 
         view.findViewById(R.id.btnClose).setOnClickListener(closeAction);
@@ -204,13 +218,16 @@ public class LiveSessionActivity extends AppCompatActivity {
     }
 
     private void saveWorkoutToHistory(int durationSeconds, int totalVolume, int completionRate, int exercisesCount) {
+        if (userId == null) {
+            Log.e(TAG, "Cannot save history, user ID is null.");
+            return;
+        }
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        String userId = "testUser"; // Replace with actual user ID management
         String dateId = "";
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             dateId = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
         } else {
-             dateId = String.valueOf(System.currentTimeMillis());
+            dateId = String.valueOf(System.currentTimeMillis());
         }
 
         Map<String, Object> historyData = new HashMap<>();
@@ -223,12 +240,12 @@ public class LiveSessionActivity extends AppCompatActivity {
         historyData.put("date", dateId);
 
         db.collection("users").document(userId).collection("history")
-                .add(historyData) // Use add() to generate unique ID for each history entry
+                .add(historyData)
                 .addOnSuccessListener(documentReference -> {
-                    // Success
+                    Log.d(TAG, "Workout history saved successfully for user: " + userId);
                 })
                 .addOnFailureListener(e -> {
-                    // Failure
+                    Log.e(TAG, "Error saving workout history for user: " + userId, e);
                 });
     }
 }

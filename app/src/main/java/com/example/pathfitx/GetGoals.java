@@ -89,8 +89,8 @@ public class GetGoals extends AppCompatActivity {
                     return; // Prevent navigation if no goals are selected
                 }
 
-                // Navigate to the next screen (GetHeight)
-                Intent intent = new Intent(GetGoals.this, GetHeight.class);
+                // Navigate to the next screen (GetInfo)
+                Intent intent = new Intent(GetGoals.this, GetInfo.class);
 
                 // Pass the essential data to the next activity
                 intent.putExtra("USERNAME", username);

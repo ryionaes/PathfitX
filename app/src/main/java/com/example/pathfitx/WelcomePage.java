@@ -50,7 +50,7 @@ public class WelcomePage extends AppCompatActivity {
             editor.putBoolean(FIRST_TIME_KEY, false);
             editor.apply();
 
-            Intent intent = new Intent(WelcomePage.this, GetHeight.class);
+            Intent intent = new Intent(WelcomePage.this, HomeScreen.class);
             startActivity(intent);
             finish();
         });

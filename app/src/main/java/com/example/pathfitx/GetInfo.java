@@ -22,11 +22,17 @@ public class GetInfo extends AppCompatActivity {
     private EditText ageEditText;
 
     private static final String PREFS_NAME = "UserPrefs";
+    private String username;
+    private ArrayList<String> selectedGoals;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_get_info);
+
+        // Get data from previous intent
+        username = getIntent().getStringExtra("USERNAME");
+        selectedGoals = getIntent().getStringArrayListExtra("SELECTED_GOALS");
 
         ageEditText = findViewById(R.id.ageEditText);
         ImageButton backBtn = findViewById(R.id.backButton);
@@ -46,6 +52,9 @@ public class GetInfo extends AppCompatActivity {
             editor.apply();
 
             Intent intent = new Intent(GetInfo.this, GetHeight.class);
+            // Pass data to the next intent
+            intent.putExtra("USERNAME", username);
+            intent.putStringArrayListExtra("SELECTED_GOALS", selectedGoals);
             startActivity(intent);
         });
 

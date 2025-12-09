@@ -1,5 +1,7 @@
 package com.example.pathfitx;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -9,12 +11,14 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
@@ -25,12 +29,15 @@ import java.util.List;
 
 public class ProgressFragment extends Fragment {
 
+    private static final String TAG = "ProgressFragment";
+    private static final String USER_PREFS_NAME = "UserPrefs";
+
     private RecyclerView rvHistory;
     private HistoryAdapter adapter;
     private List<WorkoutHistory> historyList;
     private TextView tvVolumeValue, valWorkouts, valCalories;
     private FirebaseFirestore db;
-    private final String userId = "testUser"; // Consistent with HomeFragment
+    private String userId;
 
     public ProgressFragment() {
         // Required empty public constructor
@@ -50,15 +57,30 @@ public class ProgressFragment extends Fragment {
         db = FirebaseFirestore.getInstance();
         historyList = new ArrayList<>();
         adapter = new HistoryAdapter(historyList);
-        
+
         adapter.setOnHistoryItemClickListener(this::showWorkoutSummaryDialog);
 
         rvHistory.setLayoutManager(new LinearLayoutManager(getContext()));
         rvHistory.setAdapter(adapter);
 
-        loadHistoryData();
+        loadUserId();
+        if (userId != null) {
+            loadHistoryData();
+        } else {
+            // Handle the case where user ID is null (e.g., show a message)
+            Toast.makeText(getContext(), "Error: User not logged in.", Toast.LENGTH_SHORT).show();
+        }
 
         return view;
+    }
+
+    private void loadUserId() {
+        if (getContext() == null) return;
+        SharedPreferences userPrefs = getContext().getSharedPreferences(USER_PREFS_NAME, Context.MODE_PRIVATE);
+        userId = userPrefs.getString("USERNAME", null);
+        if (userId == null) {
+            Log.e(TAG, "User ID is null. Cannot load progress.");
+        }
     }
 
     private void loadHistoryData() {
@@ -75,17 +97,19 @@ public class ProgressFragment extends Fragment {
                         for (QueryDocumentSnapshot document : task.getResult()) {
                             WorkoutHistory item = document.toObject(WorkoutHistory.class);
                             historyList.add(item);
-                            
+
                             totalVol += item.getTotalVolume();
                             totalWorkouts++;
-                            totalCalories += (item.getDurationSeconds() / 60) * 5; 
+                            totalCalories += (item.getDurationSeconds() / 60) * 5;
                         }
-                        
+
                         adapter.notifyDataSetChanged();
-                        
+
                         tvVolumeValue.setText(String.format("%,d", totalVol));
                         valWorkouts.setText(String.valueOf(totalWorkouts));
                         valCalories.setText(String.format("%,d", totalCalories));
+                    } else {
+                        Log.e(TAG, "Error loading history data for user: " + userId, task.getException());
                     }
                 });
     }
