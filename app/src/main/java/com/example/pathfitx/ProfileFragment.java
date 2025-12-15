@@ -2,17 +2,15 @@ package com.example.pathfitx;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.Intent; // Import for Navigation
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -23,12 +21,12 @@ import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.AppCompatButton;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.signature.ObjectKey;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
 import java.util.Set;
@@ -37,26 +35,33 @@ public class ProfileFragment extends Fragment {
 
     // --- UI Elements ---
     private TextView tvUserName, tvWeight, tvHeight, tvAge;
-    private AppCompatButton btnEditProfile, btnNotifications, btnSettings, btnPrivacy, btnLogout;
+    // REMOVED: private TextView tvMemberStatus; (Deleted to match your XML)
+
+    private TextView tvEditProfile; // The clickable "Edit Profile" text
+
+    // Menu Cards
+    private CardView btnEditProfile, btnNotifications, btnSettings, btnPrivacy;
+    private MaterialButton btnLogout;
 
     // Image Elements
-    private FrameLayout layoutProfileImageContainer;
     private CardView cvProfileImage;
+    private View btnCamera;
     private ImageView ivProfile;
 
-    // --- Content Views ---
-    private TextView contentAccountInfo, contentHelp, contentAbout;
-    private LinearLayout layoutAccountDetails;
+    // --- Content Views (Expandable sections) ---
+    private TextView contentAccountInfo;
+    private LinearLayout layoutAccountDetails, contentHelp, contentAbout;
+    private LinearLayout layoutNotificationSettings;
+
     private Button btnOpenEditDialog;
 
-    // --- Notification Views ---
-    private LinearLayout layoutNotificationSettings;
+    // --- Switches ---
     private SwitchMaterial switchWaterReminder, switchWorkoutAlerts;
 
     // --- Image Picker ---
     private ActivityResultLauncher<PickVisualMediaRequest> pickMedia;
 
-    // Preference File Names (To clear on logout)
+    // Preference File Names
     private static final String USER_PREFS = "UserPrefs";
     private static final String WORKOUT_PREFS = "WorkoutPrefs";
 
@@ -88,15 +93,20 @@ public class ProfileFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Initialize Views
+        // --- Initialize Views ---
         tvUserName = view.findViewById(R.id.tvUserName);
         tvWeight = view.findViewById(R.id.tvWeight);
         tvHeight = view.findViewById(R.id.tvHeight);
         tvAge = view.findViewById(R.id.tvAge);
 
-        layoutProfileImageContainer = view.findViewById(R.id.layoutProfileImageContainer);
+        // This is the clickable text below the name
+        tvEditProfile = view.findViewById(R.id.tvEditProfile);
+
+        // REMOVED: tvMemberStatus = view.findViewById(R.id.tvMemberStatus);
+
         cvProfileImage = view.findViewById(R.id.cvProfileImage);
         ivProfile = view.findViewById(R.id.ivProfile);
+        btnCamera = view.findViewById(R.id.btnCamera);
 
         btnEditProfile = view.findViewById(R.id.btnEditProfile);
         btnNotifications = view.findViewById(R.id.btnNotifications);
@@ -120,16 +130,22 @@ public class ProfileFragment extends Fragment {
     }
 
     private void setupListeners() {
-        // Image Click
+        // --- Image Click Listener ---
         View.OnClickListener imageClickListener = v -> {
             pickMedia.launch(new PickVisualMediaRequest.Builder()
                     .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
                     .build());
         };
-        if (layoutProfileImageContainer != null) layoutProfileImageContainer.setOnClickListener(imageClickListener);
+
+        if (btnCamera != null) btnCamera.setOnClickListener(imageClickListener);
         if (cvProfileImage != null) cvProfileImage.setOnClickListener(imageClickListener);
 
-        // Account Info Toggle
+        // --- Edit Profile (Red Text Click) ---
+        if (tvEditProfile != null) {
+            tvEditProfile.setOnClickListener(v -> showEditProfileDialog());
+        }
+
+        // --- Expand Account Info ---
         if (btnEditProfile != null) {
             btnEditProfile.setOnClickListener(v -> {
                 contentAccountInfo.setText(getFullUserDetails());
@@ -137,17 +153,17 @@ public class ProfileFragment extends Fragment {
             });
         }
 
-        // Edit Dialog
+        // --- Edit Dialog Button ---
         if (btnOpenEditDialog != null) {
             btnOpenEditDialog.setOnClickListener(v -> showEditProfileDialog());
         }
 
-        // Other Toggles
+        // --- Expand Other Sections ---
         if (btnNotifications != null) btnNotifications.setOnClickListener(v -> toggleVisibility(layoutNotificationSettings));
         if (btnSettings != null) btnSettings.setOnClickListener(v -> toggleVisibility(contentHelp));
         if (btnPrivacy != null) btnPrivacy.setOnClickListener(v -> toggleVisibility(contentAbout));
 
-        // Switches
+        // --- Switches ---
         if (switchWaterReminder != null) {
             switchWaterReminder.setOnCheckedChangeListener((buttonView, isChecked) -> saveNotificationPreference("NOTIF_WATER", isChecked));
         }
@@ -155,27 +171,21 @@ public class ProfileFragment extends Fragment {
             switchWorkoutAlerts.setOnCheckedChangeListener((buttonView, isChecked) -> saveNotificationPreference("NOTIF_WORKOUT", isChecked));
         }
 
-        // --- LOG OUT BUTTON LOGIC ---
+        // --- Log Out ---
         if (btnLogout != null) {
             btnLogout.setOnClickListener(v -> {
                 if (getContext() == null) return;
 
-                // 1. Clear All Saved Data
                 SharedPreferences userPrefs = getContext().getSharedPreferences(USER_PREFS, Context.MODE_PRIVATE);
                 SharedPreferences workoutPrefs = getContext().getSharedPreferences(WORKOUT_PREFS, Context.MODE_PRIVATE);
 
-                userPrefs.edit().clear().commit(); // Use commit for synchronous save
-                workoutPrefs.edit().clear().commit(); // Use commit for synchronous save
+                userPrefs.edit().clear().commit();
+                workoutPrefs.edit().clear().commit();
 
-                // 2. Navigate to Main Activity
                 Intent intent = new Intent(getActivity(), MainActivity.class);
-
-                // 3. Clear the Back Stack (Cannot go back to Profile)
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-
                 startActivity(intent);
 
-                // 4. Show Toast
                 Toast.makeText(getContext(), "Logged Out Successfully", Toast.LENGTH_SHORT).show();
             });
         }
@@ -284,11 +294,10 @@ public class ProfileFragment extends Fragment {
         if (getContext() == null) return "No Data";
         SharedPreferences prefs = getContext().getSharedPreferences(USER_PREFS, Context.MODE_PRIVATE);
         Set<String> goals = prefs.getStringSet("GOALS", null);
-        String goalsStr = (goals != null) ? String.join(", ", goals) : "None";
+
         return "Name: " + prefs.getString("USERNAME", "User") +
                 "\nWeight: " + prefs.getString("WEIGHT_KG", "0") + "kg" +
                 "\nHeight: " + prefs.getString("HEIGHT_CM", "0") + "cm" +
-                "\nAge: " + prefs.getString("AGE", "0") +
-                "\nGoals: " + goalsStr;
+                "\nAge: " + prefs.getString("AGE", "0");
     }
 }

@@ -1,374 +1,504 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/profile_bg"
     android:fillViewport="true">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#F5F5F5"
-        android:padding="24dp">
+        android:paddingBottom="40dp">
+
+        <View
+            android:id="@+id/viewHeaderBg"
+            android:layout_width="match_parent"
+            android:layout_height="160dp"
+            android:background="@color/red_logout"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/tvHeader"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Profile"
-            android:textSize="28sp"
+            android:layout_marginTop="20dp"
             android:fontFamily="sans-serif-medium"
-            android:textColor="#000000"
+            android:text="My Profile"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginTop="20dp"/>
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <FrameLayout
-            android:id="@+id/layoutProfileImageContainer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            app:layout_constraintTop_toBottomOf="@+id/tvHeader"
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cvProfileImage"
+            android:layout_width="110dp"
+            android:layout_height="110dp"
+            android:layout_marginTop="90dp"
+            app:cardCornerRadius="55dp"
+            app:cardElevation="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <androidx.cardview.widget.CardView
-                android:id="@+id/cvProfileImage"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                app:cardCornerRadius="50dp"
-                app:cardElevation="4dp">
-
-                <ImageView
-                    android:id="@+id/ivProfile"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:src="@android:drawable/sym_def_app_icon"
-                    android:scaleType="centerCrop"
-                    android:background="#EEEEEE"/>
-            </androidx.cardview.widget.CardView>
+            app:layout_constraintTop_toTopOf="parent">
 
             <ImageView
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:id="@+id/ivProfile"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@android:drawable/sym_def_app_icon"
+                tools:src="@tools:sample/avatars" />
+        </androidx.cardview.widget.CardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btnCamera"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginEnd="4dp"
+            android:layout_marginBottom="4dp"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardBackgroundColor="#F0F0F0"
+            app:cardCornerRadius="18dp"
+            app:layout_constraintBottom_toBottomOf="@id/cvProfileImage"
+            app:layout_constraintEnd_toEndOf="@id/cvProfileImage"
+            app:strokeColor="#FFFFFF"
+            app:strokeWidth="2dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
                 android:src="@android:drawable/ic_menu_camera"
-                android:background="@drawable/bg_card_goals"
-                android:backgroundTint="#444444"
-                android:padding="6dp"
-                android:layout_gravity="bottom|end"
-                android:elevation="6dp"
-                app:tint="#FFFFFF"/>
-        </FrameLayout>
+                app:tint="@color/red_logout" />
+        </com.google.android.material.card.MaterialCardView>
 
         <TextView
             android:id="@+id/tvUserName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Joshua"
-            android:textSize="22sp"
-            android:fontFamily="sans-serif-medium"
-            android:textColor="#000000"
             android:layout_marginTop="12dp"
-            app:layout_constraintTop_toBottomOf="@+id/layoutProfileImageContainer"
+            android:fontFamily="sans-serif-medium"
+            android:text="Joshua"
+            android:textColor="@color/profile_primary"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
+            app:layout_constraintTop_toBottomOf="@+id/cvProfileImage" />
 
-        <LinearLayout
-            android:id="@+id/statsRow"
+        <TextView
+            android:id="@+id/tvEditProfile"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="4dp"
+            android:text="Edit Profile"
+            android:textColor="@color/red_logout"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvUserName" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardStats"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="32dp"
-            android:padding="16dp"
-            android:background="@drawable/bg_card_goals"
-            android:backgroundTint="#FFFFFF"
-            android:elevation="2dp"
-            app:layout_constraintTop_toBottomOf="@+id/tvUserName"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
-                <TextView
-                    android:id="@+id/tvWeight"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="65kg"
-                    android:textColor="#1A1B2F"
-                    android:fontFamily="sans-serif-medium"
-                    android:textSize="18sp"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Weight"
-                    android:textColor="#8F90A6"
-                    android:textSize="12sp"/>
-            </LinearLayout>
-
-            <View
-                android:layout_width="1dp"
-                android:layout_height="30dp"
-                android:background="#D1D1D6"/>
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
-                <TextView
-                    android:id="@+id/tvHeight"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="180cm"
-                    android:textColor="#1A1B2F"
-                    android:fontFamily="sans-serif-medium"
-                    android:textSize="18sp"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Height"
-                    android:textColor="#8F90A6"
-                    android:textSize="12sp"/>
-            </LinearLayout>
-
-            <View
-                android:layout_width="1dp"
-                android:layout_height="30dp"
-                android:background="#D1D1D6"/>
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
-                <TextView
-                    android:id="@+id/tvAge"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="19"
-                    android:textColor="#1A1B2F"
-                    android:fontFamily="sans-serif-medium"
-                    android:textSize="18sp"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Age"
-                    android:textColor="#8F90A6"
-                    android:textSize="12sp"/>
-            </LinearLayout>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginTop="32dp"
-            android:layout_marginBottom="24dp"
-            app:layout_constraintTop_toBottomOf="@+id/statsRow"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="24dp"
+            app:cardBackgroundColor="@color/card_white"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            app:layout_constraintTop_toBottomOf="@+id/tvEditProfile"
+            app:strokeWidth="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="16dp">
-
-                <androidx.appcompat.widget.AppCompatButton
-                    android:id="@+id/btnEditProfile"
-                    android:layout_width="match_parent"
-                    android:layout_height="60dp"
-                    android:text="Account Information"
-                    android:textColor="#000000"
-                    android:textSize="16sp"
-                    android:fontFamily="sans-serif-medium"
-                    android:background="@drawable/bg_card_goals"
-                    android:drawableStart="@android:drawable/ic_menu_edit"
-                    android:drawablePadding="16dp"
-                    android:paddingStart="24dp"
-                    android:paddingEnd="24dp"
-                    android:gravity="start|center_vertical"
-                    android:textAllCaps="false"
-                    android:layout_marginBottom="16dp"
-                    app:drawableTint="#000000"/>
+                android:baselineAligned="false"
+                android:orientation="horizontal"
+                android:paddingVertical="16dp">
 
                 <LinearLayout
-                    android:id="@+id/layoutAccountDetails"
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:visibility="gone"
-                    android:padding="16dp"
-                    android:background="#F0F0F0">
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
 
                     <TextView
-                        android:id="@+id/contentAccountInfo"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
-
-                    <Button
-                        android:id="@+id/btnOpenEditDialog"
+                        android:id="@+id/tvWeight"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Edit" />
+                        android:fontFamily="sans-serif-black"
+                        android:text="65kg"
+                        android:textColor="@color/profile_primary"
+                        android:textSize="18sp" />
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Weight"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
                 </LinearLayout>
-            </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="16dp">
-
-                <androidx.appcompat.widget.AppCompatButton
-                    android:id="@+id/btnNotifications"
-                    android:layout_width="match_parent"
-                    android:layout_height="60dp"
-                    android:text="Notifications"
-                    android:textColor="#000000"
-                    android:textSize="16sp"
-                    android:fontFamily="sans-serif-medium"
-                    android:background="@drawable/bg_card_clickable"
-                    android:backgroundTint="#FFFFFF"
-                    android:gravity="start|center_vertical"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="30dp"
-                    android:textAllCaps="false"
-                    android:drawableEnd="@android:drawable/arrow_down_float"
-                    android:drawableTint="#8F90A6"
-                    android:stateListAnimator="@null"
-                    android:elevation="2dp"/>
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:background="#E0E0E0" />
 
                 <LinearLayout
-                    android:id="@+id/layoutNotificationSettings"
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="#E8E8E8"
-                    android:padding="16dp"
-                    android:visibility="gone">
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
 
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/switchWaterReminder"
-                        android:layout_width="match_parent"
+                    <TextView
+                        android:id="@+id/tvHeight"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Drink Water Reminder"
-                        android:textColor="#444444"
-                        android:textSize="14sp"
-                        android:checked="true"/>
+                        android:fontFamily="sans-serif-black"
+                        android:text="180cm"
+                        android:textColor="@color/profile_primary"
+                        android:textSize="18sp" />
 
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="#D1D1D6"
-                        android:layout_marginTop="8dp"
-                        android:layout_marginBottom="8dp"/>
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/switchWorkoutAlerts"
-                        android:layout_width="match_parent"
+                    <TextView
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Workout Alerts"
-                        android:textColor="#444444"
-                        android:textSize="14sp"
-                        android:checked="false"/>
+                        android:text="Height"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+                </LinearLayout>
 
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:background="#E0E0E0" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tvAge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-black"
+                        android:text="19"
+                        android:textColor="@color/profile_primary"
+                        android:textSize="18sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Age"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
                 </LinearLayout>
             </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-            <LinearLayout
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            app:layout_constraintTop_toBottomOf="@+id/cardStats">
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btnEditProfile"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="16dp">
+                android:layout_marginBottom="16dp"
+                android:clickable="true"
+                android:focusable="true"
+                app:cardBackgroundColor="@color/card_white"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
 
-                <androidx.appcompat.widget.AppCompatButton
-                    android:id="@+id/btnSettings"
-                    android:layout_width="match_parent"
-                    android:layout_height="60dp"
-                    android:text="Help"
-                    android:textColor="#000000"
-                    android:textSize="16sp"
-                    android:fontFamily="sans-serif-medium"
-                    android:background="@drawable/bg_card_clickable"
-                    android:gravity="start|center_vertical"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp"
-                    android:textAllCaps="false"
-                    android:drawableEnd="@android:drawable/arrow_down_float"
-                    android:drawableTint="#8F90A6"
-                    android:stateListAnimator="@null"/>
-
-                <TextView
-                    android:id="@+id/contentHelp"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Need assistance? \nEmail us at support@pathfitx.com"
-                    android:padding="16dp"
-                    android:background="#F0F0F0"
-                    android:visibility="gone"/>
-            </LinearLayout>
+                    android:orientation="vertical">
 
-            <LinearLayout
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:padding="16dp">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@android:drawable/ic_menu_edit"
+                            app:tint="@color/red_logout" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_weight="1"
+                            android:text="Account Information"
+                            android:textColor="@color/profile_primary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:rotation="-90"
+                            android:src="@android:drawable/arrow_down_float"
+                            app:tint="#D0D0D0" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/layoutAccountDetails"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="#FAFAFA"
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:id="@+id/contentAccountInfo"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="User ID: 89901\nEmail: joshua@example.com"
+                            android:textColor="#666666" />
+
+                        <Button
+                            android:id="@+id/btnOpenEditDialog"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="Edit" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btnNotifications"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="16dp">
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="@color/card_white"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
 
-                <androidx.appcompat.widget.AppCompatButton
-                    android:id="@+id/btnPrivacy"
-                    android:layout_width="match_parent"
-                    android:layout_height="60dp"
-                    android:text="About App"
-                    android:textColor="#000000"
-                    android:textSize="16sp"
-                    android:fontFamily="sans-serif-medium"
-                    android:background="@drawable/bg_card_clickable"
-                    android:gravity="start|center_vertical"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp"
-                    android:textAllCaps="false"
-                    android:drawableEnd="@android:drawable/arrow_down_float"
-                    android:drawableTint="#8F90A6"
-                    android:stateListAnimator="@null"/>
-
-                <TextView
-                    android:id="@+id/contentAbout"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="PathFitX App Version 1.0\nBuilt for fitness tracking."
-                    android:padding="16dp"
-                    android:background="#F0F0F0"
-                    android:visibility="gone"/>
-            </LinearLayout>
+                    android:orientation="vertical">
 
-            <androidx.appcompat.widget.AppCompatButton
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:padding="16dp">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@android:drawable/ic_popup_reminder"
+                            app:tint="@color/red_logout" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_weight="1"
+                            android:text="Notifications"
+                            android:textColor="@color/profile_primary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:rotation="-90"
+                            android:src="@android:drawable/arrow_down_float"
+                            app:tint="#D0D0D0" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/layoutNotificationSettings"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="#FAFAFA"
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        android:visibility="gone">
+
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchWaterReminder"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:checked="true"
+                            android:text="Drink Water Reminder" />
+
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchWorkoutAlerts"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="Workout Alerts" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btnSettings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="@color/card_white"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:padding="16dp">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@android:drawable/ic_menu_help"
+                            app:tint="@color/red_logout" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_weight="1"
+                            android:text="Help &amp; Support"
+                            android:textColor="@color/profile_primary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:rotation="-90"
+                            android:src="@android:drawable/arrow_down_float"
+                            app:tint="#D0D0D0" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/contentHelp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="#FAFAFA"
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:lineSpacingExtra="4dp"
+                            android:text="Need assistance? \nEmail us at support@pathfitx.com"
+                            android:textColor="#666666" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btnPrivacy"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="@color/card_white"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:padding="16dp">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@android:drawable/ic_menu_info_details"
+                            app:tint="@color/red_logout" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_weight="1"
+                            android:text="About App"
+                            android:textColor="@color/profile_primary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:rotation="-90"
+                            android:src="@android:drawable/arrow_down_float"
+                            app:tint="#D0D0D0" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/contentAbout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="#FAFAFA"
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:lineSpacingExtra="4dp"
+                            android:text="PathFitX App Version 1.0\nBuilt for fitness tracking."
+                            android:textColor="#666666" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnLogout"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
+                android:layout_marginTop="16dp"
                 android:text="Log Out"
-                android:textColor="#FF0000"
-                android:textSize="16sp"
-                android:fontFamily="sans-serif-medium"
-                android:background="@drawable/bg_card_goals"
-                android:backgroundTint="#FFF0F0"
-                android:gravity="start|center_vertical"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:textAllCaps="false"
-                android:layout_marginBottom="12dp"
-                android:stateListAnimator="@null"/>
+                android:textColor="@color/red_logout"
+                android:textStyle="bold"
+                app:backgroundTint="@color/red_bg_light"
+                app:cornerRadius="12dp"
+                app:elevation="0dp"
+                app:icon="@android:drawable/ic_lock_power_off"
+                app:iconGravity="textStart"
+                app:iconTint="@color/red_logout" />
 
         </LinearLayout>
 

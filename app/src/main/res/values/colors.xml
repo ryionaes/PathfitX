@@ -12,6 +12,14 @@
     <color name="gray_300">#B3B3B3</color>
     <color name="gray_100">#EFEFEF</color>
 
+
+    <color name="profile_primary">#2D3E50</color> <color name="profile_accent">#3D5AFE</color>  <color name="profile_bg">#F2F5F8</color>      <color name="card_white">#FFFFFF</color>
+    <color name="text_secondary">#9E9E9E</color>
+    <color name="red_logout">#FF5252</color>
+    <color name="red_bg_light">#FFF0F0</color>
+
+
+
     <!-- Accent Colors -->
 </resources>
 
