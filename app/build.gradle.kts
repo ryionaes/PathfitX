@@ -5,14 +5,12 @@ plugins {
 
 android {
     namespace = "com.example.pathfitx"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36 // It is safer to use 35 or 34 for now, but 36 is fine if you have the preview installed
 
     defaultConfig {
         applicationId = "com.example.pathfitx"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -50,4 +48,7 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.firestore)
+
+    // GOOGLE SIGN IN (Added this line)
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
 }

@@ -12,40 +12,22 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.PathfitX">
 
+        <activity android:name=".HomeScreen" android:exported="false" />
+        <activity android:name=".WelcomePage" android:exported="false" />
+        <activity android:name=".GetUser" android:exported="false" />
+        <activity android:name=".GetGoals" android:exported="false" />
+        <activity android:name=".GetHeight" android:exported="false" />
+        <activity android:name=".LiveSessionActivity" android:exported="false" />
+        <activity android:name=".ProfileActivity" android:exported="false" />
+        <activity android:name=".GetInfo" android:exported="false" />
+        <activity android:name=".MainActivity" android:exported="false" />
+
         <activity
-            android:name=".HomeScreen"
+            android:name=".RegisterActivity"
             android:exported="false" />
 
         <activity
-            android:name=".WelcomePage"
-            android:exported="false" />
-
-        <activity
-            android:name=".GetUser"
-            android:exported="false" />
-
-        <activity
-            android:name=".GetGoals"
-            android:exported="false" />
-
-        <activity
-            android:name=".GetHeight"
-            android:exported="false" />
-
-        <activity
-            android:name=".LiveSessionActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".ProfileActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".GetInfo"
-            android:exported="false" />
-
-        <activity
-            android:name=".MainActivity"
+            android:name=".ForgotPasswordActivity"
             android:exported="false" />
 
         <activity

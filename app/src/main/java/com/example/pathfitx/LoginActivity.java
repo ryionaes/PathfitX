@@ -5,10 +5,20 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+
+// 1. ADD GOOGLE IMPORTS
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
@@ -16,88 +26,124 @@ import com.google.android.material.textfield.TextInputEditText;
 public class LoginActivity extends AppCompatActivity {
 
     private TextInputEditText etEmail, etPassword;
-    private MaterialButton btnLogin, btnGoogle;
-    private TextView tvSignUp, tvForgotPassword;
+    private MaterialButton btnLogin, btnGoogle; // Added btnGoogle
+    private TextView tvForgotPassword, tvSignUp;
 
-    // This helps us save if the user is logged in
-    private static final String USER_PREFS = "UserPrefs";
-    private static final String KEY_IS_LOGGED_IN = "isLoggedIn";
+    // 2. GOOGLE VARIABLES
+    private GoogleSignInClient mGoogleSignInClient;
+    private static final int RC_SIGN_IN = 9001;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // 1. Check if user is ALREADY logged in. If yes, skip to Main Activity.
-        SharedPreferences prefs = getSharedPreferences(USER_PREFS, Context.MODE_PRIVATE);
-        if (prefs.getBoolean(KEY_IS_LOGGED_IN, false)) {
-            goToMainActivity();
-            return;
-        }
-
         setContentView(R.layout.activity_login);
 
-        // 2. Initialize Views
+        // 3. SETUP GOOGLE CLIENT
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .build();
+        mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+
+        // Initialize Views
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
         btnLogin = findViewById(R.id.btnLogin);
-        btnGoogle = findViewById(R.id.btnGoogle);
-        tvSignUp = findViewById(R.id.tvSignUp);
+        btnGoogle = findViewById(R.id.btnGoogle); // Ensure this ID exists in XML
         tvForgotPassword = findViewById(R.id.tvForgotPassword);
+        tvSignUp = findViewById(R.id.tvSignUp);
 
-        // 3. Login Button Click
+        // Login Button Logic (Standard Email/Pass)
         btnLogin.setOnClickListener(v -> {
             String email = etEmail.getText().toString().trim();
             String password = etPassword.getText().toString().trim();
 
             if (validateInput(email, password)) {
-                performLogin(email);
+                loginUser(email, password);
             }
         });
 
-        // 4. Google Button Click
+        // 4. GOOGLE LOGIN BUTTON
         btnGoogle.setOnClickListener(v -> {
-            Toast.makeText(this, "Google Login Clicked", Toast.LENGTH_SHORT).show();
+            signInWithGoogle();
         });
 
-        // 5. Sign Up Link Click
-        tvSignUp.setOnClickListener(v -> {
-            Toast.makeText(this, "Go to Sign Up Screen", Toast.LENGTH_SHORT).show();
-            // You can add the intent to move to RegisterActivity here later
-        });
-
-        // 6. Forgot Password Link Click
+        // Forgot Password Logic
         tvForgotPassword.setOnClickListener(v -> {
-            Toast.makeText(this, "Forgot Password Clicked", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(LoginActivity.this, ForgotPasswordActivity.class));
+        });
+
+        // Sign Up Link
+        tvSignUp.setOnClickListener(v -> {
+            startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
         });
     }
 
+    // --- GOOGLE SIGN IN METHODS ---
+
+    private void signInWithGoogle() {
+        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+        startActivityForResult(signInIntent, RC_SIGN_IN);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == RC_SIGN_IN) {
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            handleSignInResult(task);
+        }
+    }
+
+    private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
+        try {
+            GoogleSignInAccount account = completedTask.getResult(ApiException.class);
+            String googleEmail = account.getEmail();
+
+            Toast.makeText(this, "Welcome back: " + googleEmail, Toast.LENGTH_SHORT).show();
+
+            // Save Login State
+            SharedPreferences prefs = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putString("EMAIL", googleEmail);
+            editor.putBoolean("isLoggedIn", true);
+            editor.apply();
+
+            // Go to Main Dashboard
+            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+
+        } catch (ApiException e) {
+            Log.w("GoogleSignIn", "signInResult:failed code=" + e.getStatusCode());
+            Toast.makeText(this, "Google Login Failed", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // --- STANDARD LOGIN LOGIC ---
+
     private boolean validateInput(String email, String password) {
-        if (TextUtils.isEmpty(email)) {
-            etEmail.setError("Email is required");
-            return false;
-        }
-        if (TextUtils.isEmpty(password)) {
-            etPassword.setError("Password is required");
-            return false;
-        }
+        if (TextUtils.isEmpty(email)) { etEmail.setError("Email required"); return false; }
+        if (TextUtils.isEmpty(password)) { etPassword.setError("Password required"); return false; }
         return true;
     }
 
-    private void performLogin(String email) {
-        // Save that the user has logged in so they don't have to do it again next time
-        SharedPreferences prefs = getSharedPreferences(USER_PREFS, Context.MODE_PRIVATE);
+    private void loginUser(String email, String password) {
+        // Here you would usually check the password against a database (Firebase/API)
+        // For now, we simulate a successful login
+
+        SharedPreferences prefs = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
-        editor.putBoolean(KEY_IS_LOGGED_IN, true);
         editor.putString("EMAIL", email);
+        editor.putBoolean("isLoggedIn", true);
         editor.apply();
 
-        Toast.makeText(this, "Login Successful!", Toast.LENGTH_SHORT).show();
-        goToMainActivity();
-    }
+        Toast.makeText(this, "Login Successful", Toast.LENGTH_SHORT).show();
 
-    private void goToMainActivity() {
         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
-        finish(); // Closes Login Activity so you can't go back to it
+        finish();
     }
 }
