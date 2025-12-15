@@ -1,26 +1,44 @@
 {
   "project_info": {
-    "project_number": "750652798076",
-    "project_id": "pathfitx",
-    "storage_bucket": "pathfitx.firebasestorage.app"
+    "project_number": "381642629816",
+    "project_id": "pathfitx-5e4ed",
+    "storage_bucket": "pathfitx-5e4ed.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:750652798076:android:f2df2fb084df7de08f45f9",
+        "mobilesdk_app_id": "1:381642629816:android:b9f4e61323c149cbd7ca4d",
         "android_client_info": {
           "package_name": "com.example.pathfitx"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "381642629816-bi6h965hu7kgjof9li8rbnr43b1ifrdj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.pathfitx",
+            "certificate_hash": "ecdfe1fa883b11226690337d55f0cd8c2f79abf0"
+          }
+        },
+        {
+          "client_id": "381642629816-8s7b7sroi2o6b79kc864784emd9hi3di.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyBvnB_ZT89cKq71oYZq8iU9YJ1E0ZgFZtk"
+          "current_key": "AIzaSyAzBtbtaDurkZOzhfZS3aqEJjwleMLJ3HA"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "381642629816-8s7b7sroi2o6b79kc864784emd9hi3di.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

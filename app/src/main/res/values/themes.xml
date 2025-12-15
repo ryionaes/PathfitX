@@ -9,6 +9,12 @@
 
     <style name="Theme.PathfitX" parent="Base.Theme.PathfitX" />
 
+    <style name="Theme.PathfitX.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/white</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/logo_light</item>
+        <item name="postSplashScreenTheme">@style/Theme.PathfitX</item>
+    </style>
+
     <style name="App.Custom.Indicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
         <item name="android:color">@android:color/transparent</item>
     </style>

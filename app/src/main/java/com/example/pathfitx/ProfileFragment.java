@@ -3,9 +3,9 @@ package com.example.pathfitx;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,44 +26,46 @@ import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.signature.ObjectKey;
+import com.canhub.cropper.CropImageContract;
+import com.canhub.cropper.CropImageContractOptions;
+import com.canhub.cropper.CropImageOptions;
+import com.canhub.cropper.CropImageView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.switchmaterial.SwitchMaterial;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ProfileFragment extends Fragment {
 
+    private static final String TAG = "ProfileFragment";
+
     // --- UI Elements ---
-    private TextView tvUserName, tvWeight, tvHeight, tvAge;
-    // REMOVED: private TextView tvMemberStatus; (Deleted to match your XML)
-
-    private TextView tvEditProfile; // The clickable "Edit Profile" text
-
-    // Menu Cards
+    private TextView tvUserName, tvWeight, tvHeight, tvAge, tvEditProfile;
     private CardView btnEditProfile, btnNotifications, btnSettings, btnPrivacy;
     private MaterialButton btnLogout;
-
-    // Image Elements
     private CardView cvProfileImage;
     private View btnCamera;
     private ImageView ivProfile;
-
-    // --- Content Views (Expandable sections) ---
+    private ImageView ivArrowAccount, ivArrowNotifications, ivArrowHelp, ivArrowAbout;
     private TextView contentAccountInfo;
     private LinearLayout layoutAccountDetails, contentHelp, contentAbout;
     private LinearLayout layoutNotificationSettings;
-
     private Button btnOpenEditDialog;
-
-    // --- Switches ---
     private SwitchMaterial switchWaterReminder, switchWorkoutAlerts;
 
     // --- Image Picker ---
     private ActivityResultLauncher<PickVisualMediaRequest> pickMedia;
+    private ActivityResultLauncher<CropImageContractOptions> cropImage;
 
-    // Preference File Names
-    private static final String USER_PREFS = "UserPrefs";
-    private static final String WORKOUT_PREFS = "WorkoutPrefs";
+    // Firebase
+    private FirebaseAuth mAuth;
+    private FirebaseFirestore db;
+    private FirebaseUser currentUser;
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -73,15 +75,12 @@ public class ProfileFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Photo Picker Logic
-        pickMedia = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
-            if (uri != null) {
-                String uriString = uri.toString();
-                saveProfileImageUri(uriString);
-                loadProfileImage(uriString);
-                Toast.makeText(getContext(), "Profile Picture Updated!", Toast.LENGTH_SHORT).show();
-            }
-        });
+        // Initialize Firebase
+        mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
+        currentUser = mAuth.getCurrentUser();
+
+        initializeImagePicker();
     }
 
     @Override
@@ -92,107 +91,45 @@ public class ProfileFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
-        // --- Initialize Views ---
-        tvUserName = view.findViewById(R.id.tvUserName);
-        tvWeight = view.findViewById(R.id.tvWeight);
-        tvHeight = view.findViewById(R.id.tvHeight);
-        tvAge = view.findViewById(R.id.tvAge);
-
-        // This is the clickable text below the name
-        tvEditProfile = view.findViewById(R.id.tvEditProfile);
-
-        // REMOVED: tvMemberStatus = view.findViewById(R.id.tvMemberStatus);
-
-        cvProfileImage = view.findViewById(R.id.cvProfileImage);
-        ivProfile = view.findViewById(R.id.ivProfile);
-        btnCamera = view.findViewById(R.id.btnCamera);
-
-        btnEditProfile = view.findViewById(R.id.btnEditProfile);
-        btnNotifications = view.findViewById(R.id.btnNotifications);
-        btnSettings = view.findViewById(R.id.btnSettings);
-        btnPrivacy = view.findViewById(R.id.btnPrivacy);
-        btnLogout = view.findViewById(R.id.btnLogout);
-
-        layoutAccountDetails = view.findViewById(R.id.layoutAccountDetails);
-        contentAccountInfo = view.findViewById(R.id.contentAccountInfo);
-        btnOpenEditDialog = view.findViewById(R.id.btnOpenEditDialog);
-
-        layoutNotificationSettings = view.findViewById(R.id.layoutNotificationSettings);
-        switchWaterReminder = view.findViewById(R.id.switchWaterReminder);
-        switchWorkoutAlerts = view.findViewById(R.id.switchWorkoutAlerts);
-
-        contentHelp = view.findViewById(R.id.contentHelp);
-        contentAbout = view.findViewById(R.id.contentAbout);
-
-        loadUserProfile();
+        initializeViews(view);
         setupListeners();
+        loadUserProfile();
     }
 
-    private void setupListeners() {
-        // --- Image Click Listener ---
-        View.OnClickListener imageClickListener = v -> {
-            pickMedia.launch(new PickVisualMediaRequest.Builder()
-                    .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
-                    .build());
-        };
-
-        if (btnCamera != null) btnCamera.setOnClickListener(imageClickListener);
-        if (cvProfileImage != null) cvProfileImage.setOnClickListener(imageClickListener);
-
-        // --- Edit Profile (Red Text Click) ---
-        if (tvEditProfile != null) {
-            tvEditProfile.setOnClickListener(v -> showEditProfileDialog());
+    private void loadUserProfile() {
+        if (currentUser == null || getContext() == null) {
+            tvUserName.setText("Guest");
+            return;
         }
 
-        // --- Expand Account Info ---
-        if (btnEditProfile != null) {
-            btnEditProfile.setOnClickListener(v -> {
-                contentAccountInfo.setText(getFullUserDetails());
-                toggleVisibility(layoutAccountDetails);
-            });
-        }
+        db.collection("users").document(currentUser.getUid()).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        String username = documentSnapshot.getString("username");
+                        Double weight = documentSnapshot.getDouble("weight_kg");
+                        Double height = documentSnapshot.getDouble("height_cm");
+                        Long age = documentSnapshot.getLong("age");
 
-        // --- Edit Dialog Button ---
-        if (btnOpenEditDialog != null) {
-            btnOpenEditDialog.setOnClickListener(v -> showEditProfileDialog());
-        }
+                        tvUserName.setText(username != null ? username : "N/A");
+                        tvWeight.setText(String.format("%s kg", weight != null ? String.valueOf(weight.intValue()) : "0"));
+                        tvHeight.setText(String.format("%s cm", height != null ? String.valueOf(height.intValue()) : "0"));
+                        tvAge.setText(age != null ? String.valueOf(age.intValue()) : "0");
 
-        // --- Expand Other Sections ---
-        if (btnNotifications != null) btnNotifications.setOnClickListener(v -> toggleVisibility(layoutNotificationSettings));
-        if (btnSettings != null) btnSettings.setOnClickListener(v -> toggleVisibility(contentHelp));
-        if (btnPrivacy != null) btnPrivacy.setOnClickListener(v -> toggleVisibility(contentAbout));
+                        String profileImageUri = documentSnapshot.getString("profileImageUri");
+                        loadProfileImage(profileImageUri);
 
-        // --- Switches ---
-        if (switchWaterReminder != null) {
-            switchWaterReminder.setOnCheckedChangeListener((buttonView, isChecked) -> saveNotificationPreference("NOTIF_WATER", isChecked));
-        }
-        if (switchWorkoutAlerts != null) {
-            switchWorkoutAlerts.setOnCheckedChangeListener((buttonView, isChecked) -> saveNotificationPreference("NOTIF_WORKOUT", isChecked));
-        }
-
-        // --- Log Out ---
-        if (btnLogout != null) {
-            btnLogout.setOnClickListener(v -> {
-                if (getContext() == null) return;
-
-                SharedPreferences userPrefs = getContext().getSharedPreferences(USER_PREFS, Context.MODE_PRIVATE);
-                SharedPreferences workoutPrefs = getContext().getSharedPreferences(WORKOUT_PREFS, Context.MODE_PRIVATE);
-
-                userPrefs.edit().clear().commit();
-                workoutPrefs.edit().clear().commit();
-
-                Intent intent = new Intent(getActivity(), MainActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
-
-                Toast.makeText(getContext(), "Logged Out Successfully", Toast.LENGTH_SHORT).show();
-            });
-        }
+                    } else {
+                        Toast.makeText(getContext(), "User data not found. Please complete profile.", Toast.LENGTH_LONG).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error loading user profile", e);
+                    Toast.makeText(getContext(), "Failed to load profile.", Toast.LENGTH_SHORT).show();
+                });
     }
 
     private void showEditProfileDialog() {
-        if (getContext() == null) return;
+        if (getContext() == null || currentUser == null) return;
 
         View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_edit_profile, null);
         EditText etName = dialogView.findViewById(R.id.etEditName);
@@ -201,103 +138,160 @@ public class ProfileFragment extends Fragment {
         EditText etAge = dialogView.findViewById(R.id.etEditAge);
         Button btnSave = dialogView.findViewById(R.id.btnSaveProfile);
 
-        SharedPreferences prefs = getContext().getSharedPreferences(USER_PREFS, Context.MODE_PRIVATE);
-        etName.setText(prefs.getString("USERNAME", ""));
-        etWeight.setText(prefs.getString("WEIGHT_KG", ""));
-        etHeight.setText(prefs.getString("HEIGHT_CM", ""));
-        etAge.setText(prefs.getString("AGE", ""));
+        // Pre-fill dialog with current data
+        db.collection("users").document(currentUser.getUid()).get().addOnSuccessListener(snapshot -> {
+            if (snapshot.exists()) {
+                etName.setText(snapshot.getString("username"));
+                etWeight.setText(String.valueOf(snapshot.getDouble("weight_kg")));
+                etHeight.setText(String.valueOf(snapshot.getDouble("height_cm")));
+                etAge.setText(String.valueOf(snapshot.getLong("age")));
+            }
+        });
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setView(dialogView);
-        AlertDialog dialog = builder.create();
-        dialog.show();
+        AlertDialog dialog = new AlertDialog.Builder(getContext()).setView(dialogView).create();
 
         btnSave.setOnClickListener(v -> {
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putString("USERNAME", etName.getText().toString().trim());
-            editor.putString("WEIGHT_KG", etWeight.getText().toString().trim());
-            editor.putString("HEIGHT_CM", etHeight.getText().toString().trim());
-            editor.putString("AGE", etAge.getText().toString().trim());
+            String newName = etName.getText().toString().trim();
+            String newWeightStr = etWeight.getText().toString().trim();
+            String newHeightStr = etHeight.getText().toString().trim();
+            String newAgeStr = etAge.getText().toString().trim();
 
-            boolean success = editor.commit();
-
-            if (success) {
-                loadUserProfile();
-                contentAccountInfo.setText(getFullUserDetails());
-                Toast.makeText(getContext(), "Profile Saved!", Toast.LENGTH_SHORT).show();
+            if (newName.isEmpty() || newWeightStr.isEmpty() || newHeightStr.isEmpty() || newAgeStr.isEmpty()) {
+                Toast.makeText(getContext(), "All fields are required.", Toast.LENGTH_SHORT).show();
+                return;
             }
-            dialog.dismiss();
+
+            try {
+                Map<String, Object> updatedData = new HashMap<>();
+                updatedData.put("username", newName);
+                updatedData.put("weight_kg", Double.parseDouble(newWeightStr));
+                updatedData.put("height_cm", Double.parseDouble(newHeightStr));
+                updatedData.put("age", Long.parseLong(newAgeStr));
+
+                db.collection("users").document(currentUser.getUid()).update(updatedData)
+                        .addOnSuccessListener(aVoid -> {
+                            Toast.makeText(getContext(), "Profile updated!", Toast.LENGTH_SHORT).show();
+                            loadUserProfile(); // Refresh the profile display
+                            dialog.dismiss();
+                        })
+                        .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update profile.", Toast.LENGTH_SHORT).show());
+            } catch (NumberFormatException e) {
+                Toast.makeText(getContext(), "Please enter valid numbers.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        dialog.show();
+    }
+
+    private void initializeViews(View view) {
+        tvUserName = view.findViewById(R.id.tvUserName);
+        tvWeight = view.findViewById(R.id.tvWeight);
+        tvHeight = view.findViewById(R.id.tvHeight);
+        tvAge = view.findViewById(R.id.tvAge);
+        tvEditProfile = view.findViewById(R.id.tvEditProfile);
+        cvProfileImage = view.findViewById(R.id.cvProfileImage);
+        ivProfile = view.findViewById(R.id.ivProfile);
+        btnCamera = view.findViewById(R.id.btnCamera);
+        btnEditProfile = view.findViewById(R.id.btnEditProfile);
+        btnNotifications = view.findViewById(R.id.btnNotifications);
+        btnSettings = view.findViewById(R.id.btnSettings);
+        btnPrivacy = view.findViewById(R.id.btnPrivacy);
+        btnLogout = view.findViewById(R.id.btnLogout);
+        ivArrowAccount = view.findViewById(R.id.ivArrowAccount);
+        ivArrowNotifications = view.findViewById(R.id.ivArrowNotifications);
+        ivArrowHelp = view.findViewById(R.id.ivArrowHelp);
+        ivArrowAbout = view.findViewById(R.id.ivArrowAbout);
+        layoutAccountDetails = view.findViewById(R.id.layoutAccountDetails);
+        contentAccountInfo = view.findViewById(R.id.contentAccountInfo);
+        btnOpenEditDialog = view.findViewById(R.id.btnOpenEditDialog);
+        layoutNotificationSettings = view.findViewById(R.id.layoutNotificationSettings);
+        switchWaterReminder = view.findViewById(R.id.switchWaterReminder);
+        switchWorkoutAlerts = view.findViewById(R.id.switchWorkoutAlerts);
+        contentHelp = view.findViewById(R.id.contentHelp);
+        contentAbout = view.findViewById(R.id.contentAbout);
+    }
+
+    private void setupListeners() {
+        if (btnCamera != null) {
+            btnCamera.setOnClickListener(v -> pickMedia.launch(new PickVisualMediaRequest.Builder()
+                    .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE).build()));
+        }
+
+        if (tvEditProfile != null) {
+            tvEditProfile.setOnClickListener(v -> showEditProfileDialog());
+        }
+
+        if (btnEditProfile != null) {
+            btnEditProfile.setOnClickListener(v -> {
+                toggleVisibility(layoutAccountDetails, ivArrowAccount);
+            });
+        }
+        
+        if (btnOpenEditDialog != null) {
+            btnOpenEditDialog.setOnClickListener(v -> showEditProfileDialog());
+        }
+
+        if (btnLogout != null) {
+            btnLogout.setOnClickListener(v -> {
+                if (getContext() == null) return;
+                mAuth.signOut();
+                Intent intent = new Intent(getActivity(), LoginActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                Toast.makeText(getContext(), "Logged Out Successfully", Toast.LENGTH_SHORT).show();
+            });
+        }
+    }
+    
+    private void initializeImagePicker() {
+        pickMedia = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
+            if (uri != null) {
+                CropImageContractOptions options = new CropImageContractOptions(uri, new CropImageOptions())
+                        .setGuidelines(CropImageView.Guidelines.ON).setAspectRatio(1, 1).setCropShape(CropImageView.CropShape.OVAL);
+                cropImage.launch(options);
+            }
+        });
+
+        cropImage = registerForActivityResult(new CropImageContract(), result -> {
+            if (result.isSuccessful()) {
+                Uri resultUri = result.getUriContent();
+                saveProfileImageUriToFirestore(resultUri.toString());
+            } else {
+                Exception error = result.getError();
+                if (error != null) {
+                    Toast.makeText(getContext(), "Error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }
         });
     }
 
-    private void loadUserProfile() {
-        if (getContext() == null) return;
-        SharedPreferences prefs = getContext().getSharedPreferences(USER_PREFS, Context.MODE_PRIVATE);
-
-        String name = prefs.getString("USERNAME", "User");
-        if (tvUserName != null) tvUserName.setText(name);
-        if (tvWeight != null) tvWeight.setText(prefs.getString("WEIGHT_KG", "0") + "kg");
-        if (tvHeight != null) tvHeight.setText(prefs.getString("HEIGHT_CM", "0") + "cm");
-        if (tvAge != null) tvAge.setText(prefs.getString("AGE", "0"));
-
-        if (switchWaterReminder != null) switchWaterReminder.setChecked(prefs.getBoolean("NOTIF_WATER", true));
-        if (switchWorkoutAlerts != null) switchWorkoutAlerts.setChecked(prefs.getBoolean("NOTIF_WORKOUT", false));
-
-        String savedUri = prefs.getString("PROFILE_IMAGE_URI", null);
-        loadProfileImage(savedUri);
+    private void saveProfileImageUriToFirestore(String uriString) {
+        if (currentUser == null) return;
+        Map<String, Object> data = new HashMap<>();
+        data.put("profileImageUri", uriString);
+        db.collection("users").document(currentUser.getUid()).update(data)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(getContext(), "Profile Picture Updated!", Toast.LENGTH_SHORT).show();
+                    loadProfileImage(uriString);
+                })
+                .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to save image.", Toast.LENGTH_SHORT).show());
     }
 
     private void loadProfileImage(String uriString) {
         if (getContext() == null || ivProfile == null) return;
 
         if (uriString != null && !uriString.isEmpty()) {
-            Glide.with(this)
-                    .load(Uri.parse(uriString))
-                    .circleCrop()
-                    .signature(new ObjectKey(System.currentTimeMillis()))
-                    .into(ivProfile);
+            Glide.with(this).load(Uri.parse(uriString)).circleCrop()
+                    .signature(new ObjectKey(System.currentTimeMillis())).into(ivProfile);
         } else {
-            Glide.with(this)
-                    .load(android.R.drawable.sym_def_app_icon)
-                    .circleCrop()
-                    .into(ivProfile);
+            // You should have a default placeholder image in your drawables
+            // Glide.with(this).load(R.drawable.ic_profile_default).circleCrop().into(ivProfile);
         }
     }
 
-    private void saveProfileImageUri(String uriString) {
-        if (getContext() == null) return;
-        SharedPreferences prefs = getContext().getSharedPreferences(USER_PREFS, Context.MODE_PRIVATE);
-        prefs.edit().putString("PROFILE_IMAGE_URI", uriString).apply();
-        try {
-            getContext().getContentResolver().takePersistableUriPermission(
-                    Uri.parse(uriString),
-                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-            );
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void toggleVisibility(View view) {
-        if (view != null) {
-            view.setVisibility(view.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
-        }
-    }
-
-    private void saveNotificationPreference(String key, boolean isChecked) {
-        if (getContext() == null) return;
-        SharedPreferences prefs = getContext().getSharedPreferences(USER_PREFS, Context.MODE_PRIVATE);
-        prefs.edit().putBoolean(key, isChecked).apply();
-    }
-
-    private String getFullUserDetails() {
-        if (getContext() == null) return "No Data";
-        SharedPreferences prefs = getContext().getSharedPreferences(USER_PREFS, Context.MODE_PRIVATE);
-        Set<String> goals = prefs.getStringSet("GOALS", null);
-
-        return "Name: " + prefs.getString("USERNAME", "User") +
-                "\nWeight: " + prefs.getString("WEIGHT_KG", "0") + "kg" +
-                "\nHeight: " + prefs.getString("HEIGHT_CM", "0") + "cm" +
-                "\nAge: " + prefs.getString("AGE", "0");
+    private void toggleVisibility(View view, ImageView arrow) {
+        boolean isVisible = view.getVisibility() == View.VISIBLE;
+        view.setVisibility(isVisible ? View.GONE : View.VISIBLE);
+        arrow.setRotation(isVisible ? -90 : 0);
     }
 }

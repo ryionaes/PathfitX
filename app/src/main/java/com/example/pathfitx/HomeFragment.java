@@ -2,8 +2,7 @@ package com.example.pathfitx;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.net.Uri; // Added for Image
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -22,11 +21,13 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide; // Added Glide
-import com.bumptech.glide.signature.ObjectKey; // Added Signature for refresh
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.signature.ObjectKey;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.switchmaterial.SwitchMaterial;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -46,40 +47,32 @@ import java.util.Set;
 public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClickListener, EditExerciseDialog.DialogListener, CalendarAdapter.OnDateClickListener, OptionsBottomSheetFragment.OnOptionSelectedListener, SwapWorkoutBottomSheetFragment.OnOptionSelectedListener {
 
     private static final String TAG = "HomeFragment";
-    private static final String PREFS_NAME = "WorkoutPrefs"; // For Calendar/Workouts
-    private static final String USER_PREFS_NAME = "UserPrefs"; // NEW: For Profile Data
-    private static final String KEY_DEFAULT_TIME = "default_time";
-    private static final String KEY_DEFAULT_EQUIPMENT = "default_equipment";
-    private static final String KEY_SELECTED_DATE = "selected_date";
-    private static final boolean UPLOAD_TEMPLATES_ON_START = true;
 
-    private RecyclerView rvCalendar;
-    private RecyclerView rvExercises;
+    // UI
+    private RecyclerView rvCalendar, rvExercises;
     private CalendarAdapter calendarAdapter;
-
-    // UI Variables
-    private TextView tvYear, tvUserName; // Added tvUserName
-    private TextView tvTimeOption, tvEquipmentOption, tvWorkoutTitle, tvRestDayMessage, tvExerciseCount, tvWorkoutSubtitle;
+    private ExerciseAdapter exerciseAdapter;
+    private TextView tvYear, tvUserName, tvTimeOption, tvEquipmentOption, tvWorkoutTitle, tvRestDayMessage, tvExerciseCount, tvWorkoutSubtitle;
     private ImageView ivProfileIcon;
     private SwitchMaterial switchRestDay;
     private MaterialButton btnSwap, btnAddExercise, btnStartWorkout;
     private Group workoutDetailsGroup;
-    private View restDayContainer;
     private View restDayCard;
 
-    private ExerciseAdapter exerciseAdapter;
-    private List<Exercise> exerciseList;
+    // Firebase
     private FirebaseFirestore db;
-    private LocalDate selectedDate;
+    private FirebaseAuth mAuth;
+    private FirebaseUser currentUser;
     private String userId;
 
-    private ArrayList<String> timeOptions = new ArrayList<>(Arrays.asList("15 min", "30 min", "45 min", "1 hr", "1 hr, 30 min"));
-    private ArrayList<String> equipmentOptions = new ArrayList<>(Arrays.asList("With Equipment", "No Equipment"));
-    private String selectedTime;
-    private String selectedEquipment;
-    private String selectedWorkout;
-    private ArrayList<WorkoutType> workoutTypes = new ArrayList<>();
+    // State
+    private List<Exercise> exerciseList = new ArrayList<>();
+    private LocalDate selectedDate;
+    private String selectedTime = "45 min";
+    private String selectedEquipment = "With Equipment";
+    private String selectedWorkout = "No Workout Planned";
     private boolean isRestDay = false;
+    private ArrayList<WorkoutType> workoutTypes = new ArrayList<>();
 
     @Nullable
     @Override
@@ -90,85 +83,239 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        db = FirebaseFirestore.getInstance();
-
+        initFirebase();
         initViews(view);
-        loadSavedDate();
-        loadDefaultOptions();
 
-        // NEW: Load Profile Data (Name & Picture)
-        loadUserProfile();
+        if (currentUser == null) {
+            handleSignedOutState();
+            return;
+        }
+
+        // Always start with today's date
+        selectedDate = LocalDate.now();
 
         tvYear.setText(String.valueOf(selectedDate.getYear()));
-
-        if (UPLOAD_TEMPLATES_ON_START) {
-            uploadWorkoutTemplatesToFirestore();
-        }
 
         setupCalendar();
         setupOptionPickers();
         setupWorkoutTypes();
         setupExercises();
         setupClickListeners();
+
+        // Load all data from Firestore
+        loadFirebaseData();
     }
 
-    // --- UPDATED: onResume to refresh Profile Data ---
-    @Override
-    public void onResume() {
-        super.onResume();
-
-        // 1. Load Profile Data (Updates Name & Picture immediately)
-        loadUserProfile();
-
-        // 2. Load Calendar/Workout Data
-        loadSavedDate();
-        int newPosition = calendarAdapter.findPositionForDate(selectedDate);
-        if (newPosition != -1) {
-            calendarAdapter.setSelectedPosition(newPosition);
+    private void initFirebase() {
+        db = FirebaseFirestore.getInstance();
+        mAuth = FirebaseAuth.getInstance();
+        currentUser = mAuth.getCurrentUser();
+        if (currentUser != null) {
+            userId = currentUser.getUid(); // CRITICAL: Use UID, not username
         }
+    }
+
+    private void loadFirebaseData() {
+        loadUserProfile();
         loadWorkoutsForDate(selectedDate);
     }
 
-    // --- NEW: Method to load Name and Picture ---
     private void loadUserProfile() {
-        if (getContext() == null) return;
-        SharedPreferences userPrefs = getContext().getSharedPreferences(USER_PREFS_NAME, Context.MODE_PRIVATE);
+        if (userId == null) return;
 
-        // 1. Update Name (Replaces "saturei")
-        // Make sure you have a TextView with id 'tv_user_name' in fragment_home.xml
-        String username = userPrefs.getString("USERNAME", "Fitness User");
-        userId = userPrefs.getString("USERNAME", "testUser");
-        if (tvUserName != null) {
-            tvUserName.setText(username);
-        }
+        db.collection("users").document(userId).get().addOnSuccessListener(snapshot -> {
+            if (snapshot.exists()) {
+                String username = snapshot.getString("username");
+                String profileImageUri = snapshot.getString("profileImageUri");
 
-        // 2. Update Profile Picture with Glide
-        String imageUriString = userPrefs.getString("PROFILE_IMAGE_URI", null);
-        if (ivProfileIcon != null) {
-            if (imageUriString != null && !imageUriString.isEmpty()) {
-                Glide.with(this)
-                        .load(Uri.parse(imageUriString))
-                        .circleCrop()
-                        .signature(new ObjectKey(System.currentTimeMillis())) // Force refresh
-                        .into(ivProfileIcon);
-            } else {
-                Glide.with(this)
-                        .load(R.drawable.ic_launcher_foreground) // Default image
-                        .circleCrop()
-                        .into(ivProfileIcon);
+                tvUserName.setText(username != null ? username : "Fitness User");
+
+                if (ivProfileIcon != null && getContext() != null) {
+                    if (profileImageUri != null && !profileImageUri.isEmpty()) {
+                        Glide.with(getContext()).load(Uri.parse(profileImageUri)).circleCrop()
+                             .signature(new ObjectKey(System.currentTimeMillis())) // Force refresh
+                             .into(ivProfileIcon);
+                    } else {
+                        Glide.with(getContext()).load(R.drawable.ic_profile_default).circleCrop().into(ivProfileIcon);
+                    }
+                }
             }
+        }).addOnFailureListener(e -> Log.e(TAG, "Error loading user profile", e));
+    }
+
+    private void loadWorkoutsForDate(LocalDate date) {
+        if (userId == null) return;
+        String dateId = date.format(DateTimeFormatter.ISO_LOCAL_DATE);
+
+        db.collection("users").document(userId).collection("workouts").document(dateId).get()
+            .addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    exerciseList.clear();
+
+                    if (document != null && document.exists()) {
+                        selectedTime = document.getString("time");
+                        selectedEquipment = document.getString("equipment");
+                        isRestDay = document.getBoolean("isRestDay") != null && document.getBoolean("isRestDay");
+
+                        if (!isRestDay) {
+                            selectedWorkout = document.getString("workoutName");
+                            Object exercisesField = document.get("exercises");
+                            if (exercisesField instanceof List) {
+                                exerciseList.addAll(parseExercisesFromMap((List<HashMap<String, Object>>) exercisesField));
+                            }
+                        } else {
+                            selectedWorkout = "Rest Day";
+                        }
+                    } else {
+                        // Default state for a new day
+                        isRestDay = false;
+                        selectedWorkout = "No Workout Planned";
+                    }
+                    updateUI();
+                } else {
+                    Log.e(TAG, "Error getting workouts: ", task.getException());
+                }
+            });
+    }
+
+    private void saveWorkoutsForDate(LocalDate date) {
+        if (userId == null) return;
+        String dateId = date.format(DateTimeFormatter.ISO_LOCAL_DATE);
+
+        Map<String, Object> workoutData = new HashMap<>();
+        workoutData.put("isRestDay", isRestDay);
+        workoutData.put("workoutName", selectedWorkout);
+        workoutData.put("exercises", exerciseList);
+        workoutData.put("time", selectedTime);
+        workoutData.put("equipment", selectedEquipment);
+
+        db.collection("users").document(userId).collection("workouts").document(dateId)
+                .set(workoutData)
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "Workout saved for " + dateId))
+                .addOnFailureListener(e -> Log.e(TAG, "Error saving workout", e));
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Refresh data when returning to the fragment
+        if (currentUser != null) {
+            loadFirebaseData();
         }
     }
+
+    // --- UI SETUP AND EVENT HANDLERS ---
+
+    @Override
+    public void onDateClick(int position) {
+        selectedDate = calendarAdapter.getDateAt(position);
+        calendarAdapter.setSelectedPosition(position);
+        loadWorkoutsForDate(selectedDate);
+    }
+
+    @Override
+    public void onSave(Exercise updatedExercise, int position) {
+        exerciseList.set(position, updatedExercise);
+        saveWorkoutsForDate(selectedDate);
+        updateUI();
+    }
+
+    @Override
+    public void onRemove(Exercise exerciseToRemove, int position) {
+        exerciseList.remove(position);
+        if (exerciseList.isEmpty()) {
+            selectedWorkout = "No Workout Planned";
+        }
+        saveWorkoutsForDate(selectedDate);
+        updateUI();
+    }
+
+    @Override
+    public void onOptionSelected(String option) {
+        if (timeOptions.contains(option)) {
+            selectedTime = option;
+            tvTimeOption.setText(selectedTime);
+        } else if (equipmentOptions.contains(option)) {
+            selectedEquipment = option;
+            tvEquipmentOption.setText(selectedEquipment);
+        } else {
+            selectedWorkout = option;
+            tvWorkoutTitle.setText(selectedWorkout);
+            swapWorkout(option);
+            return; // swapWorkout already saves
+        }
+        saveWorkoutsForDate(selectedDate);
+    }
+
+    private void swapWorkout(String workoutName) {
+        if ("Custom Plan".equals(workoutName)) {
+            exerciseList.clear();
+            isRestDay = false;
+            saveWorkoutsForDate(selectedDate);
+            updateUI();
+            return;
+        }
+        db.collection("workout_templates").document(workoutName).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        List<HashMap<String, Object>> exercisesMap = (List<HashMap<String, Object>>) documentSnapshot.get("exercises");
+                        exerciseList.clear();
+                        exerciseList.addAll(parseExercisesFromMap(exercisesMap));
+                        isRestDay = false;
+                        selectedWorkout = workoutName;
+                        saveWorkoutsForDate(selectedDate);
+                        updateUI();
+                    }
+                });
+    }
+
+    private void updateUI() {
+        switchRestDay.setChecked(isRestDay);
+        tvTimeOption.setText(selectedTime);
+        tvEquipmentOption.setText(selectedEquipment);
+        tvWorkoutTitle.setText(selectedWorkout);
+
+        boolean hasWorkout = !exerciseList.isEmpty();
+
+        if (isRestDay) {
+            workoutDetailsGroup.setVisibility(View.GONE);
+            btnAddExercise.setVisibility(View.GONE);
+            btnSwap.setVisibility(View.GONE);
+            restDayCard.setVisibility(View.VISIBLE);
+            tvWorkoutSubtitle.setVisibility(View.GONE);
+        } else if (hasWorkout) {
+            workoutDetailsGroup.setVisibility(View.VISIBLE);
+            btnAddExercise.setVisibility(View.VISIBLE);
+            btnSwap.setVisibility(View.VISIBLE);
+            restDayCard.setVisibility(View.GONE);
+            tvWorkoutSubtitle.setVisibility(View.VISIBLE);
+            int exerciseCount = exerciseList.size();
+            tvWorkoutSubtitle.setText(String.format("%d Exercises", exerciseCount));
+        } else { // Empty Day
+            workoutDetailsGroup.setVisibility(View.GONE);
+            btnAddExercise.setVisibility(View.VISIBLE);
+            btnSwap.setVisibility(View.VISIBLE);
+            restDayCard.setVisibility(View.VISIBLE);
+            tvWorkoutSubtitle.setVisibility(View.VISIBLE);
+            tvWorkoutSubtitle.setText("Add a workout or set as rest day.");
+        }
+        exerciseAdapter.notifyDataSetChanged();
+    }
+    
+    private void handleSignedOutState(){
+        tvUserName.setText("Guest");
+        // Hide all workout related views
+        // You can add more views to hide here
+    }
+    
+    // --- UNCHANGED HELPER METHODS (initViews, setupListeners, etc.) ---
 
     private void initViews(View view) {
         rvCalendar = view.findViewById(R.id.rv_calendar);
         rvExercises = view.findViewById(R.id.rv_exercises);
         tvYear = view.findViewById(R.id.tv_year);
-
-        // NEW: Initialize User Name TextView
-        // IMPORTANT: Ensure your XML has android:id="@+id/tv_user_name"
         tvUserName = view.findViewById(R.id.tv_user_name);
-
         ivProfileIcon = view.findViewById(R.id.iv_profile_icon);
         tvTimeOption = view.findViewById(R.id.tv_time_option);
         tvEquipmentOption = view.findViewById(R.id.tv_equipment_option);
@@ -180,128 +327,8 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         tvExerciseCount = view.findViewById(R.id.tv_exercise_count);
         tvWorkoutSubtitle = view.findViewById(R.id.tv_workout_subtitle);
         btnAddExercise = view.findViewById(R.id.btn_add_exercise);
-        restDayContainer = view.findViewById(R.id.rest_day_container);
         restDayCard = view.findViewById(R.id.rest_day_card);
         btnStartWorkout = view.findViewById(R.id.btn_start_workout);
-    }
-
-    // ... (The rest of your code remains exactly the same below) ...
-
-    private void loadSavedDate() {
-        if(getContext() == null) return;
-        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        String savedDate = prefs.getString(KEY_SELECTED_DATE, null);
-        if (savedDate != null) {
-            selectedDate = LocalDate.parse(savedDate);
-        } else {
-            selectedDate = LocalDate.now();
-        }
-    }
-
-    private void saveSelectedDate(LocalDate date) {
-        if(getContext() == null) return;
-        SharedPreferences.Editor editor = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit();
-        editor.putString(KEY_SELECTED_DATE, date.format(DateTimeFormatter.ISO_LOCAL_DATE));
-        editor.apply();
-    }
-
-    private void loadDefaultOptions() {
-        if(getContext() == null) return;
-        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        selectedTime = prefs.getString(KEY_DEFAULT_TIME, "45 min");
-        selectedEquipment = prefs.getString(KEY_DEFAULT_EQUIPMENT, "With Equipment");
-        selectedWorkout = "Push Day"; // Default workout
-    }
-
-    private void setupOptionPickers() {
-        tvTimeOption.setText(selectedTime);
-        tvEquipmentOption.setText(selectedEquipment);
-        tvTimeOption.setOnClickListener(v -> showOptionsBottomSheet("time"));
-        tvEquipmentOption.setOnClickListener(v -> showOptionsBottomSheet("equipment"));
-    }
-
-    private void setupWorkoutTypes() {
-        workoutTypes.clear();
-        workoutTypes.add(new WorkoutType("Push Day", "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=2070&auto=format&fit=crop"));
-        workoutTypes.add(new WorkoutType("Pull Day", "https://images.unsplash.com/photo-1598971639058-211a74a96aea?q=80&w=2070&auto=format&fit=crop"));
-        workoutTypes.add(new WorkoutType("Leg Day", "https://images.unsplash.com/photo-1574680096145-d05b474e2155?q=80&w=2069&auto=format&fit=crop"));
-        workoutTypes.add(new WorkoutType("Upper Body", "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=2070&auto=format&fit=crop"));
-        workoutTypes.add(new WorkoutType("Cardio & Core", "https://images.unsplash.com/photo-1599058945522-28d584b6f0ff?q=80&w=2069&auto=format&fit=crop"));
-        workoutTypes.add(new WorkoutType("Custom Plan", "https://plus.unsplash.com/premium_photo-1664109999537-088e7d96448d?q=80&w=1974&auto=format&fit=crop"));
-        tvWorkoutTitle.setText(selectedWorkout);
-    }
-
-    private void showOptionsBottomSheet(String type) {
-        boolean isTime = type.equals("time");
-        String title = isTime ? "Workout duration" : "Equipment";
-        ArrayList<String> options = isTime ? timeOptions : equipmentOptions;
-        String selected = isTime ? selectedTime : selectedEquipment;
-
-        OptionsBottomSheetFragment bottomSheet = OptionsBottomSheetFragment.newInstance(title, options, selected);
-        bottomSheet.setOnOptionSelectedListener(this);
-        bottomSheet.show(getParentFragmentManager(), "OptionsBottomSheet");
-    }
-
-    private void showSwapWorkoutBottomSheet(){
-        SwapWorkoutBottomSheetFragment bottomSheet = SwapWorkoutBottomSheetFragment.newInstance("Swap Workout", workoutTypes, selectedWorkout);
-        bottomSheet.setOnOptionSelectedListener(this);
-        bottomSheet.show(getParentFragmentManager(), "SwapWorkoutBottomSheet");
-    }
-
-    @Override
-    public void onOptionSelected(String option) {
-        if (timeOptions.contains(option)) {
-            selectedTime = option;
-            tvTimeOption.setText(selectedTime);
-            saveWorkoutsForDate(selectedDate);
-        } else if (equipmentOptions.contains(option)) {
-            selectedEquipment = option;
-            tvEquipmentOption.setText(selectedEquipment);
-            saveWorkoutsForDate(selectedDate);
-        } else {
-            selectedWorkout = option;
-            tvWorkoutTitle.setText(selectedWorkout);
-            swapWorkout(option);
-        }
-    }
-
-    private void swapWorkout(String workoutName) {
-        if ("Custom Plan".equals(workoutName)) {
-            return;
-        }
-        isRestDay = false;
-        selectedWorkout = workoutName;
-
-        db.collection("workout_templates").document(workoutName)
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        List<HashMap<String, Object>> exercisesMap = (List<HashMap<String, Object>>) documentSnapshot.get("exercises");
-                        exerciseList.clear();
-                        exerciseList.addAll(parseExercisesFromMap(exercisesMap));
-                        saveWorkoutsForDate(selectedDate);
-                        updateUI();
-                    } else {
-                        Log.e(TAG, "Workout template not found: " + workoutName);
-                    }
-                })
-                .addOnFailureListener(e -> Log.e(TAG, "Error getting workout template", e));
-    }
-
-    @Override
-    public void onSetAsDefault(String option) {
-        SharedPreferences.Editor editor = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit();
-        if (timeOptions.contains(option)) {
-            selectedTime = option;
-            tvTimeOption.setText(selectedTime);
-            editor.putString(KEY_DEFAULT_TIME, selectedTime);
-        } else {
-            selectedEquipment = option;
-            tvEquipmentOption.setText(selectedEquipment);
-            editor.putString(KEY_DEFAULT_EQUIPMENT, selectedEquipment);
-        }
-        editor.apply();
-        saveWorkoutsForDate(selectedDate);
     }
 
     private void setupClickListeners() {
@@ -353,6 +380,9 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
                 isRestDay = isChecked;
                 if(isRestDay){
                     exerciseList.clear();
+                    selectedWorkout = "Rest Day";
+                } else {
+                    selectedWorkout = "No Workout Planned";
                 }
                 saveWorkoutsForDate(selectedDate);
                 updateUI();
@@ -365,35 +395,59 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
     private void setupCalendar() {
         rvCalendar.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
         List<LocalDate> dates = new ArrayList<>();
-        LocalDate today = LocalDate.now();
-        LocalDate startPoint = today.minusWeeks(1).with(DayOfWeek.MONDAY);
-        for (int i = 0; i < 21; i++) {
-            dates.add(startPoint.plusDays(i));
+        LocalDate monthStart = LocalDate.now().withDayOfMonth(1).minusMonths(1);
+        for (int i = 0; i < 90; i++) { // 3 months of dates
+            dates.add(monthStart.plusDays(i));
         }
-        int todayPosition = dates.indexOf(today);
-        calendarAdapter = new CalendarAdapter(dates, todayPosition, this);
+        int todayPosition = dates.indexOf(LocalDate.now());
+        calendarAdapter = new CalendarAdapter(dates, this);
+        calendarAdapter.setSelectedPosition(todayPosition);
         rvCalendar.setAdapter(calendarAdapter);
         if (todayPosition != -1) {
-            ((LinearLayoutManager) rvCalendar.getLayoutManager()).scrollToPositionWithOffset(todayPosition, rvCalendar.getWidth() / 2);
+            ((LinearLayoutManager) rvCalendar.getLayoutManager()).scrollToPositionWithOffset(todayPosition, rvCalendar.getWidth() / 2 - 40);
         }
     }
-
+    
     private void setupExercises() {
-        exerciseList = new ArrayList<>();
         exerciseAdapter = new ExerciseAdapter(exerciseList, this);
         rvExercises.setLayoutManager(new LinearLayoutManager(getContext()));
         rvExercises.setAdapter(exerciseAdapter);
-        loadWorkoutsForDate(selectedDate);
     }
 
-    @Override
-    public void onDateClick(int position) {
-        selectedDate = calendarAdapter.getDateAt(position);
-        calendarAdapter.setSelectedPosition(position);
-        saveSelectedDate(selectedDate);
-        loadWorkoutsForDate(selectedDate);
+    private void setupOptionPickers() {
+        tvTimeOption.setOnClickListener(v -> showOptionsBottomSheet("time"));
+        tvEquipmentOption.setOnClickListener(v -> showOptionsBottomSheet("equipment"));
     }
 
+    private void setupWorkoutTypes() {
+        workoutTypes.clear();
+        workoutTypes.add(new WorkoutType("Push Day", ""));
+        workoutTypes.add(new WorkoutType("Pull Day", ""));
+        workoutTypes.add(new WorkoutType("Leg Day", ""));
+        workoutTypes.add(new WorkoutType("Upper Body", ""));
+        workoutTypes.add(new WorkoutType("Cardio & Core", ""));
+        workoutTypes.add(new WorkoutType("Custom Plan", ""));
+    }
+
+    private void showOptionsBottomSheet(String type) {
+        ArrayList<String> timeOptions = new ArrayList<>(Arrays.asList("15 min", "30 min", "45 min", "1 hr", "1 hr, 30 min"));
+        ArrayList<String> equipmentOptions = new ArrayList<>(Arrays.asList("With Equipment", "No Equipment"));
+        boolean isTime = type.equals("time");
+        String title = isTime ? "Workout duration" : "Equipment";
+        ArrayList<String> options = isTime ? timeOptions : equipmentOptions;
+        String selected = isTime ? selectedTime : selectedEquipment;
+
+        OptionsBottomSheetFragment bottomSheet = OptionsBottomSheetFragment.newInstance(title, options, selected);
+        bottomSheet.setOnOptionSelectedListener(this);
+        bottomSheet.show(getParentFragmentManager(), "OptionsBottomSheet");
+    }
+
+    private void showSwapWorkoutBottomSheet(){
+        SwapWorkoutBottomSheetFragment bottomSheet = SwapWorkoutBottomSheetFragment.newInstance("Swap Workout", workoutTypes, selectedWorkout);
+        bottomSheet.setOnOptionSelectedListener(this);
+        bottomSheet.show(getParentFragmentManager(), "SwapWorkoutBottomSheet");
+    }
+    
     private List<Exercise> parseExercisesFromMap(List<HashMap<String, Object>> exercisesMap) {
         List<Exercise> exercises = new ArrayList<>();
         if (exercisesMap == null) return exercises;
@@ -402,37 +456,13 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
             try {
                 Exercise exercise = new Exercise();
                 exercise.setTitle((String) map.get("title"));
-
-                Object setsObj = map.get("sets");
-                if(setsObj instanceof Long) exercise.setSets(((Long) setsObj).intValue());
-
-                Object repsObj = map.get("reps");
-                if(repsObj instanceof Long) exercise.setReps(((Long) repsObj).intValue());
-
-                Object kgObj = map.get("kg");
-                if(kgObj instanceof Long) exercise.setKg(((Long) kgObj).intValue());
-
-                Object categoryObj = map.get("category");
-                if (categoryObj instanceof String) {
-                    exercise.setCategory(Exercise.Category.valueOf((String) categoryObj));
-                }
-
-                Object bodyPartObj = map.get("bodyPart");
-                if (bodyPartObj instanceof String) {
-                    exercise.setBodyPart(Exercise.BodyPart.valueOf((String) bodyPartObj));
-                }
-
-                Object muscleTargetsObj = map.get("muscleTargets");
-                if (muscleTargetsObj instanceof List) {
-                    exercise.setMuscleTargets((List<String>) muscleTargetsObj);
-                }
-
-                if (map.containsKey("imageUrl")) {
-                    exercise.setImageUrl((String) map.get("imageUrl"));
-                } else if (map.containsKey("imageResId")) {
-                    // Fallback or ignore
-                }
-
+                if (map.get("sets") != null) exercise.setSets(((Long) map.get("sets")).intValue());
+                if (map.get("reps") != null) exercise.setReps(((Long) map.get("reps")).intValue());
+                if (map.get("kg") != null) exercise.setKg(((Long) map.get("kg")).intValue());
+                if (map.get("category") != null) exercise.setCategory(Exercise.Category.valueOf((String) map.get("category")));
+                if (map.get("bodyPart") != null) exercise.setBodyPart(Exercise.BodyPart.valueOf((String) map.get("bodyPart")));
+                if (map.get("muscleTargets") != null) exercise.setMuscleTargets((List<String>) map.get("muscleTargets"));
+                if (map.get("imageUrl") != null) exercise.setImageUrl((String) map.get("imageUrl"));
                 exercise.setAddedToWorkout(true);
                 exercises.add(exercise);
             } catch (Exception e) {
@@ -442,169 +472,13 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         return exercises;
     }
 
-    private void loadWorkoutsForDate(LocalDate date) {
-        String dateId = date.format(DateTimeFormatter.ISO_LOCAL_DATE);
-        db.collection("users").document(userId).collection("workouts").document(dateId)
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        DocumentSnapshot document = task.getResult();
-                        exerciseList.clear();
-                        loadDefaultOptions();
-
-                        if (document != null && document.exists()) {
-                            if (document.contains("time")) selectedTime = document.getString("time");
-                            if (document.contains("equipment")) selectedEquipment = document.getString("equipment");
-
-                            isRestDay = document.getBoolean("isRestDay") != null && document.getBoolean("isRestDay");
-
-                            if (!isRestDay) {
-                                String workoutName = document.getString("workoutName");
-                                selectedWorkout = workoutName != null ? workoutName : "No Workout Planned";
-
-                                Object exercisesField = document.get("exercises");
-                                if (exercisesField instanceof List && !((List) exercisesField).isEmpty()) {
-                                    if("No Workout Planned".equals(selectedWorkout)){
-                                        selectedWorkout = "Custom Plan";
-                                    }
-                                    exerciseList.addAll(parseExercisesFromMap((List<HashMap<String, Object>>) exercisesField));
-                                } else {
-                                    selectedWorkout = "No Workout Planned";
-                                }
-                            }
-                        } else {
-                            isRestDay = false;
-                            selectedWorkout = "No Workout Planned";
-                        }
-                        updateUI();
-                    } else {
-                        Log.e(TAG, "Error getting workouts: ", task.getException());
-                    }
-                });
-    }
-
-    private void saveWorkoutsForDate(LocalDate date) {
-        String dateId = date.format(DateTimeFormatter.ISO_LOCAL_DATE);
-        Map<String, Object> workoutData = new HashMap<>();
-        workoutData.put("isRestDay", isRestDay);
-        workoutData.put("workoutName", selectedWorkout);
-        workoutData.put("exercises", exerciseList);
-        workoutData.put("time", selectedTime);
-        workoutData.put("equipment", selectedEquipment);
-
-        db.collection("users").document(userId).collection("workouts").document(dateId)
-                .set(workoutData)
-                .addOnSuccessListener(aVoid -> Log.d(TAG, "Workout saved for " + dateId))
-                .addOnFailureListener(e -> Log.e(TAG, "Error saving workout", e));
-    }
-
-    private void updateUI() {
-        switchRestDay.setChecked(isRestDay);
-        tvWorkoutSubtitle.setVisibility(View.GONE);
-        tvExerciseCount.setVisibility(View.GONE);
-        tvTimeOption.setText(selectedTime);
-        tvEquipmentOption.setText(selectedEquipment);
-
-        boolean hasWorkout = !exerciseList.isEmpty();
-
-        if(isRestDay){
-            tvWorkoutTitle.setText("Rest Day");
-            tvWorkoutSubtitle.setText("Time to recover!");
-            tvWorkoutSubtitle.setVisibility(View.VISIBLE);
-            workoutDetailsGroup.setVisibility(View.GONE);
-            btnAddExercise.setVisibility(View.GONE);
-            btnSwap.setVisibility(View.GONE);
-            restDayCard.setVisibility(View.GONE);
-        } else if (hasWorkout) {
-            tvWorkoutTitle.setText(selectedWorkout);
-            int exerciseCount = exerciseList.size();
-            Set<String> muscleTargets = new HashSet<>();
-            for (Exercise exercise : exerciseList) {
-                if (exercise.getMuscleTargets() != null) {
-                    muscleTargets.addAll(exercise.getMuscleTargets());
-                }
-            }
-            int muscleCount = muscleTargets.size();
-            String muscleTargetString = muscleCount + " Muscle Target" + (muscleCount == 1 ? "" : "s");
-
-            tvExerciseCount.setText(exerciseCount + " " + (exerciseCount == 1 ? "Exercise" : "Exercises") + " • " + muscleTargetString);
-            tvExerciseCount.setVisibility(View.VISIBLE);
-            btnSwap.setText("Swap");
-            btnSwap.setIconResource(R.drawable.ic_swap_horiz);
-            workoutDetailsGroup.setVisibility(View.VISIBLE);
-
-            if (exerciseList.size() >= 3) {
-                btnAddExercise.setVisibility(View.GONE);
-            } else {
-                btnAddExercise.setVisibility(View.VISIBLE);
-            }
-
-            if (exerciseList.size() >= 1) {
-                restDayCard.setVisibility(View.GONE);
-            } else {
-                restDayCard.setVisibility(View.VISIBLE);
-            }
-
-            btnSwap.setVisibility(View.VISIBLE);
-            btnStartWorkout.setVisibility(View.VISIBLE);
-        } else { // Empty Day
-            tvWorkoutTitle.setText("No Workout Planned");
-            tvWorkoutSubtitle.setText("Start your path to fitness today!");
-            tvWorkoutSubtitle.setVisibility(View.VISIBLE);
-            btnSwap.setText("Plans");
-            btnSwap.setIconResource(android.R.drawable.ic_dialog_info);
-            workoutDetailsGroup.setVisibility(View.GONE);
-            btnAddExercise.setVisibility(View.VISIBLE);
-            btnSwap.setVisibility(View.VISIBLE);
-            restDayCard.setVisibility(View.VISIBLE);
-            btnStartWorkout.setVisibility(View.GONE);
-        }
-
-        if (exerciseAdapter != null) {
-            exerciseAdapter.notifyDataSetChanged();
-        }
-    }
+    // Unused listener methods, can be filled in later
+    @Override
+    public void onSetAsDefault(String option) {}
 
     @Override
     public void onMoreClick(Exercise exercise, int position) {
         EditExerciseDialog dialog = new EditExerciseDialog(exercise, position, this);
         dialog.show(getChildFragmentManager(), "EditExerciseDialog");
-    }
-
-    @Override
-    public void onSave(Exercise updatedExercise, int position) {
-        exerciseList.set(position, updatedExercise);
-        saveWorkoutsForDate(selectedDate);
-        updateUI();
-    }
-
-    @Override
-    public void onRemove(Exercise exerciseToRemove, int position) {
-        exerciseList.remove(position);
-        saveWorkoutsForDate(selectedDate);
-        updateUI();
-    }
-
-    private void uploadWorkoutTemplatesToFirestore() {
-        Log.d(TAG, "Attempting to upload workout templates...");
-        Map<String, List<Exercise>> templates = new HashMap<>();
-        templates.put("Push Day", WorkoutTemplates.getPushDay());
-        templates.put("Pull Day", WorkoutTemplates.getPullDay());
-        templates.put("Leg Day", WorkoutTemplates.getLegDay());
-        templates.put("Upper Body", WorkoutTemplates.getUpperBody());
-        templates.put("Cardio & Core", WorkoutTemplates.getCardioCore());
-
-        for (Map.Entry<String, List<Exercise>> entry : templates.entrySet()) {
-            String templateName = entry.getKey();
-            List<Exercise> exercises = entry.getValue();
-
-            Map<String, Object> templateData = new HashMap<>();
-            templateData.put("exercises", exercises);
-
-            db.collection("workout_templates").document(templateName)
-                    .set(templateData)
-                    .addOnSuccessListener(aVoid -> Log.d(TAG, "Template '" + templateName + "' uploaded successfully."))
-                    .addOnFailureListener(e -> Log.e(TAG, "Error uploading template '" + templateName + "'", e));
-        }
     }
 }

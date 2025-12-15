@@ -1,10 +1,9 @@
 package com.example.pathfitx;
 
 import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -21,9 +20,12 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.google.android.material.button.MaterialButton;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
-import java.io.Serializable;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -35,7 +37,6 @@ import java.util.Map;
 public class LiveSessionActivity extends AppCompatActivity {
 
     private static final String TAG = "LiveSessionActivity";
-    private static final String USER_PREFS_NAME = "UserPrefs";
 
     // UI
     private TextView tvTimer, tvProgressText;
@@ -43,18 +44,23 @@ public class LiveSessionActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private RecyclerView rvLiveWorkout;
 
-    // Timer Logic
-    private Handler timerHandler = new Handler(Looper.getMainLooper());
+    // Timer
+    private final Handler timerHandler = new Handler(Looper.getMainLooper());
     private long startTime = 0L;
     private long timeSwapBuff = 0L;
     private long updateTime = 0L;
     private boolean isRunning = true;
 
-    // Progress Logic
+    // Progress
     private int totalSets = 0;
     private int completedSets = 0;
     private List<Exercise> workoutList;
     private String workoutName = "My Workout";
+
+    // Firebase
+    private FirebaseFirestore db;
+    private FirebaseAuth mAuth;
+    private FirebaseUser currentUser;
     private String userId;
 
     @Override
@@ -62,17 +68,12 @@ public class LiveSessionActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_live_session);
 
-        tvTimer = findViewById(R.id.tv_timer);
-        tvProgressText = findViewById(R.id.tv_progress_text);
-        progressBar = findViewById(R.id.progress_bar);
-        btnPause = findViewById(R.id.btn_pause);
-        rvLiveWorkout = findViewById(R.id.rv_live_workout);
-
-        loadUserId();
+        initFirebase();
+        initViews();
 
         if (userId == null) {
             Toast.makeText(this, "Error: User not logged in. Cannot save progress.", Toast.LENGTH_LONG).show();
-            finish(); // Close the activity if user is not identified
+            finish(); // Close activity
             return;
         }
 
@@ -86,13 +87,25 @@ public class LiveSessionActivity extends AppCompatActivity {
         findViewById(R.id.btn_finish).setOnClickListener(v -> finishWorkout());
     }
 
-    private void loadUserId() {
-        SharedPreferences userPrefs = getSharedPreferences(USER_PREFS_NAME, Context.MODE_PRIVATE);
-        userId = userPrefs.getString("USERNAME", null);
-        if (userId == null) {
-            Log.e(TAG, "User ID is null. This is a critical error.");
+    private void initFirebase() {
+        mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
+        currentUser = mAuth.getCurrentUser();
+        if (currentUser != null) {
+            userId = currentUser.getUid(); // CORRECT WAY to get user ID
+        } else {
+            Log.e(TAG, "User is not authenticated.");
         }
     }
+
+    private void initViews(){
+        tvTimer = findViewById(R.id.tv_timer);
+        tvProgressText = findViewById(R.id.tv_progress_text);
+        progressBar = findViewById(R.id.progress_bar);
+        btnPause = findViewById(R.id.btn_pause);
+        rvLiveWorkout = findViewById(R.id.rv_live_workout);
+    }
+
 
     private void setupTimer() {
         startTime = System.currentTimeMillis();
@@ -113,7 +126,7 @@ public class LiveSessionActivity extends AppCompatActivity {
         });
     }
 
-    private Runnable updateTimerThread = new Runnable() {
+    private final Runnable updateTimerThread = new Runnable() {
         public void run() {
             long timeInMilliseconds = System.currentTimeMillis() - startTime;
             updateTime = timeSwapBuff + timeInMilliseconds;
@@ -134,7 +147,6 @@ public class LiveSessionActivity extends AppCompatActivity {
         }
 
         totalSets = 0;
-        completedSets = 0;
         for (Exercise ex : workoutList) {
             totalSets += ex.getSets();
         }
@@ -161,9 +173,11 @@ public class LiveSessionActivity extends AppCompatActivity {
     }
 
     private void finishWorkout() {
-        timeSwapBuff += System.currentTimeMillis() - startTime;
-        timerHandler.removeCallbacks(updateTimerThread);
-        isRunning = false;
+        if (isRunning) {
+            timeSwapBuff += System.currentTimeMillis() - startTime;
+            timerHandler.removeCallbacks(updateTimerThread);
+            isRunning = false;
+        }
 
         int durationSeconds = (int) (updateTime / 1000);
         int totalVolume = 0;
@@ -183,13 +197,6 @@ public class LiveSessionActivity extends AppCompatActivity {
         View view = LayoutInflater.from(this).inflate(R.layout.dialog_workout_summary, null);
 
         EditText etTitle = view.findViewById(R.id.etWorkoutTitle);
-        TextView tvTitle = view.findViewById(R.id.tvWorkoutTitle);
-        ImageView ivEdit = view.findViewById(R.id.ivEditIcon);
-
-        etTitle.setVisibility(View.VISIBLE);
-        tvTitle.setVisibility(View.GONE);
-        ivEdit.setVisibility(View.VISIBLE);
-
         etTitle.setText(workoutName);
 
         ((TextView) view.findViewById(R.id.tvDurationValue)).setText((durationSeconds / 60) + " min");
@@ -210,7 +217,7 @@ public class LiveSessionActivity extends AppCompatActivity {
             }
             saveWorkoutToHistory(durationSeconds, totalVolume, completionRate, exercisesCount);
             dialog.dismiss();
-            finish();
+            finish(); // Go back to HomeFragment
         };
 
         view.findViewById(R.id.btnClose).setOnClickListener(closeAction);
@@ -222,12 +229,12 @@ public class LiveSessionActivity extends AppCompatActivity {
             Log.e(TAG, "Cannot save history, user ID is null.");
             return;
         }
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
         String dateId = "";
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             dateId = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
         } else {
-            dateId = String.valueOf(System.currentTimeMillis());
+            dateId = String.valueOf(System.currentTimeMillis()); // Fallback for older APIs
         }
 
         Map<String, Object> historyData = new HashMap<>();
@@ -239,13 +246,10 @@ public class LiveSessionActivity extends AppCompatActivity {
         historyData.put("timestamp", System.currentTimeMillis());
         historyData.put("date", dateId);
 
+        // Add to the 'history' sub-collection
         db.collection("users").document(userId).collection("history")
                 .add(historyData)
-                .addOnSuccessListener(documentReference -> {
-                    Log.d(TAG, "Workout history saved successfully for user: " + userId);
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error saving workout history for user: " + userId, e);
-                });
+                .addOnSuccessListener(documentReference -> Log.d(TAG, "Workout history saved with ID: " + documentReference.getId()))
+                .addOnFailureListener(e -> Log.e(TAG, "Error saving workout history", e));
     }
 }

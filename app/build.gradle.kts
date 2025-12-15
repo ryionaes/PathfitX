@@ -1,16 +1,16 @@
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.google.services)
+    id("com.android.application")
+    id("com.google.gms.google-services")
 }
 
 android {
     namespace = "com.example.pathfitx"
-    compileSdk = 36 // It is safer to use 35 or 34 for now, but 36 is fine if you have the preview installed
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.pathfitx"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -39,16 +39,19 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.cardview)
     implementation("androidx.recyclerview:recyclerview:1.3.2")
+    implementation("androidx.core:core-splashscreen:1.2.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation("com.github.CanHub:Android-Image-Cropper:4.4.0")
 
     // Firebase
-    implementation(platform(libs.firebase.bom))
+    implementation(platform("com.google.firebase:firebase-bom:34.7.0"))
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.firestore)
+    implementation(libs.firebase.auth)
 
     // GOOGLE SIGN IN (Added this line)
-    implementation("com.google.android.gms:play-services-auth:20.7.0")
+    implementation("com.google.android.gms:play-services-auth:21.4.0")
 }
