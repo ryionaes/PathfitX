@@ -1,5 +1,6 @@
 package com.example.pathfitx;
 
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -27,8 +28,10 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -36,13 +39,16 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
-public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClickListener, EditExerciseDialog.DialogListener, CalendarAdapter.OnDateClickListener, OptionsBottomSheetFragment.OnOptionSelectedListener, SwapWorkoutBottomSheetFragment.OnOptionSelectedListener {
+public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClickListener, EditExerciseDialog.DialogListener, CalendarAdapter.OnDateClickListener, OptionsBottomSheetFragment.OnOptionSelectedListener, SwapWorkoutBottomSheetFragment.OnOptionSelectedListener, UserUpdatable {
 
     private static final String TAG = "HomeFragment";
+    private static final String ARG_SELECTED_DATE = "selectedDate";
 
     // UI
     private RecyclerView rvCalendar, rvExercises;
@@ -57,9 +63,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
 
     // Firebase
     private FirebaseFirestore db;
-    private FirebaseAuth mAuth;
-    private FirebaseUser currentUser;
-    private String userId;
+    private ListenerRegistration workoutListener;
 
     // State
     private List<Exercise> exerciseList = new ArrayList<>();
@@ -72,6 +76,26 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
     private final ArrayList<String> timeOptions = new ArrayList<>(Arrays.asList("15 min", "30 min", "45 min", "1 hr", "1 hr, 30 min"));
     private final ArrayList<String> equipmentOptions = new ArrayList<>(Arrays.asList("With Equipment", "No Equipment"));
 
+    private OnDateSelectedListener mListener;
+
+    public static HomeFragment newInstance(String selectedDate) {
+        HomeFragment fragment = new HomeFragment();
+        Bundle args = new Bundle();
+        args.putString(ARG_SELECTED_DATE, selectedDate);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if (context instanceof OnDateSelectedListener) {
+            mListener = (OnDateSelectedListener) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement OnDateSelectedListener");
+        }
+    }
 
     @Nullable
     @Override
@@ -82,100 +106,108 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        initFirebase();
+        db = FirebaseFirestore.getInstance();
         initViews(view);
 
-        if (currentUser == null) {
-            handleSignedOutState();
-            return;
+        if (getArguments() != null && getArguments().getString(ARG_SELECTED_DATE) != null) {
+            selectedDate = LocalDate.parse(getArguments().getString(ARG_SELECTED_DATE));
+        } else {
+            selectedDate = LocalDate.now();
         }
-
-        selectedDate = LocalDate.now();
         tvYear.setText(String.valueOf(selectedDate.getYear()));
+
+        if (getActivity() instanceof HomeScreen) {
+            DocumentSnapshot userSnapshot = ((HomeScreen) getActivity()).getUserSnapshot();
+            if (userSnapshot != null) {
+                onUserUpdate(userSnapshot);
+            }
+        }
 
         setupCalendar();
         setupOptionPickers();
         setupWorkoutTypes();
         setupExercises();
         setupClickListeners();
-
-        loadFirebaseData();
-    }
-
-    private void initFirebase() {
-        db = FirebaseFirestore.getInstance();
-        mAuth = FirebaseAuth.getInstance();
-        currentUser = mAuth.getCurrentUser();
-        if (currentUser != null) {
-            userId = currentUser.getUid();
-        }
-    }
-
-    private void loadFirebaseData() {
-        loadUserProfile();
         loadWorkoutsForDate(selectedDate);
     }
 
-    private void loadUserProfile() {
-        if (userId == null || !isAdded()) return;
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (workoutListener != null) {
+            workoutListener.remove();
+        }
+    }
 
-        db.collection("users").document(userId).get().addOnSuccessListener(snapshot -> {
-            if (snapshot.exists()) {
-                String username = snapshot.getString("username");
-                String profileImageUri = snapshot.getString("profileImageUri");
+    @Override
+    public void onUserUpdate(DocumentSnapshot snapshot) {
+        if (isAdded() && getContext() != null) {
+            String username = snapshot.getString("username");
+            String profileImageUri = snapshot.getString("profileImageUri");
 
-                tvUserName.setText(username != null ? username : "Fitness User");
+            tvUserName.setText(username != null ? username : "Fitness User");
 
-                if (ivProfileIcon != null) {
-                    if (profileImageUri != null && !profileImageUri.isEmpty()) {
-                        Glide.with(this).load(Uri.parse(profileImageUri)).circleCrop()
-                             .signature(new ObjectKey(System.currentTimeMillis()))
-                             .into(ivProfileIcon);
-                    } else {
-                        Glide.with(this).load(R.drawable.ic_profile_default).circleCrop().into(ivProfileIcon);
-                    }
+            if (ivProfileIcon != null) {
+                if (profileImageUri != null && !profileImageUri.isEmpty()) {
+                    Glide.with(this).load(Uri.parse(profileImageUri)).circleCrop()
+                            .signature(new ObjectKey(System.currentTimeMillis()))
+                            .into(ivProfileIcon);
+                } else {
+                    Glide.with(this).load(R.drawable.ic_profile_default).circleCrop().into(ivProfileIcon);
                 }
             }
-        }).addOnFailureListener(e -> Log.e(TAG, "Error loading user profile", e));
+        }
     }
 
     private void loadWorkoutsForDate(LocalDate date) {
-        if (userId == null) return;
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) return;
+        String userId = currentUser.getUid();
+
         String dateId = date.format(DateTimeFormatter.ISO_LOCAL_DATE);
+        if (mListener != null) {
+            mListener.onDateSelected(dateId);
+        }
 
-        db.collection("users").document(userId).collection("workouts").document(dateId).get()
-            .addOnCompleteListener(task -> {
-                if (task.isSuccessful()) {
-                    DocumentSnapshot document = task.getResult();
-                    exerciseList.clear();
+        if (workoutListener != null) {
+            workoutListener.remove();
+        }
 
-                    if (document != null && document.exists()) {
-                        selectedTime = document.getString("time");
-                        selectedEquipment = document.getString("equipment");
-                        isRestDay = document.getBoolean("isRestDay") != null && document.getBoolean("isRestDay");
+        DocumentReference workoutDocRef = db.collection("users").document(userId).collection("workouts").document(dateId);
+        workoutListener = workoutDocRef.addSnapshotListener((snapshot, e) -> {
+            if (e != null) {
+                Log.e(TAG, "Error getting workouts: ", e);
+                return;
+            }
 
-                        if (!isRestDay) {
-                            selectedWorkout = document.getString("workoutName");
-                            Object exercisesField = document.get("exercises");
-                            if (exercisesField instanceof List) {
-                                exerciseList.addAll(parseExercisesFromMap((List<HashMap<String, Object>>) exercisesField));
-                            }
-                        } else {
-                            selectedWorkout = "Rest Day";
-                        }
-                    } else {
-                        isRestDay = false;
-                        selectedWorkout = "No Workout Planned";
+            exerciseList.clear();
+
+            if (snapshot != null && snapshot.exists()) {
+                selectedTime = snapshot.getString("time");
+                selectedEquipment = snapshot.getString("equipment");
+                isRestDay = snapshot.getBoolean("isRestDay") != null && snapshot.getBoolean("isRestDay");
+
+                if (!isRestDay) {
+                    selectedWorkout = snapshot.getString("workoutName");
+                    Object exercisesField = snapshot.get("exercises");
+                    if (exercisesField instanceof List) {
+                        exerciseList.addAll(parseExercisesFromMap((List<HashMap<String, Object>>) exercisesField));
                     }
-                    updateUI();
                 } else {
-                    Log.e(TAG, "Error getting workouts: ", task.getException());
+                    selectedWorkout = "Rest Day";
                 }
-            });
+            } else {
+                isRestDay = false;
+                selectedWorkout = "No Workout Planned";
+            }
+            updateUI();
+        });
     }
 
     private void saveWorkoutsForDate(LocalDate date) {
-        if (userId == null) return;
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) return;
+        String userId = currentUser.getUid();
         String dateId = date.format(DateTimeFormatter.ISO_LOCAL_DATE);
 
         Map<String, Object> workoutData = new HashMap<>();
@@ -189,14 +221,6 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
                 .set(workoutData)
                 .addOnSuccessListener(aVoid -> Log.d(TAG, "Workout saved for " + dateId))
                 .addOnFailureListener(e -> Log.e(TAG, "Error saving workout", e));
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (currentUser != null) {
-            loadFirebaseData();
-        }
     }
 
     @Override
@@ -283,8 +307,17 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
             btnSwap.setVisibility(View.VISIBLE);
             restDayCard.setVisibility(View.GONE);
             tvWorkoutSubtitle.setVisibility(View.VISIBLE);
+
             int exerciseCount = exerciseList.size();
-            tvWorkoutSubtitle.setText(String.format("%d Exercises", exerciseCount));
+            Set<String> muscleGroups = new HashSet<>();
+            for (Exercise exercise : exerciseList) {
+                if (exercise.getMuscleTargets() != null) {
+                    muscleGroups.addAll(exercise.getMuscleTargets());
+                }
+            }
+            int muscleCount = muscleGroups.size();
+
+            tvWorkoutSubtitle.setText(String.format("%d Exercises • %d Muscles", exerciseCount, muscleCount));
             tvRestDayMessage.setVisibility(View.GONE);
         } else { // Empty Day
             workoutDetailsGroup.setVisibility(View.GONE);
@@ -296,10 +329,6 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
             tvRestDayMessage.setVisibility(View.GONE);
         }
         if(exerciseAdapter != null) exerciseAdapter.notifyDataSetChanged();
-    }
-    
-    private void handleSignedOutState(){
-        tvUserName.setText("Guest");
     }
     
     private void initViews(View view) {
@@ -340,10 +369,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
                 selectedWorkout = "Custom Plan";
             }
 
-            WorkoutFragment workoutFragment = new WorkoutFragment();
-            Bundle args = new Bundle();
-            args.putString("selectedDate", selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
-            workoutFragment.setArguments(args);
+            WorkoutFragment workoutFragment = WorkoutFragment.newInstance(selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
 
             getParentFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, workoutFragment)
@@ -369,11 +395,16 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         switchRestDay.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
                 isRestDay = isChecked;
-                if(isRestDay){
+                if (isRestDay) {
                     exerciseList.clear();
                     selectedWorkout = "Rest Day";
                 } else {
-                    selectedWorkout = "No Workout Planned";
+                    // If there are exercises, it's a custom plan, otherwise no workout.
+                    if (!exerciseList.isEmpty()) {
+                        selectedWorkout = "Custom Plan";
+                    } else {
+                        selectedWorkout = "No Workout Planned";
+                    }
                 }
                 saveWorkoutsForDate(selectedDate);
                 updateUI();
@@ -390,12 +421,17 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         for (int i = 0; i < 90; i++) { // 3 months of dates
             dates.add(monthStart.plusDays(i));
         }
-        int todayPosition = dates.indexOf(LocalDate.now());
-        calendarAdapter = new CalendarAdapter(dates, todayPosition, this);
-        calendarAdapter.setSelectedPosition(todayPosition);
+        int selectedPosition = dates.indexOf(selectedDate);
+        calendarAdapter = new CalendarAdapter(dates, selectedPosition, this);
+        calendarAdapter.setSelectedPosition(selectedPosition);
         rvCalendar.setAdapter(calendarAdapter);
-        if (todayPosition != -1) {
-            ((LinearLayoutManager) rvCalendar.getLayoutManager()).scrollToPositionWithOffset(todayPosition, rvCalendar.getWidth() / 2 - 40);
+        if (selectedPosition != -1) {
+            rvCalendar.post(() -> {
+                LinearLayoutManager layoutManager = (LinearLayoutManager) rvCalendar.getLayoutManager();
+                if (layoutManager != null) {
+                    layoutManager.scrollToPositionWithOffset(selectedPosition, rvCalendar.getWidth() / 2 - 40);
+                }
+            });
         }
     }
     

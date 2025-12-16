@@ -1,7 +1,6 @@
 package com.example.pathfitx;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
@@ -10,7 +9,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.HorizontalScrollView;
 import android.widget.Toast;
@@ -18,7 +16,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -36,6 +33,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +41,7 @@ import java.util.Map;
 public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerciseInteractionListener, ExerciseDetailDialog.OnAddExerciseListener {
 
     private static final String TAG = "WorkoutFragment";
+    private static final String ARG_SELECTED_DATE = "selectedDate";
 
     // UI
     private RecyclerView rvExplore;
@@ -57,7 +56,7 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
 
     // Data
     private List<Exercise> allExercises;
-    
+
     // Filter State
     private enum FilterType { ALL, MUSCLE, GOALS }
     private FilterType currentFilterType = FilterType.ALL;
@@ -73,6 +72,20 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
     private FirebaseUser currentUser;
     private String userId;
     private String selectedDate; // ISO-8601 formatted date string
+
+    // Callback for generic operations
+    public interface GeneralCallback {
+        void onComplete(boolean success);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public static WorkoutFragment newInstance(String selectedDate) {
+        WorkoutFragment fragment = new WorkoutFragment();
+        Bundle args = new Bundle();
+        args.putString(ARG_SELECTED_DATE, selectedDate);
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     @Nullable
     @Override
@@ -112,13 +125,70 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
             return false;
         }
 
-        if (getArguments() != null && getArguments().getString("selectedDate") != null) {
-            selectedDate = getArguments().getString("selectedDate");
+        if (getArguments() != null && getArguments().getString(ARG_SELECTED_DATE) != null) {
+            selectedDate = getArguments().getString(ARG_SELECTED_DATE);
         } else {
             selectedDate = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
         }
         return true;
     }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public void setRestDay(boolean isRest, final GeneralCallback callback) {
+        if (userId == null || selectedDate == null) {
+            if (callback != null) callback.onComplete(false);
+            return;
+        }
+
+        final DocumentReference workoutDocRef = db.collection("users").document(userId).collection("workouts").document(selectedDate);
+        Map<String, Object> workoutData = new HashMap<>();
+        workoutData.put("isRestDay", isRest);
+
+        if (isRest) {
+            // If it's a rest day, we can clear out the exercises
+            workoutData.put("exercises", new ArrayList<>());
+            workoutData.put("workoutName", "Rest Day");
+        } else {
+            // If it's not a rest day, we don't want to remove existing exercises unless specified
+            workoutData.put("workoutName", "Custom Plan");
+        }
+
+        workoutDocRef.get().addOnCompleteListener(task -> {
+            if (getContext() == null || !isAdded()) {
+                if (callback != null) callback.onComplete(false);
+                return;
+            }
+
+            if (task.isSuccessful() && task.getResult() != null) {
+                if (task.getResult().exists()) {
+                    workoutDocRef.update(workoutData)
+                            .addOnSuccessListener(aVoid -> {
+                                Toast.makeText(getContext(), isRest ? "Marked as Rest Day" : "Workout day activated", Toast.LENGTH_SHORT).show();
+                                if (callback != null) callback.onComplete(true);
+                            })
+                            .addOnFailureListener(e -> {
+                                Toast.makeText(getContext(), "Failed to update day.", Toast.LENGTH_SHORT).show();
+                                if (callback != null) callback.onComplete(false);
+                            });
+                } else {
+                    // if it does not exist, create a new one
+                    workoutDocRef.set(workoutData)
+                            .addOnSuccessListener(aVoid -> {
+                                Toast.makeText(getContext(), isRest ? "Marked as Rest Day" : "Workout day activated", Toast.LENGTH_SHORT).show();
+                                if (callback != null) callback.onComplete(true);
+                            })
+                            .addOnFailureListener(e -> {
+                                Toast.makeText(getContext(), "Failed to set day.", Toast.LENGTH_SHORT).show();
+                                if (callback != null) callback.onComplete(false);
+                            });
+                }
+            } else {
+                Toast.makeText(getContext(), "Failed to access day.", Toast.LENGTH_SHORT).show();
+                if (callback != null) callback.onComplete(false);
+            }
+        });
+    }
+
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -149,19 +219,32 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
 
             if (task.isSuccessful() && task.getResult() != null) {
                 DocumentSnapshot document = task.getResult();
-                Map<String, Object> updates = new HashMap<>();
-                updates.put("exercises", FieldValue.arrayUnion(exercise));
-                updates.put("workoutName", "Custom Plan");
 
                 if (document.exists()) {
+                    // Document exists, so we can update it
+                    boolean isRestDay = document.getBoolean("isRestDay") != null && document.getBoolean("isRestDay");
+                    if (isRestDay) {
+                        Toast.makeText(getContext(), "This was a rest day. Now it's a workout day!", Toast.LENGTH_SHORT).show();
+                    }
+
+                    Map<String, Object> updates = new HashMap<>();
+                    updates.put("exercises", FieldValue.arrayUnion(exercise));
+                    updates.put("isRestDay", false); // Adding an exercise makes it not a rest day
+                    updates.put("workoutName", "Custom Plan");
+
                     workoutDocRef.update(updates)
                             .addOnSuccessListener(aVoid -> handleSuccess(exercise.getTitle(), callback))
                             .addOnFailureListener(e -> handleFailure(e, callback));
                 } else {
-                    updates.put("isRestDay", false);
-                    updates.put("time", "45 min");
-                    updates.put("equipment", "With Equipment");
-                    workoutDocRef.set(updates)
+                    // Document does not exist, so we create it
+                    Map<String, Object> newWorkout = new HashMap<>();
+                    newWorkout.put("workoutName", "Custom Plan");
+                    newWorkout.put("isRestDay", false);
+                    newWorkout.put("time", "45 min");
+                    newWorkout.put("equipment", "With Equipment");
+                    newWorkout.put("exercises", Collections.singletonList(exercise)); // Initialize with a list
+
+                    workoutDocRef.set(newWorkout)
                             .addOnSuccessListener(aVoid -> handleSuccess(exercise.getTitle(), callback))
                             .addOnFailureListener(e -> handleFailure(e, callback));
                 }
@@ -190,10 +273,10 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
         rvExplore = view.findViewById(R.id.rv_explore);
         etSearch = view.findViewById(R.id.et_search);
         secondaryFilterScrollView = view.findViewById(R.id.scroll_chips_secondary);
-        
+
         chipGroupCategory = view.findViewById(R.id.chipGroupCategory);
         chipGroupFilters = view.findViewById(R.id.chipGroupFilters);
-        
+
         chipAll = view.findViewById(R.id.chip_all);
         chipMuscle = view.findViewById(R.id.chip_muscle);
         chipGoals = view.findViewById(R.id.chip_goals);
@@ -219,7 +302,7 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
         chipAll.setOnClickListener(v -> setFilterType(FilterType.ALL));
         chipMuscle.setOnClickListener(v -> setFilterType(FilterType.MUSCLE));
         chipGoals.setOnClickListener(v -> setFilterType(FilterType.GOALS));
-        
+
         // Initial state
         setFilterType(FilterType.ALL);
     }
@@ -242,32 +325,29 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
             applyFilters();
         }
     }
-    
+
     private void populateChips(List<String> tags) {
         if (getContext() == null) return;
-        
+
         chipGroupFilters.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(getContext());
-        
+
         for (String tag : tags) {
             Chip chip = (Chip) inflater.inflate(R.layout.item_filter_chip, chipGroupFilters, false);
             chip.setText(tag);
-            
+
             chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 if (isChecked) {
                     currentSecondaryFilter = tag;
                 } else {
-                    // Check if the unchecked one was the current one before clearing
-                    // Also check if any other chip is checked if singleSelection is true,
-                    // but with ChipGroup singleSelection, usually one stays checked or none.
-                    // If we want to allow deselecting:
+
                     if (tag.equals(currentSecondaryFilter)) {
                         currentSecondaryFilter = null;
                     }
                 }
                 applyFilters();
             });
-            
+
             chipGroupFilters.addView(chip);
         }
     }
@@ -275,7 +355,7 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
     private void applyFilters() {
         String searchText = etSearch.getText().toString().toLowerCase().trim();
         List<Exercise> filteredList = new ArrayList<>();
-        
+
         for (Exercise exercise : allExercises) {
             boolean matchesSearch = searchText.isEmpty() || exercise.getTitle().toLowerCase().contains(searchText);
             boolean matchesFilter = true;
@@ -296,7 +376,7 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
         }
         adapter.setExercises(filteredList);
     }
-    
+
     private boolean matchMuscle(Exercise exercise, String muscle) {
         Exercise.BodyPart part = exercise.getBodyPart();
         switch (muscle) {

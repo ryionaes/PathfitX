@@ -31,21 +31,25 @@ import com.canhub.cropper.CropImageContractOptions;
 import com.canhub.cropper.CropImageOptions;
 import com.canhub.cropper.CropImageView;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-public class ProfileFragment extends Fragment {
+public class ProfileFragment extends Fragment implements UserUpdatable {
 
     private static final String TAG = "ProfileFragment";
 
     // --- UI Elements ---
-    private TextView tvUserName, tvWeight, tvHeight, tvAge, tvEditProfile, tvChangePassword;
+    private TextView tvUserName, tvWeight, tvHeight, tvAge, tvEditProfile, tvChangePassword, tvEditGoals;
     private CardView btnEditProfile, btnNotifications, btnSettings, btnPrivacy;
     private MaterialButton btnLogout;
     private CardView cvProfileImage;
@@ -55,8 +59,8 @@ public class ProfileFragment extends Fragment {
     private TextView contentAccountInfo;
     private LinearLayout layoutAccountDetails, contentHelp, contentAbout;
     private LinearLayout layoutNotificationSettings;
-    private Button btnOpenEditDialog;
     private SwitchMaterial switchWaterReminder, switchWorkoutAlerts;
+    private ChipGroup chipGroupGoals;
 
     // --- Image Picker ---
     private ActivityResultLauncher<PickVisualMediaRequest> pickMedia;
@@ -64,8 +68,8 @@ public class ProfileFragment extends Fragment {
 
     // Firebase
     private FirebaseAuth mAuth;
-    private FirebaseFirestore db;
     private FirebaseUser currentUser;
+    private FirebaseFirestore db;
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -74,12 +78,7 @@ public class ProfileFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Initialize Firebase
-        mAuth = FirebaseAuth.getInstance();
-        db = FirebaseFirestore.getInstance();
-        currentUser = mAuth.getCurrentUser();
-
+        initFirebase();
         initializeImagePicker();
     }
 
@@ -93,43 +92,75 @@ public class ProfileFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         initializeViews(view);
         setupListeners();
-        loadUserProfile();
+
+        // Get initial data from hosting activity
+        if (getActivity() instanceof HomeScreen) {
+            DocumentSnapshot userSnapshot = ((HomeScreen) getActivity()).getUserSnapshot();
+            if (userSnapshot != null) {
+                onUserUpdate(userSnapshot);
+            } else {
+                updateUIForGuest();
+            }
+        }
     }
 
-    private void loadUserProfile() {
-        if (currentUser == null || getContext() == null) {
-            tvUserName.setText("Guest");
+    private void initFirebase() {
+        mAuth = FirebaseAuth.getInstance();
+        currentUser = mAuth.getCurrentUser();
+        db = FirebaseFirestore.getInstance();
+    }
+
+    @Override
+    public void onUserUpdate(DocumentSnapshot snapshot) {
+        updateUIWithData(snapshot);
+    }
+
+    private void updateUIWithData(@NonNull DocumentSnapshot snapshot) {
+        if (!isAdded() || getContext() == null) return;
+
+        String username = snapshot.getString("username");
+        String email = snapshot.getString("email");
+        Double weight = snapshot.getDouble("weight_kg");
+        Double height = snapshot.getDouble("height_cm");
+        Long age = snapshot.getLong("age");
+        List<String> goals = (List<String>) snapshot.get("goals");
+        String profileImageUri = snapshot.getString("profileImageUri");
+
+        tvUserName.setText(username != null ? username : "");
+        tvWeight.setText(weight != null ? String.valueOf(weight.intValue()) + "kg" : "");
+        tvHeight.setText(height != null ? String.valueOf(height.intValue()) + "cm" : "");
+        tvAge.setText(age != null ? String.valueOf(age.intValue()) : "");
+
+        String accountInfo = "User ID: " + (currentUser != null ? currentUser.getUid() : "N/A") + "\nEmail: " + (email != null ? email : "N/A");
+        contentAccountInfo.setText(accountInfo);
+
+        loadProfileImage(profileImageUri);
+        displayGoals(goals);
+    }
+
+    private void updateUIForGuest() {
+        if (!isAdded() || getContext() == null) return;
+        tvUserName.setText("Guest");
+        tvWeight.setText("");
+        tvHeight.setText("");
+        tvAge.setText("");
+        contentAccountInfo.setText("");
+        chipGroupGoals.removeAllViews();
+        loadProfileImage(null);
+    }
+
+    private void displayGoals(List<String> goals) {
+        if (getContext() == null) return;
+        chipGroupGoals.removeAllViews();
+        if (goals == null || goals.isEmpty()) {
             return;
         }
 
-        db.collection("users").document(currentUser.getUid()).get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        String username = documentSnapshot.getString("username");
-                        String email = documentSnapshot.getString("email");
-                        Double weight = documentSnapshot.getDouble("weight_kg");
-                        Double height = documentSnapshot.getDouble("height_cm");
-                        Long age = documentSnapshot.getLong("age");
-
-                        tvUserName.setText(username != null ? username : "N/A");
-                        tvWeight.setText(String.format("%s kg", weight != null ? String.valueOf(weight.intValue()) : "0"));
-                        tvHeight.setText(String.format("%s cm", height != null ? String.valueOf(height.intValue()) : "0"));
-                        tvAge.setText(age != null ? String.valueOf(age.intValue()) : "0");
-
-                        String accountInfo = "User ID: " + currentUser.getUid() + "\nEmail: " + (email != null ? email : "N/A");
-                        contentAccountInfo.setText(accountInfo);
-
-                        String profileImageUri = documentSnapshot.getString("profileImageUri");
-                        loadProfileImage(profileImageUri);
-
-                    } else {
-                        Toast.makeText(getContext(), "User data not found. Please complete profile.", Toast.LENGTH_LONG).show();
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error loading user profile", e);
-                    Toast.makeText(getContext(), "Failed to load profile.", Toast.LENGTH_SHORT).show();
-                });
+        for (String goal : goals) {
+            Chip chip = new Chip(getContext());
+            chip.setText(goal);
+            chipGroupGoals.addView(chip);
+        }
     }
 
     private void showEditProfileDialog() {
@@ -142,7 +173,6 @@ public class ProfileFragment extends Fragment {
         EditText etAge = dialogView.findViewById(R.id.etEditAge);
         Button btnSave = dialogView.findViewById(R.id.btnSaveProfile);
 
-        // Pre-fill dialog with current data
         db.collection("users").document(currentUser.getUid()).get().addOnSuccessListener(snapshot -> {
             if (snapshot.exists()) {
                 etName.setText(snapshot.getString("username"));
@@ -175,7 +205,6 @@ public class ProfileFragment extends Fragment {
                 db.collection("users").document(currentUser.getUid()).update(updatedData)
                         .addOnSuccessListener(aVoid -> {
                             Toast.makeText(getContext(), "Profile updated!", Toast.LENGTH_SHORT).show();
-                            loadUserProfile(); // Refresh the profile display
                             dialog.dismiss();
                         })
                         .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update profile.", Toast.LENGTH_SHORT).show());
@@ -208,48 +237,38 @@ public class ProfileFragment extends Fragment {
         ivArrowAbout = view.findViewById(R.id.ivArrowAbout);
         layoutAccountDetails = view.findViewById(R.id.layoutAccountDetails);
         contentAccountInfo = view.findViewById(R.id.contentAccountInfo);
-        btnOpenEditDialog = view.findViewById(R.id.btnOpenEditDialog);
         layoutNotificationSettings = view.findViewById(R.id.layoutNotificationSettings);
         switchWaterReminder = view.findViewById(R.id.switchWaterReminder);
         switchWorkoutAlerts = view.findViewById(R.id.switchWorkoutAlerts);
         contentHelp = view.findViewById(R.id.contentHelp);
         contentAbout = view.findViewById(R.id.contentAbout);
+        chipGroupGoals = view.findViewById(R.id.chipGroupGoals);
+        tvEditGoals = view.findViewById(R.id.tvEditGoals);
     }
 
     private void setupListeners() {
-        if (btnCamera != null) {
-            btnCamera.setOnClickListener(v -> pickMedia.launch(new PickVisualMediaRequest.Builder()
-                    .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE).build()));
-        }
+        btnCamera.setOnClickListener(v -> pickMedia.launch(new PickVisualMediaRequest.Builder()
+                .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE).build()));
 
-        if (tvEditProfile != null) {
-            tvEditProfile.setOnClickListener(v -> showEditProfileDialog());
-        }
+        tvEditProfile.setOnClickListener(v -> showEditProfileDialog());
 
-        if (btnEditProfile != null) {
-            btnEditProfile.setOnClickListener(v -> {
-                toggleVisibility(layoutAccountDetails, ivArrowAccount);
-            });
-        }
+        btnEditProfile.setOnClickListener(v -> toggleVisibility(layoutAccountDetails, ivArrowAccount));
 
-        if (btnOpenEditDialog != null) {
-            btnOpenEditDialog.setOnClickListener(v -> showEditProfileDialog());
-        }
+        tvChangePassword.setOnClickListener(v -> sendPasswordResetEmail());
 
-        if (tvChangePassword != null) {
-            tvChangePassword.setOnClickListener(v -> sendPasswordResetEmail());
-        }
+        btnLogout.setOnClickListener(v -> {
+            if (getContext() == null) return;
+            mAuth.signOut();
+            Intent intent = new Intent(getActivity(), LoginActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            Toast.makeText(getContext(), "Logged Out Successfully", Toast.LENGTH_SHORT).show();
+        });
 
-        if (btnLogout != null) {
-            btnLogout.setOnClickListener(v -> {
-                if (getContext() == null) return;
-                mAuth.signOut();
-                Intent intent = new Intent(getActivity(), LoginActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
-                Toast.makeText(getContext(), "Logged Out Successfully", Toast.LENGTH_SHORT).show();
-            });
-        }
+        tvEditGoals.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), EditGoals.class);
+            startActivity(intent);
+        });
     }
 
     private void sendPasswordResetEmail() {
@@ -294,10 +313,7 @@ public class ProfileFragment extends Fragment {
         Map<String, Object> data = new HashMap<>();
         data.put("profileImageUri", uriString);
         db.collection("users").document(currentUser.getUid()).update(data)
-                .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(getContext(), "Profile Picture Updated!", Toast.LENGTH_SHORT).show();
-                    loadProfileImage(uriString);
-                })
+                .addOnSuccessListener(aVoid -> Toast.makeText(getContext(), "Profile Picture Updated!", Toast.LENGTH_SHORT).show())
                 .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to save image.", Toast.LENGTH_SHORT).show());
     }
 
@@ -308,8 +324,7 @@ public class ProfileFragment extends Fragment {
             Glide.with(this).load(Uri.parse(uriString)).circleCrop()
                     .signature(new ObjectKey(System.currentTimeMillis())).into(ivProfile);
         } else {
-            // You should have a default placeholder image in your drawables
-            // Glide.with(this).load(R.drawable.ic_profile_default).circleCrop().into(ivProfile);
+            Glide.with(this).load(R.drawable.ic_profile_default).circleCrop().into(ivProfile);
         }
     }
 

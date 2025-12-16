@@ -24,7 +24,6 @@
             android:id="@+id/iv_profile_icon"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:src="@drawable/ic_launcher_foreground"
             android:background="@drawable/bg_selected_date"
             android:backgroundTint="#E0E0E0"/>
 
@@ -39,7 +38,6 @@
                 android:id="@+id/tv_user_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="saturei"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="@color/black"/>
@@ -48,8 +46,7 @@
                 android:id="@+id/tv_year"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/gray_500"
-                tools:text="2025" />
+                android:textColor="@color/gray_500" />
         </LinearLayout>
 
         <ImageView
@@ -100,7 +97,6 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:minLines="2"
-                android:text="No Workout Planned"
                 android:textColor="@color/black"
                 android:textSize="24sp"
                 android:textStyle="bold"
@@ -114,7 +110,6 @@
                 android:id="@+id/tv_exercise_count"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="6 Exercises • 3 Muscles"
                 android:textColor="@color/gray_500"
                 app:layout_constraintTop_toBottomOf="@id/tv_push_day"
                 app:layout_constraintStart_toStartOf="parent"/>
@@ -126,8 +121,7 @@
                 android:textColor="@color/gray_500"
                 android:visibility="gone"
                 app:layout_constraintTop_toBottomOf="@id/tv_push_day"
-                app:layout_constraintStart_toStartOf="parent"
-                tools:text="Start your path to fitness today!"/>
+                app:layout_constraintStart_toStartOf="parent"/>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_swap"
@@ -161,7 +155,6 @@
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
                     android:gravity="center"
-                    android:text="45 min"
                     android:textColor="@color/black"
                     app:drawableEndCompat="@drawable/ic_arrow_down_black"
                     app:drawableTint="@color/black"
@@ -176,7 +169,6 @@
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
                     android:gravity="center"
-                    android:text="Equipment"
                     android:textColor="@color/black"
                     app:drawableEndCompat="@drawable/ic_arrow_down_black"
                     app:drawableTint="@color/black"
@@ -265,7 +257,6 @@
                 android:id="@+id/tv_rest_day_message"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Today is a Rest Day."
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="@color/gray_500"

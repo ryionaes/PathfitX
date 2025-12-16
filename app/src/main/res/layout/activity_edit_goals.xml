@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".GetGoals">
+    tools:context=".EditGoals">
 
     <TextView
         android:id="@+id/textView1"
@@ -14,7 +14,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="27dp"
         android:fontFamily="@font/roboto_medium"
-        android:text="Set up your "
+        android:text="Edit your "
         android:textColor="@color/black"
         android:textSize="14dp"
         app:layout_constraintStart_toStartOf="parent"
@@ -32,16 +32,6 @@
         app:layout_constraintStart_toEndOf="@+id/textView1"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <ImageView
-        android:id="@+id/imageView2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView1"
-        app:srcCompat="@drawable/pb_getgoals" />
-
     <TextView
         android:id="@+id/setUser"
         android:layout_width="0dp"
@@ -50,12 +40,12 @@
         android:layout_marginTop="23dp"
         android:layout_marginEnd="16dp"
         android:fontFamily="@font/roboto_semibold"
-        android:text="Hey, User. 👋 Let ‘s start with your goals."
+        android:text="Edit your goals"
         android:textColor="@color/black"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView2" />
+        app:layout_constraintTop_toBottomOf="@+id/textView6" />
 
     <TextView
         android:id="@+id/textView9"
@@ -391,14 +381,14 @@
         android:layout_marginEnd="16dp"
         android:backgroundTint="@color/prim_red"
         android:fontFamily="@font/roboto_semibold"
-        android:text="Next"
+        android:text="Confirm"
         android:textColor="#FFFFFF"
         android:textSize="16sp"
         app:cornerRadius="50dp"
         app:layout_constraintBottom_toBottomOf="@+id/backButton"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/backButton"
-        app:layout_constraintTop_toTopOf="@id/backButton"
+        app:layout_constraintStart_toEndOf="@+id/backButton"
+        app:layout_constraintTop_toTopOf="@+id/backButton"
         app:rippleColor="#7d3d37" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

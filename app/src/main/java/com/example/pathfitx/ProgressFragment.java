@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -42,9 +43,7 @@ public class ProgressFragment extends Fragment {
 
     // Firebase
     private FirebaseFirestore db;
-    private FirebaseAuth mAuth;
-    private FirebaseUser currentUser;
-    private String userId;
+    private ListenerRegistration historyListener;
 
     public ProgressFragment() {
         // Required empty public constructor
@@ -53,7 +52,7 @@ public class ProgressFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        initFirebase();
+        db = FirebaseFirestore.getInstance();
     }
 
     @Override
@@ -66,29 +65,19 @@ public class ProgressFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         initViews(view);
         setupRecyclerView();
-
-        if (userId == null) {
-            handleSignedOutState();
-        } else {
-            loadHistoryData();
-        }
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        // Refresh data when the user comes back to this screen
-        if (userId != null) {
-            loadHistoryData();
-        }
+    public void onStart() {
+        super.onStart();
+        attachHistoryListener();
     }
 
-    private void initFirebase() {
-        db = FirebaseFirestore.getInstance();
-        mAuth = FirebaseAuth.getInstance();
-        currentUser = mAuth.getCurrentUser();
-        if (currentUser != null) {
-            userId = currentUser.getUid(); // CORRECT way to get user ID
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (historyListener != null) {
+            historyListener.remove();
         }
     }
 
@@ -107,53 +96,59 @@ public class ProgressFragment extends Fragment {
         rvHistory.setAdapter(adapter);
     }
 
-    private void loadHistoryData() {
-        if (userId == null) return;
+    private void attachHistoryListener() {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            handleSignedOutState();
+            return;
+        }
+        String userId = currentUser.getUid();
 
-        db.collection("users").document(userId).collection("history")
-                .orderBy("timestamp", Query.Direction.DESCENDING)
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (getContext() == null || !isAdded()) return; // Ensure fragment is still alive
+        Query historyQuery = db.collection("users").document(userId).collection("history")
+                .orderBy("timestamp", Query.Direction.DESCENDING);
 
-                    if (task.isSuccessful()) {
-                        historyList.clear();
-                        long totalVol = 0;
-                        int totalWorkouts = 0;
-                        int totalCalories = 0;
+        historyListener = historyQuery.addSnapshotListener((snapshots, e) -> {
+            if (e != null) {
+                Log.e(TAG, "Error loading history data for user: " + userId, e);
+                if (isAdded() && getContext() != null) {
+                    Toast.makeText(getContext(), "Failed to load progress.", Toast.LENGTH_SHORT).show();
+                }
+                return;
+            }
 
-                        for (QueryDocumentSnapshot document : task.getResult()) {
-                            WorkoutHistory item = document.toObject(WorkoutHistory.class);
-                            historyList.add(item);
+            if (isAdded() && getContext() != null && snapshots != null) {
+                historyList.clear();
+                long totalVol = 0;
+                int totalWorkouts = 0;
+                int totalCalories = 0;
 
-                            totalVol += item.getTotalVolume();
-                            totalWorkouts++;
-                            // A simple calorie estimation
-                            totalCalories += (item.getDurationSeconds() / 60) * 5;
-                        }
+                for (QueryDocumentSnapshot document : snapshots) {
+                    WorkoutHistory item = document.toObject(WorkoutHistory.class);
+                    historyList.add(item);
 
-                        adapter.notifyDataSetChanged();
+                    totalVol += item.getTotalVolume();
+                    totalWorkouts++;
+                    totalCalories += (item.getDurationSeconds() / 60) * 5; // Simple calorie estimation
+                }
 
-                        // Update summary cards
-                        tvVolumeValue.setText(String.format("%,d", totalVol));
-                        valWorkouts.setText(String.valueOf(totalWorkouts));
-                        valCalories.setText(String.format("%,d", totalCalories));
+                adapter.notifyDataSetChanged();
 
-                    } else {
-                        Log.e(TAG, "Error loading history data for user: " + userId, task.getException());
-                        Toast.makeText(getContext(), "Failed to load progress.", Toast.LENGTH_SHORT).show();
-                    }
-                });
+                tvVolumeValue.setText(String.format("%,d", totalVol));
+                valWorkouts.setText(String.valueOf(totalWorkouts));
+                valCalories.setText(String.format("%,d", totalCalories));
+            }
+        });
     }
 
     private void handleSignedOutState() {
-        Toast.makeText(getContext(), "Please log in to see your progress.", Toast.LENGTH_LONG).show();
-        // Clear any displayed data
-        historyList.clear();
-        adapter.notifyDataSetChanged();
-        tvVolumeValue.setText("0");
-        valWorkouts.setText("0");
-        valCalories.setText("0");
+        if (isAdded() && getContext() != null) {
+            Toast.makeText(getContext(), "Please log in to see your progress.", Toast.LENGTH_LONG).show();
+            historyList.clear();
+            adapter.notifyDataSetChanged();
+            tvVolumeValue.setText("0");
+            valWorkouts.setText("0");
+            valCalories.setText("0");
+        }
     }
 
     private void showWorkoutSummaryDialog(WorkoutHistory history) {
@@ -162,12 +157,10 @@ public class ProgressFragment extends Fragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_workout_summary, null);
 
-        // Hide editing elements as this is a read-only view
         view.findViewById(R.id.etWorkoutTitle).setVisibility(View.GONE);
         view.findViewById(R.id.ivEditIcon).setVisibility(View.GONE);
         view.findViewById(R.id.tvWorkoutTitle).setVisibility(View.VISIBLE);
 
-        // Set Data from History Item
         ((TextView) view.findViewById(R.id.tvWorkoutTitle)).setText(history.getWorkoutName());
         ((TextView) view.findViewById(R.id.tvDurationValue)).setText((history.getDurationSeconds() / 60) + " min");
         ((TextView) view.findViewById(R.id.tvVolumeValue)).setText(history.getTotalVolume() + " kg");
@@ -179,7 +172,6 @@ public class ProgressFragment extends Fragment {
         if (dialog.getWindow() != null) dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog.show();
 
-        // Set dismiss listeners
         view.findViewById(R.id.btnClose).setOnClickListener(v -> dialog.dismiss());
         view.findViewById(R.id.btnCloseSummary).setOnClickListener(v -> dialog.dismiss());
     }

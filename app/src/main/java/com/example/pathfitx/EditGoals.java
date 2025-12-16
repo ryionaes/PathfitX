@@ -1,6 +1,5 @@
 package com.example.pathfitx;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
@@ -25,13 +24,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class GetGoals extends AppCompatActivity {
+public class EditGoals extends AppCompatActivity {
 
-    private static final String TAG = "GetGoalsActivity";
+    private static final String TAG = "EditGoalsActivity";
     // Variables
-    private Button nextBtn;
+    private Button confirmBtn;
     private ImageButton backBtn;
-    private TextView setUser;
     private CheckBox chLoseWeight, chGainWeight, chMaintainWeight, chGainMuscle, chStayActive, chImproveFlexibility, chIncreaseEndurance, chBoostEnergyLevel;
     private TextView txtLoseWeight, txtMaintainWeight, txtGainWeight, txtGainMuscle, txtStayActive, txtImproveFlexibility, txtIncreaseEndurance, txtBoostEnergyLevel;
     private final List<CheckBox> allGoals = new ArrayList<>();
@@ -46,7 +44,7 @@ public class GetGoals extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_get_goals);
+        setContentView(R.layout.activity_edit_goals);
 
         // Initialize Firebase
         mAuth = FirebaseAuth.getInstance();
@@ -57,16 +55,11 @@ public class GetGoals extends AppCompatActivity {
         initializeViews();
         populateGoalsList();
 
-        // Set greeting from GetUser activity
-        String username = getIntent().getStringExtra("USERNAME");
-        if (username != null && !username.isEmpty()) {
-            String greeting = "Hey, " + username + ". 👋 Let‘s start with your goals.";
-            setUser.setText(greeting);
-        }
+        loadUserGoals();
 
         // Button Listeners
         backBtn.setOnClickListener(v -> finish()); // Go back to the previous screen
-        nextBtn.setOnClickListener(v -> saveGoalsAndContinue());
+        confirmBtn.setOnClickListener(v -> saveGoalsAndContinue());
 
         // Checkbox Logic
         setupCheckboxListeners();
@@ -79,11 +72,29 @@ public class GetGoals extends AppCompatActivity {
         });
     }
 
+    private void loadUserGoals() {
+        if (currentUser == null) return;
+        db.collection("users").document(currentUser.getUid()).get().addOnSuccessListener(documentSnapshot -> {
+            if (documentSnapshot.exists()) {
+                List<String> userGoals = (List<String>) documentSnapshot.get("goals");
+                if (userGoals != null) {
+                    for (String goal : userGoals) {
+                        for (CheckBox cb : allGoals) {
+                            if (getGoalText(cb).equalsIgnoreCase(goal)) {
+                                cb.setChecked(true);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     private void saveGoalsAndContinue() {
         List<String> selectedGoals = collectSelectedGoals();
 
         if (selectedGoals.isEmpty()) {
-            Toast.makeText(GetGoals.this, "Please select at least one goal.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(EditGoals.this, "Please select at least one goal.", Toast.LENGTH_SHORT).show();
             return; // Prevent navigation
         }
 
@@ -96,23 +107,21 @@ public class GetGoals extends AppCompatActivity {
         goalsData.put("goals", selectedGoals);
 
         db.collection("users").document(currentUser.getUid())
-                .update(goalsData) // Use update to add/modify fields without overwriting the doc
+                .update(goalsData)
                 .addOnSuccessListener(aVoid -> {
-                    Log.d(TAG, "Goals successfully saved!");
-                    // Navigate to the next screen (GetInfo)
-                    Intent intent = new Intent(GetGoals.this, GetInfo.class);
-                    startActivity(intent);
+                    Log.d(TAG, "Goals successfully updated!");
+                    Toast.makeText(EditGoals.this, "Goals Applied", Toast.LENGTH_SHORT).show();
+                    finish(); // Go back to the profile screen
                 })
                 .addOnFailureListener(e -> {
                     Log.w(TAG, "Error updating document", e);
-                    Toast.makeText(GetGoals.this, "Error saving goals: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(EditGoals.this, "Error saving goals: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
     }
 
     private void initializeViews() {
-        nextBtn = findViewById(R.id.nextButton);
+        confirmBtn = findViewById(R.id.nextButton);
         backBtn = findViewById(R.id.backButton);
-        setUser = findViewById(R.id.setUser);
         chLoseWeight = findViewById(R.id.checkLoseWeight);
         chGainWeight = findViewById(R.id.checkGainWeight);
         chMaintainWeight = findViewById(R.id.checkMaintainWeight);
@@ -171,7 +180,7 @@ public class GetGoals extends AppCompatActivity {
 
                 if (count > 3) {
                     buttonView.setChecked(false);
-                    Toast.makeText(GetGoals.this, "You can only select up to 3 goals.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(EditGoals.this, "You can only select up to 3 goals.", Toast.LENGTH_SHORT).show();
                 }
             } finally {
                 isProgrammaticallyChanging = false;
