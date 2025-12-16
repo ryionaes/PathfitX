@@ -106,6 +106,7 @@ public class GetUser extends AppCompatActivity {
         // Create a data map for Firestore
         Map<String, Object> user = new HashMap<>();
         user.put("username", username);
+        user.put("email", currentUser.getEmail());
 
         // Save to Firestore in "users" collection with the user's UID as the document ID
         db.collection("users").document(currentUser.getUid())

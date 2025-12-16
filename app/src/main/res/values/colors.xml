@@ -2,6 +2,7 @@
 <resources>
     <!-- Primary color -->
     <color name="prim_red">#FE2B15</color>
+    <color name="prim_red_dark">#D32F2F</color>
     <color name="prim_soft">#ffcac4</color>
     <color name="black">#000000</color>
     <color name="white">#FFFFFF</color>

@@ -67,7 +67,7 @@ public class GetInfo extends AppCompatActivity {
             return;
         }
 
-        if (location.equals(getResources().getStringArray(R.array.location_array)[0]))) {
+        if (location.equals(getResources().getStringArray(R.array.location_array)[0])) {
             Toast.makeText(this, "Please select your location", Toast.LENGTH_SHORT).show();
             return;
         }

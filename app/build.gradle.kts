@@ -39,7 +39,7 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.cardview)
     implementation("androidx.recyclerview:recyclerview:1.3.2")
-    implementation("androidx.core:core-splashscreen:1.2.0")
+    implementation("androidx.core:core-splashscreen:1.0.1")
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

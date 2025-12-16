@@ -1,6 +1,5 @@
 package com.example.pathfitx;
 
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -32,16 +31,13 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.Serializable;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClickListener, EditExerciseDialog.DialogListener, CalendarAdapter.OnDateClickListener, OptionsBottomSheetFragment.OnOptionSelectedListener, SwapWorkoutBottomSheetFragment.OnOptionSelectedListener {
@@ -72,7 +68,10 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
     private String selectedEquipment = "With Equipment";
     private String selectedWorkout = "No Workout Planned";
     private boolean isRestDay = false;
-    private ArrayList<WorkoutType> workoutTypes = new ArrayList<>();
+    private final ArrayList<WorkoutType> workoutTypes = new ArrayList<>();
+    private final ArrayList<String> timeOptions = new ArrayList<>(Arrays.asList("15 min", "30 min", "45 min", "1 hr", "1 hr, 30 min"));
+    private final ArrayList<String> equipmentOptions = new ArrayList<>(Arrays.asList("With Equipment", "No Equipment"));
+
 
     @Nullable
     @Override
@@ -91,9 +90,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
             return;
         }
 
-        // Always start with today's date
         selectedDate = LocalDate.now();
-
         tvYear.setText(String.valueOf(selectedDate.getYear()));
 
         setupCalendar();
@@ -102,7 +99,6 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         setupExercises();
         setupClickListeners();
 
-        // Load all data from Firestore
         loadFirebaseData();
     }
 
@@ -111,7 +107,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
-            userId = currentUser.getUid(); // CRITICAL: Use UID, not username
+            userId = currentUser.getUid();
         }
     }
 
@@ -121,7 +117,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
     }
 
     private void loadUserProfile() {
-        if (userId == null) return;
+        if (userId == null || !isAdded()) return;
 
         db.collection("users").document(userId).get().addOnSuccessListener(snapshot -> {
             if (snapshot.exists()) {
@@ -130,13 +126,13 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
 
                 tvUserName.setText(username != null ? username : "Fitness User");
 
-                if (ivProfileIcon != null && getContext() != null) {
+                if (ivProfileIcon != null) {
                     if (profileImageUri != null && !profileImageUri.isEmpty()) {
-                        Glide.with(getContext()).load(Uri.parse(profileImageUri)).circleCrop()
-                             .signature(new ObjectKey(System.currentTimeMillis())) // Force refresh
+                        Glide.with(this).load(Uri.parse(profileImageUri)).circleCrop()
+                             .signature(new ObjectKey(System.currentTimeMillis()))
                              .into(ivProfileIcon);
                     } else {
-                        Glide.with(getContext()).load(R.drawable.ic_profile_default).circleCrop().into(ivProfileIcon);
+                        Glide.with(this).load(R.drawable.ic_profile_default).circleCrop().into(ivProfileIcon);
                     }
                 }
             }
@@ -168,7 +164,6 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
                             selectedWorkout = "Rest Day";
                         }
                     } else {
-                        // Default state for a new day
                         isRestDay = false;
                         selectedWorkout = "No Workout Planned";
                     }
@@ -199,13 +194,10 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
     @Override
     public void onResume() {
         super.onResume();
-        // Refresh data when returning to the fragment
         if (currentUser != null) {
             loadFirebaseData();
         }
     }
-
-    // --- UI SETUP AND EVENT HANDLERS ---
 
     @Override
     public void onDateClick(int position) {
@@ -243,7 +235,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
             selectedWorkout = option;
             tvWorkoutTitle.setText(selectedWorkout);
             swapWorkout(option);
-            return; // swapWorkout already saves
+            return;
         }
         saveWorkoutsForDate(selectedDate);
     }
@@ -284,6 +276,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
             btnSwap.setVisibility(View.GONE);
             restDayCard.setVisibility(View.VISIBLE);
             tvWorkoutSubtitle.setVisibility(View.GONE);
+            tvRestDayMessage.setVisibility(View.VISIBLE);
         } else if (hasWorkout) {
             workoutDetailsGroup.setVisibility(View.VISIBLE);
             btnAddExercise.setVisibility(View.VISIBLE);
@@ -292,6 +285,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
             tvWorkoutSubtitle.setVisibility(View.VISIBLE);
             int exerciseCount = exerciseList.size();
             tvWorkoutSubtitle.setText(String.format("%d Exercises", exerciseCount));
+            tvRestDayMessage.setVisibility(View.GONE);
         } else { // Empty Day
             workoutDetailsGroup.setVisibility(View.GONE);
             btnAddExercise.setVisibility(View.VISIBLE);
@@ -299,18 +293,15 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
             restDayCard.setVisibility(View.VISIBLE);
             tvWorkoutSubtitle.setVisibility(View.VISIBLE);
             tvWorkoutSubtitle.setText("Add a workout or set as rest day.");
+            tvRestDayMessage.setVisibility(View.GONE);
         }
-        exerciseAdapter.notifyDataSetChanged();
+        if(exerciseAdapter != null) exerciseAdapter.notifyDataSetChanged();
     }
     
     private void handleSignedOutState(){
         tvUserName.setText("Guest");
-        // Hide all workout related views
-        // You can add more views to hide here
     }
     
-    // --- UNCHANGED HELPER METHODS (initViews, setupListeners, etc.) ---
-
     private void initViews(View view) {
         rvCalendar = view.findViewById(R.id.rv_calendar);
         rvExercises = view.findViewById(R.id.rv_exercises);
@@ -320,7 +311,6 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         tvTimeOption = view.findViewById(R.id.tv_time_option);
         tvEquipmentOption = view.findViewById(R.id.tv_equipment_option);
         switchRestDay = view.findViewById(R.id.switch_rest_day);
-        tvRestDayMessage = view.findViewById(R.id.tv_rest_day_message);
         tvWorkoutTitle = view.findViewById(R.id.tv_push_day);
         btnSwap = view.findViewById(R.id.btn_swap);
         workoutDetailsGroup = view.findViewById(R.id.workout_details_group);
@@ -329,6 +319,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         btnAddExercise = view.findViewById(R.id.btn_add_exercise);
         restDayCard = view.findViewById(R.id.rest_day_card);
         btnStartWorkout = view.findViewById(R.id.btn_start_workout);
+        tvRestDayMessage = view.findViewById(R.id.tv_rest_day_message);
     }
 
     private void setupClickListeners() {
@@ -400,7 +391,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
             dates.add(monthStart.plusDays(i));
         }
         int todayPosition = dates.indexOf(LocalDate.now());
-        calendarAdapter = new CalendarAdapter(dates, this);
+        calendarAdapter = new CalendarAdapter(dates, todayPosition, this);
         calendarAdapter.setSelectedPosition(todayPosition);
         rvCalendar.setAdapter(calendarAdapter);
         if (todayPosition != -1) {
@@ -430,8 +421,6 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
     }
 
     private void showOptionsBottomSheet(String type) {
-        ArrayList<String> timeOptions = new ArrayList<>(Arrays.asList("15 min", "30 min", "45 min", "1 hr", "1 hr, 30 min"));
-        ArrayList<String> equipmentOptions = new ArrayList<>(Arrays.asList("With Equipment", "No Equipment"));
         boolean isTime = type.equals("time");
         String title = isTime ? "Workout duration" : "Equipment";
         ArrayList<String> options = isTime ? timeOptions : equipmentOptions;
@@ -472,7 +461,6 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         return exercises;
     }
 
-    // Unused listener methods, can be filled in later
     @Override
     public void onSetAsDefault(String option) {}
 

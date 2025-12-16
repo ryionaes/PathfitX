@@ -5,6 +5,7 @@
     <string name="back_button_desc">Back</string>
     <string name="Male">Male</string>
     <string name="Female">Female</string>
+    <string name="default_web_client_id">381642629816-8s7b7sroi2o6b79kc864784emd9hi3di.apps.googleusercontent.com</string>
 
 
     <string-array name="location_array">

@@ -22,8 +22,10 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -34,6 +36,7 @@ public class RegisterActivity extends AppCompatActivity {
 
     private GoogleSignInClient mGoogleSignInClient;
     private FirebaseAuth mAuth;
+    private FirebaseFirestore db;
     private static final int RC_SIGN_IN = 9001;
 
     @Override
@@ -42,6 +45,7 @@ public class RegisterActivity extends AppCompatActivity {
         setContentView(R.layout.activity_register);
 
         mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
@@ -68,17 +72,21 @@ public class RegisterActivity extends AppCompatActivity {
                 mAuth.createUserWithEmailAndPassword(email, password)
                         .addOnCompleteListener(this, task -> {
                             if (task.isSuccessful()) {
-                                // New user, go to the "Get Started" page first
+                                // New user created with email, go to the onboarding flow
                                 startActivity(new Intent(RegisterActivity.this, MainActivity.class));
                                 finish();
                             } else {
-                                String errorMessage = "Registration failed.";
-                                if (task.getException() != null) {
-                                    errorMessage = task.getException().getMessage();
-                                    Log.e("RegistrationError", "Registration failed: " + errorMessage);
+                                if (task.getException() instanceof FirebaseAuthUserCollisionException) {
+                                    Toast.makeText(RegisterActivity.this, "An account with this email already exists. Please log in.",
+                                            Toast.LENGTH_LONG).show();
+                                } else {
+                                    String errorMessage = "Registration failed.";
+                                    if (task.getException() != null) {
+                                        errorMessage = task.getException().getMessage();
+                                        Log.e("RegistrationError", "Registration failed: " + errorMessage);
+                                    }
+                                    Toast.makeText(RegisterActivity.this, errorMessage, Toast.LENGTH_LONG).show();
                                 }
-                                Toast.makeText(RegisterActivity.this, errorMessage,
-                                        Toast.LENGTH_LONG).show();
                             }
                         });
             }
@@ -106,7 +114,7 @@ public class RegisterActivity extends AppCompatActivity {
                 firebaseAuthWithGoogle(account.getIdToken());
             } catch (ApiException e) {
                 Log.w("GoogleSignIn", "Google sign in failed", e);
-                Toast.makeText(this, "Google Sign-In Failed", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Google Sign-In Failed: " + e.getStatusCode(), Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -116,21 +124,29 @@ public class RegisterActivity extends AppCompatActivity {
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
-                        AuthResult authResult = task.getResult();
-                        boolean isNewUser = authResult.getAdditionalUserInfo().isNewUser();
-                        if (isNewUser) {
-                            // New user, go to the "Get Started" page first
-                            startActivity(new Intent(RegisterActivity.this, MainActivity.class));
-                            finish();
-                        } else {
-                            // Existing user, go to home screen
-                            startActivity(new Intent(RegisterActivity.this, HomeScreen.class));
-                            finish();
-                        }
+                        checkUserStatus(task.getResult());
                     } else {
                         Toast.makeText(this, "Firebase Authentication Failed", Toast.LENGTH_SHORT).show();
                     }
                 });
+    }
+
+    private void checkUserStatus(AuthResult authResult) {
+        boolean isNewUser = authResult.getAdditionalUserInfo().isNewUser();
+        
+        if (isNewUser) {
+            // Brand new user via Google, prompt to set a password.
+            Log.d("RegisterActivity", "Firebase Auth reports a new user. Navigating to SetPasswordActivity.");
+            startActivity(new Intent(RegisterActivity.this, SetPasswordActivity.class));
+            finish();
+        } else {
+            // User's Google account is already linked to a Firebase user.
+            // This is an existing user.
+            Log.d("RegisterActivity", "User already exists. Prompting to log in.");
+            Toast.makeText(this, "An account with this Google profile already exists. Please log in.", Toast.LENGTH_LONG).show();
+            // Sign the user out to prevent a stuck login state.
+            mAuth.signOut();
+        }
     }
 
     private boolean validateInput(String email, String password, String confirmPass) {

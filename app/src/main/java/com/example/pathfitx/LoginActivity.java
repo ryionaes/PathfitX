@@ -1,8 +1,6 @@
 package com.example.pathfitx;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -25,6 +23,8 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -34,6 +34,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private GoogleSignInClient mGoogleSignInClient;
     private FirebaseAuth mAuth;
+    private FirebaseFirestore db;
     private static final int RC_SIGN_IN = 9001;
 
     @Override
@@ -42,6 +43,7 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
 
         // Configure Google Sign-In
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -64,7 +66,7 @@ public class LoginActivity extends AppCompatActivity {
                 mAuth.signInWithEmailAndPassword(email, password)
                         .addOnCompleteListener(this, task -> {
                             if (task.isSuccessful()) {
-                                checkUserStatus(task.getResult());
+                                checkUserStatus(task.getResult().getUser());
                             } else {
                                 Toast.makeText(LoginActivity.this, "Authentication failed.",
                                         Toast.LENGTH_SHORT).show();
@@ -101,7 +103,7 @@ public class LoginActivity extends AppCompatActivity {
                 firebaseAuthWithGoogle(account.getIdToken());
             } catch (ApiException e) {
                 Log.w("GoogleSignIn", "Google sign in failed", e);
-                Toast.makeText(this, "Google Sign-In Failed", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Google Sign-In Failed: " + e.getStatusCode(), Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -111,23 +113,40 @@ public class LoginActivity extends AppCompatActivity {
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
-                        checkUserStatus(task.getResult());
+                        checkUserStatus(task.getResult().getUser());
                     } else {
                         Toast.makeText(this, "Firebase Authentication Failed", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
 
-    private void checkUserStatus(AuthResult authResult) {
-        boolean isNewUser = authResult.getAdditionalUserInfo().isNewUser();
-        if (isNewUser) {
-            // New user, go to the "Get Started" page first
-            startActivity(new Intent(LoginActivity.this, MainActivity.class));
-            finish();
-        } else {
-            // Existing user, go to home screen
-            goToHomeScreen();
+    private void checkUserStatus(FirebaseUser firebaseUser) {
+        if (firebaseUser == null) {
+            Toast.makeText(LoginActivity.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
+            return;
         }
+
+        String userId = firebaseUser.getUid();
+        db.collection("users").document(userId).get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                DocumentSnapshot document = task.getResult();
+                if (document != null && document.exists()) {
+                    // User exists in our database, so log them in.
+                    Log.d("LoginActivity", "User exists in Firestore. Navigating to HomeScreen.");
+                    goToHomeScreen();
+                } else {
+                    // User does not exist in our database. Prompt to sign up.
+                    Log.d("LoginActivity", "User does not exist in Firestore. Prompting to sign up.");
+                    Toast.makeText(LoginActivity.this, "No account found. Please sign up.", Toast.LENGTH_LONG).show();
+                    // Sign the user out to prevent a stuck login state.
+                    mAuth.signOut();
+                }
+            } else {
+                Log.e("LoginActivity", "Failed to check user in Firestore.", task.getException());
+                Toast.makeText(LoginActivity.this, "Failed to verify user status.", Toast.LENGTH_SHORT).show();
+                mAuth.signOut();
+            }
+        });
     }
 
     private void goToHomeScreen() {

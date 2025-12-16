@@ -39,7 +39,6 @@
             app:cursorColor="@color/red_logout"
             app:hintTextColor="@color/red_logout"
             app:layout_constraintTop_toBottomOf="@+id/tvHeader"
-            app:startIconDrawable="@android:drawable/ic_dialog_email"
             app:startIconTint="#80FFFFFF">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -67,7 +66,6 @@
             app:layout_constraintTop_toBottomOf="@+id/tilEmail"
             app:passwordToggleEnabled="true"
             app:passwordToggleTint="#80FFFFFF"
-            app:startIconDrawable="@android:drawable/ic_lock_idle_lock"
             app:startIconTint="#80FFFFFF">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -129,7 +127,6 @@
             android:textSize="16sp"
             android:textStyle="bold"
             app:cornerRadius="30dp"
-            app:icon="@drawable/google_icon"
             app:iconGravity="textStart"
             app:iconTint="@null"
             app:layout_constraintTop_toBottomOf="@+id/tvOrContinue"
@@ -150,7 +147,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Don't have an account? "
+                android:text="Don\'t have an account? "
                 android:textColor="#80FFFFFF" />
 
             <TextView

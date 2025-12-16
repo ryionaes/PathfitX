@@ -45,7 +45,7 @@ public class ProfileFragment extends Fragment {
     private static final String TAG = "ProfileFragment";
 
     // --- UI Elements ---
-    private TextView tvUserName, tvWeight, tvHeight, tvAge, tvEditProfile;
+    private TextView tvUserName, tvWeight, tvHeight, tvAge, tvEditProfile, tvChangePassword;
     private CardView btnEditProfile, btnNotifications, btnSettings, btnPrivacy;
     private MaterialButton btnLogout;
     private CardView cvProfileImage;
@@ -106,6 +106,7 @@ public class ProfileFragment extends Fragment {
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
                         String username = documentSnapshot.getString("username");
+                        String email = documentSnapshot.getString("email");
                         Double weight = documentSnapshot.getDouble("weight_kg");
                         Double height = documentSnapshot.getDouble("height_cm");
                         Long age = documentSnapshot.getLong("age");
@@ -114,6 +115,9 @@ public class ProfileFragment extends Fragment {
                         tvWeight.setText(String.format("%s kg", weight != null ? String.valueOf(weight.intValue()) : "0"));
                         tvHeight.setText(String.format("%s cm", height != null ? String.valueOf(height.intValue()) : "0"));
                         tvAge.setText(age != null ? String.valueOf(age.intValue()) : "0");
+
+                        String accountInfo = "User ID: " + currentUser.getUid() + "\nEmail: " + (email != null ? email : "N/A");
+                        contentAccountInfo.setText(accountInfo);
 
                         String profileImageUri = documentSnapshot.getString("profileImageUri");
                         loadProfileImage(profileImageUri);
@@ -189,6 +193,7 @@ public class ProfileFragment extends Fragment {
         tvHeight = view.findViewById(R.id.tvHeight);
         tvAge = view.findViewById(R.id.tvAge);
         tvEditProfile = view.findViewById(R.id.tvEditProfile);
+        tvChangePassword = view.findViewById(R.id.tvChangePassword);
         cvProfileImage = view.findViewById(R.id.cvProfileImage);
         ivProfile = view.findViewById(R.id.ivProfile);
         btnCamera = view.findViewById(R.id.btnCamera);
@@ -226,9 +231,13 @@ public class ProfileFragment extends Fragment {
                 toggleVisibility(layoutAccountDetails, ivArrowAccount);
             });
         }
-        
+
         if (btnOpenEditDialog != null) {
             btnOpenEditDialog.setOnClickListener(v -> showEditProfileDialog());
+        }
+
+        if (tvChangePassword != null) {
+            tvChangePassword.setOnClickListener(v -> sendPasswordResetEmail());
         }
 
         if (btnLogout != null) {
@@ -242,7 +251,22 @@ public class ProfileFragment extends Fragment {
             });
         }
     }
-    
+
+    private void sendPasswordResetEmail() {
+        if (currentUser != null && currentUser.getEmail() != null) {
+            mAuth.sendPasswordResetEmail(currentUser.getEmail())
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(getContext(), "Password reset email sent.", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(getContext(), "Failed to send password reset email.", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        } else {
+            Toast.makeText(getContext(), "Could not get user email.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void initializeImagePicker() {
         pickMedia = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
             if (uri != null) {
