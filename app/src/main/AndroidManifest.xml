@@ -16,12 +16,9 @@
 
         <activity
             android:name=".SplashActivity"
-            android:exported="true"
+            android:exported="false"
             android:theme="@style/Theme.PathfitX.Splash">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+
         </activity>
 
         <activity
@@ -30,7 +27,12 @@
 
         <activity
             android:name=".HomeScreen"
-            android:exported="false" />
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
 
         <activity
             android:name=".WelcomePage"
@@ -66,7 +68,7 @@
 
         <activity
             android:name=".MainActivity"
-            android:exported="false" />
+            android:exported="false"/>
 
         <activity
             android:name=".RegisterActivity"

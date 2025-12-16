@@ -38,53 +38,67 @@
         app:layout_constraintTop_toBottomOf="@id/tv_header"/>
 
     <!-- 3. Primary Filter Chips -->
-    <HorizontalScrollView
+    <LinearLayout
         android:id="@+id/scroll_chips_primary"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:scrollbars="none"
+        android:clipToPadding="false"
         app:layout_constraintTop_toBottomOf="@id/et_search">
 
-        <LinearLayout
-            android:layout_width="wrap_content"
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupCategory"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            app:singleLine="true"
+            app:singleSelection="true"
+            android:layout_gravity="center">
 
-            <Button
-                android:id="@+id/btn_strength"
-                style="@style/ChipStyle.Selected"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:layout_marginEnd="8dp"
-                android:text="Strength"/>
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_all"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="120dp"
+                android:layout_height="55dp"
+                android:text="All"
+                android:textAlignment="center"
+                android:textColor="@drawable/selector_chip_text"
+                app:chipBackgroundColor="@drawable/selector_chip_bg"
+                app:chipStrokeColor="#E0E0E0"
+                app:chipStrokeWidth="1dp"
+                app:chipCornerRadius="24dp"
+                android:checked="true"/>
 
-            <Button
-                android:id="@+id/btn_cardio"
-                style="@style/ChipStyle.Unselected"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:layout_marginEnd="8dp"
-                android:text="Cardio"/>
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_muscle"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="120dp"
+                android:layout_height="55dp"
+                android:text="By Muscle"
+                android:textAlignment="center"
+                android:textColor="@drawable/selector_chip_text"
+                app:chipBackgroundColor="@drawable/selector_chip_bg"
+                app:chipStrokeColor="#E0E0E0"
+                app:chipStrokeWidth="1dp"
+                app:chipCornerRadius="24dp"/>
 
-            <Button
-                android:id="@+id/btn_hiit"
-                style="@style/ChipStyle.Unselected"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:layout_marginEnd="8dp"
-                android:text="HIIT"/>
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_goals"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="120dp"
+                android:layout_height="55dp"
+                android:text="By Goals"
+                android:textAlignment="center"
+                android:textColor="@drawable/selector_chip_text"
+                app:chipBackgroundColor="@drawable/selector_chip_bg"
+                app:chipStrokeColor="#E0E0E0"
+                app:chipStrokeWidth="1dp"
+                app:chipCornerRadius="24dp"/>
 
-            <Button
-                android:id="@+id/btn_yoga"
-                style="@style/ChipStyle.Unselected"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:text="Yoga"/>
-        </LinearLayout>
-    </HorizontalScrollView>
+        </com.google.android.material.chip.ChipGroup>
+    </LinearLayout>
 
-    <!-- 4. Secondary Filter Chips (for Strength) -->
+    <!-- 4. Secondary Filter Chips -->
     <HorizontalScrollView
         android:id="@+id/scroll_chips_secondary"
         android:layout_width="match_parent"
@@ -92,68 +106,18 @@
         android:layout_marginTop="8dp"
         android:visibility="gone"
         android:scrollbars="none"
+        android:clipToPadding="false"
         app:layout_constraintTop_toBottomOf="@id/scroll_chips_primary">
 
-        <LinearLayout
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupFilters"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btn_body_all"
-                style="@style/ChipStyle.Selected"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:layout_marginEnd="8dp"
-                android:text="All"/>
-
-            <Button
-                android:id="@+id/btn_chest"
-                style="@style/ChipStyle.Unselected"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:layout_marginEnd="8dp"
-                android:text="Chest"/>
-
-            <Button
-                android:id="@+id/btn_back"
-                style="@style/ChipStyle.Unselected"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:layout_marginEnd="8dp"
-                android:text="Back"/>
-
-            <Button
-                android:id="@+id/btn_legs"
-                style="@style/ChipStyle.Unselected"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:layout_marginEnd="8dp"
-                android:text="Legs"/>
-
-            <Button
-                android:id="@+id/btn_shoulders"
-                style="@style/ChipStyle.Unselected"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:layout_marginEnd="8dp"
-                android:text="Shoulders"/>
-
-            <Button
-                android:id="@+id/btn_arms"
-                style="@style/ChipStyle.Unselected"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:layout_marginEnd="8dp"
-                android:text="Arms"/>
-
-            <Button
-                android:id="@+id/btn_core"
-                style="@style/ChipStyle.Unselected"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:text="Core"/>
-        </LinearLayout>
+            app:singleLine="true"
+            app:singleSelection="true"
+            app:selectionRequired="false">
+            <!-- Dynamic Chips will be added here -->
+        </com.google.android.material.chip.ChipGroup>
     </HorizontalScrollView>
 
     <!-- 5. Subheader -->

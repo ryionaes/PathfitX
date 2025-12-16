@@ -18,10 +18,13 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
@@ -45,14 +48,24 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
     private RecyclerView rvExplore;
     private WorkoutAdapter adapter;
     private EditText etSearch;
-    private Button btnStrength, btnCardio, btnHiit, btnYoga;
-    private Button btnBodyAll, btnChest, btnBack, btnLegs, btnShoulders, btnArms, btnCore;
+    private ChipGroup chipGroupCategory; // Primary chips
+    private ChipGroup chipGroupFilters; // Secondary chips
     private HorizontalScrollView secondaryFilterScrollView;
+
+    // Primary Category Chips
+    private Chip chipAll, chipMuscle, chipGoals;
 
     // Data
     private List<Exercise> allExercises;
-    private Exercise.Category currentCategory = Exercise.Category.STRENGTH;
-    private Exercise.BodyPart currentBodyPart = null;
+    
+    // Filter State
+    private enum FilterType { ALL, MUSCLE, GOALS }
+    private FilterType currentFilterType = FilterType.ALL;
+    private String currentSecondaryFilter = null; // Stores "Chest", "Lose Weight", etc.
+
+    // Lists for secondary filters
+    private final List<String> muscleList = Arrays.asList("Legs", "Chest", "Core", "Arms", "Shoulder", "Back");
+    private final List<String> goalList = Arrays.asList("Lose Weight", "Maintain Weight", "Gain Weight", "Gain Muscle", "Stay Active", "Improve Flexibility", "Increase Endurance", "Boost Energy Levels");
 
     // Firebase & State
     private FirebaseFirestore db;
@@ -75,7 +88,6 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
         initViews(view);
 
         if (!loadUserAndDateInfo()) {
-            // If loading info fails (e.g., user not logged in), stop further setup.
             return;
         }
 
@@ -92,24 +104,18 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private boolean loadUserAndDateInfo() {
-        // 1. Get User ID from Firebase Auth
         if (currentUser != null) {
             userId = currentUser.getUid();
         } else {
             Log.e(TAG, "User is not logged in. Cannot save workouts.");
             Toast.makeText(getContext(), "Error: You must be logged in.", Toast.LENGTH_LONG).show();
-            // Optional: Navigate to login screen
-            // getParentFragmentManager().popBackStack();
             return false;
         }
 
-        // 2. Get Selected Date from Arguments
         if (getArguments() != null && getArguments().getString("selectedDate") != null) {
             selectedDate = getArguments().getString("selectedDate");
         } else {
-            // Fallback to today if no date is passed (should not happen in normal flow)
             selectedDate = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
-            Log.w(TAG, "No selectedDate argument found. Falling back to today.");
         }
         return true;
     }
@@ -129,7 +135,6 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void addExerciseToWorkout(final Exercise exercise, final WorkoutAdapter.AddExerciseCallback callback) {
         if (userId == null || selectedDate == null) {
-            Log.e(TAG, "User ID or Selected Date is null. Aborting save.");
             callback.onResult(false);
             return;
         }
@@ -146,18 +151,16 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
                 DocumentSnapshot document = task.getResult();
                 Map<String, Object> updates = new HashMap<>();
                 updates.put("exercises", FieldValue.arrayUnion(exercise));
-                updates.put("workoutName", "Custom Plan"); // Adding an exercise always makes it a custom plan
+                updates.put("workoutName", "Custom Plan");
 
                 if (document.exists()) {
-                    // Document for this day exists, just update it
                     workoutDocRef.update(updates)
                             .addOnSuccessListener(aVoid -> handleSuccess(exercise.getTitle(), callback))
                             .addOnFailureListener(e -> handleFailure(e, callback));
                 } else {
-                    // No workout for this day, create a new one
                     updates.put("isRestDay", false);
-                    updates.put("time", "45 min"); // Sensible default
-                    updates.put("equipment", "With Equipment"); // Sensible default
+                    updates.put("time", "45 min");
+                    updates.put("equipment", "With Equipment");
                     workoutDocRef.set(updates)
                             .addOnSuccessListener(aVoid -> handleSuccess(exercise.getTitle(), callback))
                             .addOnFailureListener(e -> handleFailure(e, callback));
@@ -181,24 +184,19 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
         callback.onResult(false);
     }
 
-
-    // --- UI and Filter Logic (Mostly Unchanged) ---
+    // --- UI and Filter Logic ---
 
     private void initViews(View view) {
         rvExplore = view.findViewById(R.id.rv_explore);
         etSearch = view.findViewById(R.id.et_search);
-        btnStrength = view.findViewById(R.id.btn_strength);
-        btnCardio = view.findViewById(R.id.btn_cardio);
-        btnHiit = view.findViewById(R.id.btn_hiit);
-        btnYoga = view.findViewById(R.id.btn_yoga);
         secondaryFilterScrollView = view.findViewById(R.id.scroll_chips_secondary);
-        btnBodyAll = view.findViewById(R.id.btn_body_all);
-        btnChest = view.findViewById(R.id.btn_chest);
-        btnBack = view.findViewById(R.id.btn_back);
-        btnLegs = view.findViewById(R.id.btn_legs);
-        btnShoulders = view.findViewById(R.id.btn_shoulders);
-        btnArms = view.findViewById(R.id.btn_arms);
-        btnCore = view.findViewById(R.id.btn_core);
+        
+        chipGroupCategory = view.findViewById(R.id.chipGroupCategory);
+        chipGroupFilters = view.findViewById(R.id.chipGroupFilters);
+        
+        chipAll = view.findViewById(R.id.chip_all);
+        chipMuscle = view.findViewById(R.id.chip_muscle);
+        chipGoals = view.findViewById(R.id.chip_goals);
     }
 
     private void setupList() {
@@ -218,60 +216,111 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
     }
 
     private void setupCategoryFilters() {
-        btnStrength.setOnClickListener(v -> updateCategoryFilter(Exercise.Category.STRENGTH, btnStrength));
-        btnCardio.setOnClickListener(v -> updateCategoryFilter(Exercise.Category.CARDIO, btnCardio));
-        btnHiit.setOnClickListener(v -> updateCategoryFilter(Exercise.Category.HIIT, btnHiit));
-        btnYoga.setOnClickListener(v -> updateCategoryFilter(Exercise.Category.YOGA, btnYoga));
-        btnBodyAll.setOnClickListener(v -> updateBodyPartFilter(null, btnBodyAll));
-        btnChest.setOnClickListener(v -> updateBodyPartFilter(Exercise.BodyPart.CHEST, btnChest));
-        btnBack.setOnClickListener(v -> updateBodyPartFilter(Exercise.BodyPart.BACK, btnBack));
-        btnLegs.setOnClickListener(v -> updateBodyPartFilter(Exercise.BodyPart.LEGS, btnLegs));
-        btnShoulders.setOnClickListener(v -> updateBodyPartFilter(Exercise.BodyPart.SHOULDERS, btnShoulders));
-        btnArms.setOnClickListener(v -> updateBodyPartFilter(Exercise.BodyPart.ARMS, btnArms));
-        btnCore.setOnClickListener(v -> updateBodyPartFilter(Exercise.BodyPart.CORE, btnCore));
-        updateCategoryFilter(Exercise.Category.STRENGTH, btnStrength);
+        chipAll.setOnClickListener(v -> setFilterType(FilterType.ALL));
+        chipMuscle.setOnClickListener(v -> setFilterType(FilterType.MUSCLE));
+        chipGoals.setOnClickListener(v -> setFilterType(FilterType.GOALS));
+        
+        // Initial state
+        setFilterType(FilterType.ALL);
     }
 
-    private void updateCategoryFilter(Exercise.Category category, Button selectedButton) {
-        currentCategory = category;
-        currentBodyPart = null;
-        updateButtonStyles(new Button[]{btnStrength, btnCardio, btnHiit, btnYoga}, selectedButton);
-        secondaryFilterScrollView.setVisibility(category == Exercise.Category.STRENGTH ? View.VISIBLE : View.GONE);
-        if (category == Exercise.Category.STRENGTH) {
-            updateBodyPartFilter(null, btnBodyAll);
+    private void setFilterType(FilterType type) {
+        currentFilterType = type;
+        currentSecondaryFilter = null; // Reset secondary selection
+
+        if (type == FilterType.ALL) {
+            secondaryFilterScrollView.setVisibility(View.GONE);
+            chipGroupFilters.removeAllViews();
+            applyFilters();
+        } else if (type == FilterType.MUSCLE) {
+            secondaryFilterScrollView.setVisibility(View.VISIBLE);
+            populateChips(muscleList);
+            applyFilters();
+        } else if (type == FilterType.GOALS) {
+            secondaryFilterScrollView.setVisibility(View.VISIBLE);
+            populateChips(goalList);
+            applyFilters();
         }
-        applyFilters();
     }
-
-    private void updateBodyPartFilter(Exercise.BodyPart bodyPart, Button selectedButton) {
-        currentBodyPart = bodyPart;
-        updateButtonStyles(new Button[]{btnBodyAll, btnChest, btnBack, btnLegs, btnShoulders, btnArms, btnCore}, selectedButton);
-        applyFilters();
+    
+    private void populateChips(List<String> tags) {
+        if (getContext() == null) return;
+        
+        chipGroupFilters.removeAllViews();
+        LayoutInflater inflater = LayoutInflater.from(getContext());
+        
+        for (String tag : tags) {
+            Chip chip = (Chip) inflater.inflate(R.layout.item_filter_chip, chipGroupFilters, false);
+            chip.setText(tag);
+            
+            chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    currentSecondaryFilter = tag;
+                } else {
+                    // Check if the unchecked one was the current one before clearing
+                    // Also check if any other chip is checked if singleSelection is true,
+                    // but with ChipGroup singleSelection, usually one stays checked or none.
+                    // If we want to allow deselecting:
+                    if (tag.equals(currentSecondaryFilter)) {
+                        currentSecondaryFilter = null;
+                    }
+                }
+                applyFilters();
+            });
+            
+            chipGroupFilters.addView(chip);
+        }
     }
 
     private void applyFilters() {
         String searchText = etSearch.getText().toString().toLowerCase().trim();
         List<Exercise> filteredList = new ArrayList<>();
+        
         for (Exercise exercise : allExercises) {
-            boolean categoryMatch = exercise.getCategory() == currentCategory;
-            boolean bodyPartMatch = (currentBodyPart == null) || (exercise.getBodyPart() == currentBodyPart);
-            boolean searchMatch = searchText.isEmpty() || exercise.getTitle().toLowerCase().contains(searchText);
-            if (categoryMatch && bodyPartMatch && searchMatch) {
+            boolean matchesSearch = searchText.isEmpty() || exercise.getTitle().toLowerCase().contains(searchText);
+            boolean matchesFilter = true;
+
+            if (currentFilterType == FilterType.MUSCLE) {
+                if (currentSecondaryFilter != null) {
+                    matchesFilter = matchMuscle(exercise, currentSecondaryFilter);
+                }
+            } else if (currentFilterType == FilterType.GOALS) {
+                if (currentSecondaryFilter != null) {
+                    matchesFilter = matchGoal(exercise, currentSecondaryFilter);
+                }
+            }
+
+            if (matchesSearch && matchesFilter) {
                 filteredList.add(exercise);
             }
         }
         adapter.setExercises(filteredList);
     }
+    
+    private boolean matchMuscle(Exercise exercise, String muscle) {
+        Exercise.BodyPart part = exercise.getBodyPart();
+        switch (muscle) {
+            case "Legs": return part == Exercise.BodyPart.LEGS;
+            case "Chest": return part == Exercise.BodyPart.CHEST;
+            case "Core": return part == Exercise.BodyPart.CORE;
+            case "Arms": return part == Exercise.BodyPart.ARMS;
+            case "Shoulder": return part == Exercise.BodyPart.SHOULDERS;
+            case "Back": return part == Exercise.BodyPart.BACK;
+            default: return false;
+        }
+    }
 
-    private void updateButtonStyles(Button[] buttons, Button selectedButton) {
-        for (Button button : buttons) {
-            if (button == selectedButton) {
-                button.setBackgroundColor(Color.parseColor("#D32F2F"));
-                button.setTextColor(Color.WHITE);
-            } else {
-                button.setBackgroundColor(Color.WHITE);
-                button.setTextColor(Color.BLACK);
-            }
+    private boolean matchGoal(Exercise exercise, String goal) {
+        switch (goal) {
+            case "Gain Muscle": return exercise.getCategory() == Exercise.Category.STRENGTH;
+            case "Lose Weight": return exercise.getCategory() == Exercise.Category.HIIT || exercise.getCategory() == Exercise.Category.CARDIO;
+            case "Improve Flexibility": return exercise.getCategory() == Exercise.Category.YOGA;
+            case "Increase Endurance": return exercise.getCategory() == Exercise.Category.CARDIO;
+            case "Boost Energy Levels": return exercise.getCategory() == Exercise.Category.CARDIO || exercise.getCategory() == Exercise.Category.YOGA;
+            case "Gain Weight": return exercise.getCategory() == Exercise.Category.STRENGTH;
+            case "Stay Active": return true;
+            case "Maintain Weight": return true;
+            default: return true;
         }
     }
 

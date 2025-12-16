@@ -21,6 +21,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Commenting out the redirection logic so MainActivity always displays
+        /*
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
         if (settings.getBoolean(ONBOARDING_COMPLETE_KEY, false)) {
             Intent intent = new Intent(MainActivity.this, HomeScreen.class);
@@ -28,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
             finish();
             return;
         }
+        */
 
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
