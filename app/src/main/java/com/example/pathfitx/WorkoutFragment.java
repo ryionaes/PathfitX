@@ -64,7 +64,7 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
 
     // Lists for secondary filters
     private final List<String> muscleList = Arrays.asList("Legs", "Chest", "Core", "Arms", "Shoulder", "Back");
-    private final List<String> goalList = Arrays.asList("Lose Weight", "Maintain Weight", "Gain Weight", "Gain Muscle", "Stay Active", "Improve Flexibility", "Increase Endurance", "Boost Energy Levels");
+    private List<String> userGoalList = new ArrayList<>();
 
     // Firebase & State
     private FirebaseFirestore db;
@@ -321,10 +321,38 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
             applyFilters();
         } else if (type == FilterType.GOALS) {
             secondaryFilterScrollView.setVisibility(View.VISIBLE);
-            populateChips(goalList);
-            applyFilters();
+            fetchUserGoals(); // Fetch goals from Firestore
         }
     }
+
+    private void fetchUserGoals() {
+        if (userId != null) {
+            db.collection("users").document(userId).get().addOnCompleteListener(task -> {
+                if (task.isSuccessful() && task.getResult() != null) {
+                    DocumentSnapshot snapshot = task.getResult();
+                    if (snapshot.exists()) {
+                        List<String> goals = (List<String>) snapshot.get("goals");
+                        if (goals != null && !goals.isEmpty()) {
+                            userGoalList.clear();
+                            userGoalList.addAll(goals);
+                            populateChips(userGoalList);
+                        } else {
+                            if (getContext() != null) {
+                                Toast.makeText(getContext(), "No goals set. Please set your goals in your profile.", Toast.LENGTH_LONG).show();
+                            }
+                            chipGroupFilters.removeAllViews();
+                        }
+                    }
+                } else {
+                     if (getContext() != null) {
+                        Toast.makeText(getContext(), "Failed to fetch goals.", Toast.LENGTH_SHORT).show();
+                     }
+                }
+                applyFilters(); // Apply filters after fetching or failing
+            });
+        }
+    }
+
 
     private void populateChips(List<String> tags) {
         if (getContext() == null) return;
