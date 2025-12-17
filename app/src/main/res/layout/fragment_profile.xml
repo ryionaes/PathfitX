@@ -16,7 +16,7 @@
             android:id="@+id/viewHeaderBg"
             android:layout_width="match_parent"
             android:layout_height="160dp"
-            android:background="@color/red_logout"
+            android:background="@color/prim_red"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
@@ -71,7 +71,7 @@
                 android:layout_height="20dp"
                 android:layout_gravity="center"
                 android:src="@android:drawable/ic_menu_camera"
-                app:tint="@color/red_logout" />
+                app:tint="@color/prim_red" />
         </com.google.android.material.card.MaterialCardView>
 
         <TextView
@@ -98,7 +98,7 @@
             android:paddingHorizontal="12dp"
             android:paddingVertical="4dp"
             android:text="Edit Profile"
-            android:textColor="@color/red_logout"
+            android:textColor="@color/prim_red"
             android:textSize="14sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
@@ -123,7 +123,8 @@
                 android:baselineAligned="false"
                 android:orientation="horizontal"
                 android:paddingHorizontal="16dp"
-                android:paddingVertical="16dp">
+                android:paddingVertical="16dp"
+                android:background="#0f172a">
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -138,7 +139,7 @@
                         android:layout_height="wrap_content"
                         android:fontFamily="sans-serif-black"
                         android:gravity="center"
-                        android:textColor="@color/profile_primary"
+                        android:textColor="@color/white"
                         android:textSize="18sp" />
 
                     <TextView
@@ -167,7 +168,7 @@
                         android:layout_height="wrap_content"
                         android:fontFamily="sans-serif-black"
                         android:gravity="center"
-                        android:textColor="@color/profile_primary"
+                        android:textColor="@color/white"
                         android:textSize="18sp" />
 
                     <TextView
@@ -196,7 +197,7 @@
                         android:layout_height="wrap_content"
                         android:fontFamily="sans-serif-black"
                         android:gravity="center"
-                        android:textColor="@color/profile_primary"
+                        android:textColor="@color/white"
                         android:textSize="18sp" />
 
                     <TextView
@@ -232,7 +233,7 @@
             android:focusable="true"
             android:padding="8dp"
             android:text="Edit Goals"
-            android:textColor="@color/red_logout"
+            android:textColor="@color/prim_red"
             android:textSize="14sp"
             android:textStyle="bold"
             app:layout_constraintBaseline_toBaselineOf="@+id/tvMyGoalsLabel"
@@ -293,8 +294,8 @@
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:src="@android:drawable/ic_menu_edit"
-                            app:tint="@color/red_logout" />
+                            android:src="@drawable/ic_edit"
+                            app:tint="@color/prim_red" />
 
                         <TextView
                             android:layout_width="0dp"
@@ -353,7 +354,7 @@
                             android:clickable="true"
                             android:focusable="true"
                             android:text="Change Password"
-                            android:textColor="@color/red_logout"
+                            android:textColor="@color/prim_red"
                             android:textStyle="bold" />
 
                     </LinearLayout>
@@ -386,8 +387,8 @@
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:src="@android:drawable/ic_popup_reminder"
-                            app:tint="@color/red_logout" />
+                            android:src="@drawable/ic_notifications"
+                            app:tint="@color/prim_red" />
 
                         <TextView
                             android:layout_width="0dp"
@@ -444,7 +445,7 @@
                             android:clickable="true"
                             android:focusable="true"
                             android:text="Set Start Time"
-                            android:textColor="@color/red_logout"
+                            android:textColor="@color/prim_red"
                             android:textSize="14sp"
                             android:visibility="gone"/>
 
@@ -476,7 +477,7 @@
                             android:clickable="true"
                             android:focusable="true"
                             android:text="Set Time"
-                            android:textColor="@color/red_logout"
+                            android:textColor="@color/prim_red"
                             android:textSize="14sp"
                             android:visibility="gone"/>
                     </LinearLayout>
@@ -509,8 +510,8 @@
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:src="@android:drawable/ic_menu_help"
-                            app:tint="@color/red_logout" />
+                            android:src="@drawable/ic_questionmark"
+                            app:tint="@color/prim_red" />
 
                         <TextView
                             android:layout_width="0dp"
@@ -658,8 +659,8 @@
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:src="@android:drawable/ic_menu_info_details"
-                            app:tint="@color/red_logout" />
+                            android:src="@drawable/ic_info"
+                            app:tint="@color/prim_red" />
 
                         <TextView
                             android:layout_width="0dp"
@@ -705,14 +706,14 @@
                 android:layout_height="60dp"
                 android:layout_marginTop="16dp"
                 android:text="Log Out"
-                android:textColor="@color/red_logout"
-                android:textStyle="bold"
-                app:backgroundTint="@color/red_bg_light"
-                app:cornerRadius="12dp"
+                android:textColor="@color/white"
+                android:fontFamily="@font/roboto_black"
+                app:backgroundTint="#0f172a"
+                app:cornerRadius="50dp"
                 app:elevation="0dp"
-                app:icon="@android:drawable/ic_lock_power_off"
+                app:icon="@drawable/ic_logout"
                 app:iconGravity="textStart"
-                app:iconTint="@color/red_logout" />
+                app:iconTint="@color/prim_red" />
 
         </LinearLayout>
 
