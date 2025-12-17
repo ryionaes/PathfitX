@@ -38,6 +38,14 @@ public class SharedViewModel extends ViewModel {
         return workoutSnapshot;
     }
 
+    public String getUserId() {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser != null) {
+            return currentUser.getUid();
+        }
+        return null;
+    }
+
     public void attachListeners() {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser == null) return;

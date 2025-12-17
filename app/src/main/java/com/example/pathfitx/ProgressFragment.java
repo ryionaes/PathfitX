@@ -20,6 +20,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
@@ -87,6 +88,7 @@ public class ProgressFragment extends Fragment {
 
             for (QueryDocumentSnapshot document : snapshots) {
                 WorkoutHistory item = document.toObject(WorkoutHistory.class);
+                item.setDocumentId(document.getId()); // Store document ID
                 historyList.add(item);
 
                 totalVol += item.getTotalVolume();
@@ -108,24 +110,65 @@ public class ProgressFragment extends Fragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_workout_summary, null);
 
-        view.findViewById(R.id.etWorkoutTitle).setVisibility(View.GONE);
-        view.findViewById(R.id.ivEditIcon).setVisibility(View.GONE);
-        view.findViewById(R.id.tvWorkoutTitle).setVisibility(View.VISIBLE);
+        final EditText etWorkoutTitle = view.findViewById(R.id.etWorkoutTitle);
+        final TextView tvWorkoutTitle = view.findViewById(R.id.tvWorkoutTitle);
+        final ImageView ivEditIcon = view.findViewById(R.id.ivEditIcon);
 
-        ((TextView) view.findViewById(R.id.tvWorkoutTitle)).setText(history.getWorkoutName());
+        tvWorkoutTitle.setText(history.getWorkoutName());
+        etWorkoutTitle.setText(history.getWorkoutName());
+
+        tvWorkoutTitle.setVisibility(View.VISIBLE);
+        etWorkoutTitle.setVisibility(View.GONE);
+        ivEditIcon.setVisibility(View.VISIBLE); // Show edit icon
+
+        ivEditIcon.setOnClickListener(v -> {
+            tvWorkoutTitle.setVisibility(View.GONE);
+            etWorkoutTitle.setVisibility(View.VISIBLE);
+            etWorkoutTitle.requestFocus();
+        });
+
         ((TextView) view.findViewById(R.id.tvDurationValue)).setText((history.getDurationSeconds() / 60) + " min");
         ((TextView) view.findViewById(R.id.tvVolumeValue)).setText(history.getTotalVolume() + " kg");
         ((TextView) view.findViewById(R.id.tvExercisesCompletedValue)).setText(String.valueOf(history.getExercisesCount()));
         ((TextView) view.findViewById(R.id.tvCompletionRateValue)).setText(history.getCompletionRate() + "%");
         ((TextView) view.findViewById(R.id.tvCaloriesBurnedValue)).setText(String.format("%.0f", history.getCaloriesBurned()));
 
-
         builder.setView(view);
         AlertDialog dialog = builder.create();
         if (dialog.getWindow() != null) dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog.show();
 
-        view.findViewById(R.id.btnClose).setOnClickListener(v -> dialog.dismiss());
-        view.findViewById(R.id.btnCloseSummary).setOnClickListener(v -> dialog.dismiss());
+        View.OnClickListener closeAction = v -> {
+            String newName = etWorkoutTitle.getText().toString().trim();
+            if (!newName.isEmpty() && !newName.equals(history.getWorkoutName())) {
+                updateWorkoutName(history, newName);
+            }
+            dialog.dismiss();
+        };
+
+        view.findViewById(R.id.btnClose).setOnClickListener(closeAction);
+        view.findViewById(R.id.btnCloseSummary).setOnClickListener(closeAction);
+    }
+
+    private void updateWorkoutName(WorkoutHistory history, String newName) {
+        if (history.getDocumentId() == null || sharedViewModel.getUserId() == null) {
+            Toast.makeText(getContext(), "Error: Cannot update workout name.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        FirebaseFirestore.getInstance().collection("users")
+                .document(sharedViewModel.getUserId())
+                .collection("history")
+                .document(history.getDocumentId())
+                .update("workoutName", newName)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(getContext(), "Workout name updated.", Toast.LENGTH_SHORT).show();
+                    history.setWorkoutName(newName);
+                    adapter.notifyDataSetChanged();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(getContext(), "Failed to update name.", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Error updating workout name", e);
+                });
     }
 }

@@ -52,6 +52,7 @@ public class LiveSessionActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private MaterialButton btnPause, btnFinish;
     private RecyclerView rvLiveWorkout;
+    private LiveAdapter liveAdapter;
 
     // Timer
     private final Handler timerHandler = new Handler(Looper.getMainLooper());
@@ -287,19 +288,10 @@ public class LiveSessionActivity extends AppCompatActivity {
         startTime = System.currentTimeMillis();
         timerHandler.postDelayed(updateTimerThread, 0);
 
-        // Don't start the timer immediately, wait for resumeWorkout to be called
         btnPause.setOnClickListener(v -> {
             if (isRunning) {
-                timeSwapBuff += System.currentTimeMillis() - startTime;
-                timerHandler.removeCallbacks(updateTimerThread);
-                btnPause.setIconResource(android.R.drawable.ic_media_play);
-                isRunning = false;
                 pauseWorkout();
             } else {
-                startTime = System.currentTimeMillis();
-                timerHandler.postDelayed(updateTimerThread, 0);
-                btnPause.setIconResource(android.R.drawable.ic_media_pause);
-                isRunning = true;
                 resumeWorkout();
             }
         });
@@ -311,6 +303,9 @@ public class LiveSessionActivity extends AppCompatActivity {
             timerHandler.removeCallbacks(updateTimerThread);
             btnPause.setIconResource(android.R.drawable.ic_media_play);
             isRunning = false;
+            if (liveAdapter != null) {
+                liveAdapter.setPaused(true);
+            }
         }
     }
 
@@ -320,6 +315,9 @@ public class LiveSessionActivity extends AppCompatActivity {
             timerHandler.postDelayed(updateTimerThread, 0);
             btnPause.setIconResource(android.R.drawable.ic_media_pause);
             isRunning = true;
+            if (liveAdapter != null) {
+                liveAdapter.setPaused(false);
+            }
         }
     }
 
@@ -362,7 +360,7 @@ public class LiveSessionActivity extends AppCompatActivity {
         }
         progressBar.setMax(totalSets);
 
-        LiveAdapter adapter = new LiveAdapter(workoutList, (exercise, isChecked) -> {
+        liveAdapter = new LiveAdapter(workoutList, (exercise, isChecked) -> {
             if (isChecked) {
                 completedSets++;
                 exercise.setCompletedSets(exercise.getCompletedSets() + 1);
@@ -375,7 +373,7 @@ public class LiveSessionActivity extends AppCompatActivity {
 
 
         rvLiveWorkout.setLayoutManager(new LinearLayoutManager(this));
-        rvLiveWorkout.setAdapter(adapter);
+        rvLiveWorkout.setAdapter(liveAdapter);
         updateProgress();
     }
 

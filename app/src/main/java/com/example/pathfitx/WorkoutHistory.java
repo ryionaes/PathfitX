@@ -1,6 +1,9 @@
 package com.example.pathfitx;
 
+import com.google.firebase.firestore.Exclude;
+
 public class WorkoutHistory {
+    private String documentId;
     private String workoutName;
     private int durationSeconds;
     private int totalVolume;
@@ -23,7 +26,13 @@ public class WorkoutHistory {
         this.caloriesBurned = caloriesBurned;
     }
 
+    @Exclude
+    public String getDocumentId() { return documentId; }
+    public void setDocumentId(String documentId) { this.documentId = documentId; }
+
     public String getWorkoutName() { return workoutName; }
+    public void setWorkoutName(String workoutName) { this.workoutName = workoutName; }
+
     public int getDurationSeconds() { return durationSeconds; }
     public int getTotalVolume() { return totalVolume; }
     public int getCompletionRate() { return completionRate; }

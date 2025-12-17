@@ -20,6 +20,7 @@ public class LiveAdapter extends RecyclerView.Adapter<LiveAdapter.ViewHolder> {
 
     private List<Exercise> list;
     private OnSetCompletedListener listener;
+    private volatile boolean isPaused = false;
 
     public interface OnSetCompletedListener {
         void onSetCompleted(Exercise exercise, boolean isChecked);
@@ -28,6 +29,11 @@ public class LiveAdapter extends RecyclerView.Adapter<LiveAdapter.ViewHolder> {
     public LiveAdapter(List<Exercise> list, OnSetCompletedListener listener) {
         this.list = list;
         this.listener = listener;
+    }
+
+    public void setPaused(boolean paused) {
+        this.isPaused = paused;
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -41,7 +47,7 @@ public class LiveAdapter extends RecyclerView.Adapter<LiveAdapter.ViewHolder> {
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Exercise exercise = list.get(position);
         holder.tvTitle.setText(exercise.getTitle());
-        
+
 
         Glide.with(holder.itemView.getContext())
                 .load(exercise.getImageUrl())
@@ -64,11 +70,23 @@ public class LiveAdapter extends RecyclerView.Adapter<LiveAdapter.ViewHolder> {
             tvSetNum.setText("Set " + (currentSetIndex + 1));
             tvDetails.setText(exercise.getReps() + " reps • " + exercise.getKg() + " kg");
 
-            // Click Listener
             boolean isSetCompleted = currentSetIndex < exercise.getCompletedSets();
             updateSetAppearance(rowContainer, tvSetNum, btnCheck, isSetCompleted);
 
+            if (isPaused) {
+                btnCheck.setAlpha(0.5f);
+                btnCheck.setClickable(false);
+            } else {
+                btnCheck.setAlpha(1.0f);
+                btnCheck.setClickable(true);
+            }
+
             btnCheck.setOnClickListener(v -> {
+                if (isPaused) {
+                    Toast.makeText(holder.itemView.getContext(), "Workout Paused", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 boolean isSelected = rowContainer.getTag() != null && (boolean) rowContainer.getTag();
 
                 if (!isSelected) {
