@@ -421,7 +421,7 @@
                             android:id="@+id/switchWaterReminder"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:checked="true"
+                            android:checked="false"
                             android:text="Drink Water Reminder" />
 
                         <TextView
@@ -453,6 +453,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
+                            android:checked="false"
                             android:text="Workout Alerts" />
 
                         <TextView

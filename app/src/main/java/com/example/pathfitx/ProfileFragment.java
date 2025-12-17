@@ -163,12 +163,11 @@ public class ProfileFragment extends Fragment {
 
         tvPrimaryLocation.setText("Location: " + (location != null ? location : "N/A"));
 
-        if (snapshot.contains("waterReminder")) {
-            boolean enabled = Boolean.TRUE.equals(snapshot.getBoolean("waterReminder"));
-            switchWaterReminder.setChecked(enabled);
-            tvWaterTime.setVisibility(enabled ? View.VISIBLE : View.GONE);
-            if (enabled) scheduleWaterReminder(true);
-        }
+        // Set switch state based on database, defaulting to false if not present
+        boolean waterReminderEnabled = snapshot.contains("waterReminder") ? Boolean.TRUE.equals(snapshot.getBoolean("waterReminder")) : false;
+        switchWaterReminder.setChecked(waterReminderEnabled);
+        tvWaterTime.setVisibility(waterReminderEnabled ? View.VISIBLE : View.GONE);
+        if (waterReminderEnabled) scheduleWaterReminder(true);
 
         if (snapshot.contains("waterHour") && snapshot.contains("waterMinute")) {
             waterHour = snapshot.getLong("waterHour").intValue();
@@ -176,12 +175,10 @@ public class ProfileFragment extends Fragment {
             updateTimeText(tvWaterTime, waterHour, waterMinute, "Start Time");
         }
 
-        if (snapshot.contains("workoutAlerts")) {
-            boolean enabled = Boolean.TRUE.equals(snapshot.getBoolean("workoutAlerts"));
-            switchWorkoutAlerts.setChecked(enabled);
-            tvWorkoutTime.setVisibility(enabled ? View.VISIBLE : View.GONE);
-            if (enabled) scheduleWorkoutAlert(true);
-        }
+        boolean workoutAlertsEnabled = snapshot.contains("workoutAlerts") ? Boolean.TRUE.equals(snapshot.getBoolean("workoutAlerts")) : false;
+        switchWorkoutAlerts.setChecked(workoutAlertsEnabled);
+        tvWorkoutTime.setVisibility(workoutAlertsEnabled ? View.VISIBLE : View.GONE);
+        if (workoutAlertsEnabled) scheduleWorkoutAlert(true);
 
         if (snapshot.contains("workoutHour") && snapshot.contains("workoutMinute")) {
             workoutHour = snapshot.getLong("workoutHour").intValue();
