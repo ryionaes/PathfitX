@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.HorizontalScrollView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -47,7 +48,7 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
     private RecyclerView rvExplore;
     private WorkoutAdapter adapter;
     private EditText etSearch;
-    private ChipGroup chipGroupCategory; // Primary chips
+    private LinearLayout chipGroupCategory; // Primary chips
     private ChipGroup chipGroupFilters; // Secondary chips
     private HorizontalScrollView secondaryFilterScrollView;
 
@@ -323,6 +324,10 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
     private void setFilterType(FilterType type) {
         currentFilterType = type;
         currentSecondaryFilter = null; // Reset secondary selection
+
+        chipAll.setChecked(type == FilterType.ALL);
+        chipMuscle.setChecked(type == FilterType.MUSCLE);
+        chipGoals.setChecked(type == FilterType.GOALS);
 
         if (type == FilterType.ALL) {
             secondaryFilterScrollView.setVisibility(View.GONE);
