@@ -52,6 +52,10 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.auth)
 
+    // ViewModel
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.4")
+    implementation("androidx.activity:activity-ktx:1.9.0")
+
     // GOOGLE SIGN IN (Added this line)
     implementation("com.google.android.gms:play-services-auth:21.4.0")
 }

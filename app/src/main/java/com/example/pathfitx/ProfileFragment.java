@@ -23,9 +23,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.signature.ObjectKey;
 import com.canhub.cropper.CropImageContract;
 import com.canhub.cropper.CropImageContractOptions;
 import com.canhub.cropper.CropImageOptions;
@@ -36,7 +36,6 @@ import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -44,7 +43,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ProfileFragment extends Fragment implements UserUpdatable {
+public class ProfileFragment extends Fragment {
 
     private static final String TAG = "ProfileFragment";
 
@@ -66,10 +65,8 @@ public class ProfileFragment extends Fragment implements UserUpdatable {
     private ActivityResultLauncher<PickVisualMediaRequest> pickMedia;
     private ActivityResultLauncher<CropImageContractOptions> cropImage;
 
-    // Firebase
-    private FirebaseAuth mAuth;
-    private FirebaseUser currentUser;
-    private FirebaseFirestore db;
+    // --- ViewModel ---
+    private SharedViewModel sharedViewModel;
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -78,7 +75,6 @@ public class ProfileFragment extends Fragment implements UserUpdatable {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        initFirebase();
         initializeImagePicker();
     }
 
@@ -93,30 +89,24 @@ public class ProfileFragment extends Fragment implements UserUpdatable {
         initializeViews(view);
         setupListeners();
 
-        // Get initial data from hosting activity
-        if (getActivity() instanceof HomeScreen) {
-            DocumentSnapshot userSnapshot = ((HomeScreen) getActivity()).getUserSnapshot();
-            if (userSnapshot != null) {
-                onUserUpdate(userSnapshot);
-            } else {
-                updateUIForGuest();
-            }
+        sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
+
+        // Observe for future updates
+        sharedViewModel.getUserSnapshot().observe(getViewLifecycleOwner(), this::updateUIWithData);
+
+        // Update UI with current data if it already exists to prevent flicker
+        DocumentSnapshot userSnapshot = sharedViewModel.getUserSnapshot().getValue();
+        if (userSnapshot != null) {
+            updateUIWithData(userSnapshot);
+        } else {
+            updateUIForGuest();
         }
-    }
-
-    private void initFirebase() {
-        mAuth = FirebaseAuth.getInstance();
-        currentUser = mAuth.getCurrentUser();
-        db = FirebaseFirestore.getInstance();
-    }
-
-    @Override
-    public void onUserUpdate(DocumentSnapshot snapshot) {
-        updateUIWithData(snapshot);
     }
 
     private void updateUIWithData(@NonNull DocumentSnapshot snapshot) {
         if (!isAdded() || getContext() == null) return;
+
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 
         String username = snapshot.getString("username");
         String email = snapshot.getString("email");
@@ -164,6 +154,7 @@ public class ProfileFragment extends Fragment implements UserUpdatable {
     }
 
     private void showEditProfileDialog() {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (getContext() == null || currentUser == null) return;
 
         View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_edit_profile, null);
@@ -173,7 +164,7 @@ public class ProfileFragment extends Fragment implements UserUpdatable {
         EditText etAge = dialogView.findViewById(R.id.etEditAge);
         Button btnSave = dialogView.findViewById(R.id.btnSaveProfile);
 
-        db.collection("users").document(currentUser.getUid()).get().addOnSuccessListener(snapshot -> {
+        FirebaseFirestore.getInstance().collection("users").document(currentUser.getUid()).get().addOnSuccessListener(snapshot -> {
             if (snapshot.exists()) {
                 etName.setText(snapshot.getString("username"));
                 etWeight.setText(String.valueOf(snapshot.getDouble("weight_kg")));
@@ -202,7 +193,7 @@ public class ProfileFragment extends Fragment implements UserUpdatable {
                 updatedData.put("height_cm", Double.parseDouble(newHeightStr));
                 updatedData.put("age", Long.parseLong(newAgeStr));
 
-                db.collection("users").document(currentUser.getUid()).update(updatedData)
+                FirebaseFirestore.getInstance().collection("users").document(currentUser.getUid()).update(updatedData)
                         .addOnSuccessListener(aVoid -> {
                             Toast.makeText(getContext(), "Profile updated!", Toast.LENGTH_SHORT).show();
                             dialog.dismiss();
@@ -257,31 +248,36 @@ public class ProfileFragment extends Fragment implements UserUpdatable {
         tvChangePassword.setOnClickListener(v -> sendPasswordResetEmail());
 
         btnLogout.setOnClickListener(v -> {
-            if (getContext() == null) return;
-            mAuth.signOut();
-            Intent intent = new Intent(getActivity(), LoginActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            Toast.makeText(getContext(), "Logged Out Successfully", Toast.LENGTH_SHORT).show();
+            FirebaseAuth.getInstance().signOut();
+            if (getActivity() != null) {
+                Intent intent = new Intent(getActivity(), LoginActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                Toast.makeText(getContext(), "Logged Out Successfully", Toast.LENGTH_SHORT).show();
+            }
         });
 
         tvEditGoals.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), EditGoals.class);
-            startActivity(intent);
+            if (getActivity() != null) {
+                startActivity(new Intent(getActivity(), EditGoals.class));
+            }
         });
     }
 
     private void sendPasswordResetEmail() {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null && currentUser.getEmail() != null) {
-            mAuth.sendPasswordResetEmail(currentUser.getEmail())
+            FirebaseAuth.getInstance().sendPasswordResetEmail(currentUser.getEmail())
                     .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            Toast.makeText(getContext(), "Password reset email sent.", Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(getContext(), "Failed to send password reset email.", Toast.LENGTH_SHORT).show();
+                        if (getContext() != null) {
+                            if (task.isSuccessful()) {
+                                Toast.makeText(getContext(), "Password reset email sent.", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(getContext(), "Failed to send password reset email.", Toast.LENGTH_SHORT).show();
+                            }
                         }
                     });
-        } else {
+        } else if (getContext() != null) {
             Toast.makeText(getContext(), "Could not get user email.", Toast.LENGTH_SHORT).show();
         }
     }
@@ -301,7 +297,7 @@ public class ProfileFragment extends Fragment implements UserUpdatable {
                 saveProfileImageUriToFirestore(resultUri.toString());
             } else {
                 Exception error = result.getError();
-                if (error != null) {
+                if (error != null && getContext() != null) {
                     Toast.makeText(getContext(), "Error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             }
@@ -309,20 +305,28 @@ public class ProfileFragment extends Fragment implements UserUpdatable {
     }
 
     private void saveProfileImageUriToFirestore(String uriString) {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser == null) return;
         Map<String, Object> data = new HashMap<>();
         data.put("profileImageUri", uriString);
-        db.collection("users").document(currentUser.getUid()).update(data)
-                .addOnSuccessListener(aVoid -> Toast.makeText(getContext(), "Profile Picture Updated!", Toast.LENGTH_SHORT).show())
-                .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to save image.", Toast.LENGTH_SHORT).show());
+        FirebaseFirestore.getInstance().collection("users").document(currentUser.getUid()).update(data)
+                .addOnSuccessListener(aVoid -> {
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(), "Profile Picture Updated!", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(), "Failed to save image.", Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     private void loadProfileImage(String uriString) {
         if (getContext() == null || ivProfile == null) return;
 
         if (uriString != null && !uriString.isEmpty()) {
-            Glide.with(this).load(Uri.parse(uriString)).circleCrop()
-                    .signature(new ObjectKey(System.currentTimeMillis())).into(ivProfile);
+            Glide.with(this).load(Uri.parse(uriString)).circleCrop().into(ivProfile);
         } else {
             Glide.with(this).load(R.drawable.ic_profile_default).circleCrop().into(ivProfile);
         }
