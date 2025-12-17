@@ -7,7 +7,6 @@
     <string name="Female">Female</string>
     <string name="default_web_client_id">381642629816-8s7b7sroi2o6b79kc864784emd9hi3di.apps.googleusercontent.com</string>
 
-
     <string-array name="location_array">
         <item>Los Baños, Calabarzon</item>
         <item>Manila, NCR</item>
@@ -15,6 +14,11 @@
         <item>Davao City, Davao del Sur</item>
         <item>Other</item>
     </string-array>
-    <!-- TODO: Remove or change this placeholder text -->
+    
+    <!-- Notification Texts -->
+    <string name="notif_water_title">Time to Drink Water!</string>
+    <string name="notif_water_message">Stay hydrated. Drink a glass of water now.</string>
+    <string name="notif_workout_title">Workout Time!</string>
+    <string name="notif_workout_message">It\'s time for your daily workout session.</string>
 
 </resources>

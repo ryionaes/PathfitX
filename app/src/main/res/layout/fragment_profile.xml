@@ -274,6 +274,7 @@
                 android:layout_marginBottom="16dp"
                 android:clickable="true"
                 android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackground"
                 app:cardBackgroundColor="@color/card_white"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="2dp">
@@ -347,6 +348,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackground"
                 app:cardBackgroundColor="@color/card_white"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="2dp">
@@ -374,7 +378,7 @@
                             android:layout_marginStart="16dp"
                             android:layout_weight="1"
                             android:text="Notifications"
-                            android.textColor="@color/profile_primary"
+                            android:textColor="@color/profile_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
 
@@ -403,12 +407,40 @@
                             android:checked="true"
                             android:text="Drink Water Reminder" />
 
+                        <TextView
+                            android:id="@+id/tvWaterTime"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:layout_marginBottom="8dp"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:text="Set Start Time"
+                            android:textColor="@color/red_logout"
+                            android:textSize="14sp"
+                            android:visibility="gone"/>
+
                         <com.google.android.material.switchmaterial.SwitchMaterial
                             android:id="@+id/switchWorkoutAlerts"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
                             android:text="Workout Alerts" />
+
+                        <TextView
+                            android:id="@+id/tvWorkoutTime"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:layout_marginBottom="8dp"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:text="Set Time"
+                            android:textColor="@color/red_logout"
+                            android:textSize="14sp"
+                            android:visibility="gone"/>
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -418,6 +450,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackground"
                 app:cardBackgroundColor="@color/card_white"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="2dp">
@@ -467,11 +502,93 @@
                         android:padding="16dp"
                         android:visibility="gone">
 
+                        <LinearLayout
+                            android:id="@+id/btnHelpAccount"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:paddingBottom="12dp"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Account Settings"
+                                android:textColor="@color/profile_primary"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="Adjust settings, manage notifications, learn about name changes and more."
+                                android:textColor="@color/text_secondary"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/btnHelpLogin"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:paddingBottom="12dp"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Login and Password"
+                                android:textColor="@color/profile_primary"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="Fix login issues and learn how to change or reset your password."
+                                android:textColor="@color/text_secondary"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/btnHelpPrivacy"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:paddingBottom="12dp"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Privacy and Security"
+                                android:textColor="@color/profile_primary"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="Control who can see what you share and add extra protection to your account."
+                                android:textColor="@color/text_secondary"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
                             android:lineSpacingExtra="4dp"
-                            android:text="Need assistance? \nEmail us at support@pathfitx.com"
+                            android:text="Need more assistance? \nEmail us at support@pathfitx.com"
                             android:textColor="#666666" />
                     </LinearLayout>
                 </LinearLayout>
@@ -482,6 +599,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackground"
                 app:cardBackgroundColor="@color/card_white"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="2dp">

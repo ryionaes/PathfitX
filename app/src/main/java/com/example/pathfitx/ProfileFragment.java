@@ -1,9 +1,14 @@
 package com.example.pathfitx;
 
+import android.app.AlarmManager;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
+import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -22,6 +27,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -39,8 +45,10 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class ProfileFragment extends Fragment {
@@ -59,14 +67,20 @@ public class ProfileFragment extends Fragment {
     private LinearLayout layoutAccountDetails, contentHelp, contentAbout;
     private LinearLayout layoutNotificationSettings;
     private SwitchMaterial switchWaterReminder, switchWorkoutAlerts;
+    private TextView tvWaterTime, tvWorkoutTime;
     private ChipGroup chipGroupGoals;
 
     // --- Image Picker ---
     private ActivityResultLauncher<PickVisualMediaRequest> pickMedia;
     private ActivityResultLauncher<CropImageContractOptions> cropImage;
+    private ActivityResultLauncher<String> requestPermissionLauncher;
 
     // --- ViewModel ---
     private SharedViewModel sharedViewModel;
+
+    // --- Time Settings ---
+    private int waterHour = 10, waterMinute = 0; // Default start time for water
+    private int workoutHour = 8, workoutMinute = 0; // Default time for workout
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -76,6 +90,17 @@ public class ProfileFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         initializeImagePicker();
+        
+        requestPermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+            if (isGranted) {
+                Toast.makeText(getContext(), "Notifications enabled", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getContext(), "Notifications disabled", Toast.LENGTH_SHORT).show();
+                // Revert switch if permission denied
+                if (switchWaterReminder != null && switchWaterReminder.isChecked()) switchWaterReminder.setChecked(false);
+                if (switchWorkoutAlerts != null && switchWorkoutAlerts.isChecked()) switchWorkoutAlerts.setChecked(false);
+            }
+        });
     }
 
     @Override
@@ -123,9 +148,41 @@ public class ProfileFragment extends Fragment {
 
         String accountInfo = "User ID: " + (currentUser != null ? currentUser.getUid() : "N/A") + "\nEmail: " + (email != null ? email : "N/A");
         contentAccountInfo.setText(accountInfo);
+        
+        // Update notification switches if fields exist in snapshot, otherwise defaults are used
+        if (snapshot.contains("waterReminder")) {
+            boolean enabled = Boolean.TRUE.equals(snapshot.getBoolean("waterReminder"));
+            switchWaterReminder.setChecked(enabled);
+            tvWaterTime.setVisibility(enabled ? View.VISIBLE : View.GONE);
+            if (enabled) scheduleWaterReminder(true);
+        }
+        
+        if (snapshot.contains("waterHour") && snapshot.contains("waterMinute")) {
+            waterHour = snapshot.getLong("waterHour").intValue();
+            waterMinute = snapshot.getLong("waterMinute").intValue();
+            updateTimeText(tvWaterTime, waterHour, waterMinute, "Start Time");
+        }
+
+        if (snapshot.contains("workoutAlerts")) {
+            boolean enabled = Boolean.TRUE.equals(snapshot.getBoolean("workoutAlerts"));
+            switchWorkoutAlerts.setChecked(enabled);
+            tvWorkoutTime.setVisibility(enabled ? View.VISIBLE : View.GONE);
+            if (enabled) scheduleWorkoutAlert(true);
+        }
+
+        if (snapshot.contains("workoutHour") && snapshot.contains("workoutMinute")) {
+            workoutHour = snapshot.getLong("workoutHour").intValue();
+            workoutMinute = snapshot.getLong("workoutMinute").intValue();
+            updateTimeText(tvWorkoutTime, workoutHour, workoutMinute, "Time");
+        }
 
         loadProfileImage(profileImageUri);
         displayGoals(goals);
+    }
+
+    private void updateTimeText(TextView tv, int hour, int minute, String prefix) {
+        String timeStr = String.format(Locale.getDefault(), "%02d:%02d", hour, minute);
+        tv.setText(prefix + ": " + timeStr);
     }
 
     private void updateUIForGuest() {
@@ -235,6 +292,8 @@ public class ProfileFragment extends Fragment {
         contentAbout = view.findViewById(R.id.contentAbout);
         chipGroupGoals = view.findViewById(R.id.chipGroupGoals);
         tvEditGoals = view.findViewById(R.id.tvEditGoals);
+        tvWaterTime = view.findViewById(R.id.tvWaterTime);
+        tvWorkoutTime = view.findViewById(R.id.tvWorkoutTime);
     }
 
     private void setupListeners() {
@@ -244,24 +303,180 @@ public class ProfileFragment extends Fragment {
         tvEditProfile.setOnClickListener(v -> showEditProfileDialog());
 
         btnEditProfile.setOnClickListener(v -> toggleVisibility(layoutAccountDetails, ivArrowAccount));
+        btnNotifications.setOnClickListener(v -> toggleVisibility(layoutNotificationSettings, ivArrowNotifications));
+        btnSettings.setOnClickListener(v -> toggleVisibility(contentHelp, ivArrowHelp));
+        btnPrivacy.setOnClickListener(v -> toggleVisibility(contentAbout, ivArrowAbout));
 
         tvChangePassword.setOnClickListener(v -> sendPasswordResetEmail());
-
-        btnLogout.setOnClickListener(v -> {
-            FirebaseAuth.getInstance().signOut();
-            if (getActivity() != null) {
-                Intent intent = new Intent(getActivity(), LoginActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
-                Toast.makeText(getContext(), "Logged Out Successfully", Toast.LENGTH_SHORT).show();
-            }
+        
+        switchWaterReminder.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) checkNotificationPermission();
+            tvWaterTime.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+            saveNotificationPreference("waterReminder", isChecked);
+            scheduleWaterReminder(isChecked);
         });
+
+        switchWorkoutAlerts.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) checkNotificationPermission();
+            tvWorkoutTime.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+            saveNotificationPreference("workoutAlerts", isChecked);
+            scheduleWorkoutAlert(isChecked);
+        });
+
+        tvWaterTime.setOnClickListener(v -> showTimePicker(true));
+        tvWorkoutTime.setOnClickListener(v -> showTimePicker(false));
+
+        btnLogout.setOnClickListener(v -> showLogoutConfirmationDialog());
 
         tvEditGoals.setOnClickListener(v -> {
             if (getActivity() != null) {
                 startActivity(new Intent(getActivity(), EditGoals.class));
             }
         });
+    }
+
+    private void showLogoutConfirmationDialog() {
+        if (getContext() == null) return;
+        new AlertDialog.Builder(getContext())
+            .setTitle("Log Out")
+            .setMessage("Are you sure you want to log out?")
+            .setPositiveButton("Log Out", (dialog, which) -> {
+                FirebaseAuth.getInstance().signOut();
+                if (getActivity() != null) {
+                    Intent intent = new Intent(getActivity(), LoginActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                    Toast.makeText(getContext(), "Logged Out Successfully", Toast.LENGTH_SHORT).show();
+                }
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
+    }
+
+    private void showTimePicker(boolean isWater) {
+        if (getContext() == null) return;
+        int hour = isWater ? waterHour : workoutHour;
+        int minute = isWater ? waterMinute : workoutMinute;
+
+        TimePickerDialog picker = new TimePickerDialog(getContext(), (view, h, m) -> {
+            if (isWater) {
+                waterHour = h;
+                waterMinute = m;
+                updateTimeText(tvWaterTime, h, m, "Start Time");
+                saveTimePreference("waterHour", h, "waterMinute", m);
+                if (switchWaterReminder.isChecked()) scheduleWaterReminder(true);
+            } else {
+                workoutHour = h;
+                workoutMinute = m;
+                updateTimeText(tvWorkoutTime, h, m, "Time");
+                saveTimePreference("workoutHour", h, "workoutMinute", m);
+                if (switchWorkoutAlerts.isChecked()) scheduleWorkoutAlert(true);
+            }
+        }, hour, minute, true); // true for 24h format
+        picker.show();
+    }
+
+    private void saveTimePreference(String keyHour, int h, String keyMinute, int m) {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) return;
+        Map<String, Object> data = new HashMap<>();
+        data.put(keyHour, h);
+        data.put(keyMinute, m);
+        FirebaseFirestore.getInstance().collection("users").document(currentUser.getUid()).update(data);
+    }
+
+    private void checkNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS);
+            }
+        }
+    }
+
+    private void scheduleWaterReminder(boolean enable) {
+        if (getContext() == null) return;
+        AlarmManager alarmManager = (AlarmManager) getContext().getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(getContext(), NotificationReceiver.class);
+        intent.setAction(NotificationReceiver.ACTION_WATER_REMINDER);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(getContext(), 101, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        if (enable) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(Calendar.HOUR_OF_DAY, waterHour);
+            calendar.set(Calendar.MINUTE, waterMinute);
+            calendar.set(Calendar.SECOND, 0);
+
+            long now = System.currentTimeMillis();
+            long triggerTime = calendar.getTimeInMillis();
+
+            if (triggerTime < now) {
+                triggerTime += 24 * 60 * 60 * 1000;
+            }
+            
+            if (calendar.getTimeInMillis() < now) {
+                calendar.add(Calendar.DAY_OF_YEAR, 1);
+            }
+
+            long interval = 2 * 60 * 60 * 1000; 
+
+            if (alarmManager != null) {
+                 try {
+                    alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), interval, pendingIntent);
+                } catch (SecurityException e) {
+                    Log.e(TAG, "Error scheduling alarm: " + e.getMessage());
+                }
+            }
+        } else {
+            if (alarmManager != null) {
+                alarmManager.cancel(pendingIntent);
+            }
+        }
+    }
+
+    private void scheduleWorkoutAlert(boolean enable) {
+        if (getContext() == null) return;
+        AlarmManager alarmManager = (AlarmManager) getContext().getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(getContext(), NotificationReceiver.class);
+        intent.setAction(NotificationReceiver.ACTION_WORKOUT_ALERT);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(getContext(), 102, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        if (enable) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(Calendar.HOUR_OF_DAY, workoutHour);
+            calendar.set(Calendar.MINUTE, workoutMinute);
+            calendar.set(Calendar.SECOND, 0);
+            
+            if (calendar.getTimeInMillis() < System.currentTimeMillis()) {
+                calendar.add(Calendar.DAY_OF_YEAR, 1);
+            }
+
+            if (alarmManager != null) {
+                try {
+                    alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
+                } catch (SecurityException e) {
+                    Log.e(TAG, "Error scheduling alarm: " + e.getMessage());
+                }
+            }
+        } else {
+            if (alarmManager != null) {
+                alarmManager.cancel(pendingIntent);
+            }
+        }
+    }
+
+    private void saveNotificationPreference(String key, boolean isEnabled) {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) return;
+        
+        Map<String, Object> data = new HashMap<>();
+        data.put(key, isEnabled);
+        
+        FirebaseFirestore.getInstance().collection("users").document(currentUser.getUid()).update(data)
+                .addOnFailureListener(e -> {
+                     if (getContext() != null) {
+                         Toast.makeText(getContext(), "Failed to update preference", Toast.LENGTH_SHORT).show();
+                     }
+                });
     }
 
     private void sendPasswordResetEmail() {
@@ -333,6 +548,9 @@ public class ProfileFragment extends Fragment {
     }
 
     private void toggleVisibility(View view, ImageView arrow) {
+        if (view.getParent() instanceof ViewGroup) {
+            android.transition.TransitionManager.beginDelayedTransition((ViewGroup) view.getParent());
+        }
         boolean isVisible = view.getVisibility() == View.VISIBLE;
         view.setVisibility(isVisible ? View.GONE : View.VISIBLE);
         arrow.setRotation(isVisible ? -90 : 0);
