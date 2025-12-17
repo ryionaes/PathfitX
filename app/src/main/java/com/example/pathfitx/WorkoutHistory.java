@@ -7,11 +7,12 @@ public class WorkoutHistory {
     private int completionRate;
     private long timestamp;
     private String date;
-    private int exercisesCount; // Add exercisesCount to match what's needed for the summary
+    private int exercisesCount;
+    private double caloriesBurned;
 
     public WorkoutHistory() {} // Required for Firestore
 
-    public WorkoutHistory(String workoutName, int durationSeconds, int totalVolume, int completionRate, long timestamp, String date, int exercisesCount) {
+    public WorkoutHistory(String workoutName, int durationSeconds, int totalVolume, int completionRate, long timestamp, String date, int exercisesCount, double caloriesBurned) {
         this.workoutName = workoutName;
         this.durationSeconds = durationSeconds;
         this.totalVolume = totalVolume;
@@ -19,6 +20,7 @@ public class WorkoutHistory {
         this.timestamp = timestamp;
         this.date = date;
         this.exercisesCount = exercisesCount;
+        this.caloriesBurned = caloriesBurned;
     }
 
     public String getWorkoutName() { return workoutName; }
@@ -28,4 +30,5 @@ public class WorkoutHistory {
     public long getTimestamp() { return timestamp; }
     public String getDate() { return date; }
     public int getExercisesCount() { return exercisesCount; }
+    public double getCaloriesBurned() { return caloriesBurned; }
 }

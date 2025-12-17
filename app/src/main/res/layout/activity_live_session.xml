@@ -40,11 +40,12 @@
         app:icon="@android:drawable/ic_media_pause"
         app:iconTint="@color/black"
         app:cornerRadius="24dp"
-        android:backgroundTint="#EDEDED"
+        android:backgroundTint="@android:color/transparent"
         android:insetLeft="0dp"
         android:insetTop="0dp"
         android:insetRight="0dp"
         android:insetBottom="0dp"
+        app:iconPadding="0dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
 
@@ -79,8 +80,8 @@
         android:layout_height="0dp"
         android:layout_marginTop="20dp"
         android:layout_marginBottom="16dp"
-        app:layout_constraintBottom_toTopOf="@+id/btn_finish"
-        app:layout_constraintTop_toBottomOf="@+id/progress_bar"
+        app:layout_constraintBottom_toTopOf="@id/btn_finish"
+        app:layout_constraintTop_toBottomOf="@id/progress_bar"
         app:layout_constraintVertical_bias="0.0"
         tools:layout_editor_absoluteX="57dp" />
 
@@ -95,6 +96,7 @@
         app:icon="@android:drawable/ic_menu_save"
         app:iconGravity="textStart"
         android:backgroundTint="#102040"
+        app:iconTint="@color/white"
         app:cornerRadius="12dp"
         app:layout_constraintBottom_toBottomOf="parent"/>
 
