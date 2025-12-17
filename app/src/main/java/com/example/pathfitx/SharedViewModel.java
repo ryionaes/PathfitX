@@ -1,6 +1,7 @@
 package com.example.pathfitx;
 
 import android.os.Build;
+import android.util.Log;
 import androidx.annotation.RequiresApi;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -17,6 +18,8 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 public class SharedViewModel extends ViewModel {
+
+    private static final String TAG = "SharedViewModel";
 
     private final MutableLiveData<DocumentSnapshot> userSnapshot = new MutableLiveData<>();
     private final MutableLiveData<QuerySnapshot> historySnapshot = new MutableLiveData<>();
@@ -47,28 +50,49 @@ public class SharedViewModel extends ViewModel {
     }
 
     public void attachListeners() {
+        Log.d(TAG, "attachListeners() called.");
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser == null) return;
+        if (currentUser == null) {
+            Log.w(TAG, "Cannot attach listeners, currentUser is null.");
+            return;
+        }
         String userId = currentUser.getUid();
+        Log.d(TAG, "Attaching listeners for user ID: " + userId);
 
-        // Attach user listener if not already attached
         if (userListener == null) {
+            Log.d(TAG, "userListener is null, creating new one.");
             DocumentReference userDocRef = FirebaseFirestore.getInstance().collection("users").document(userId);
             userListener = userDocRef.addSnapshotListener((snapshot, e) -> {
-                if (e != null) return;
+                if (e != null) {
+                    Log.e(TAG, "Error fetching user snapshot", e);
+                    userSnapshot.setValue(null);
+                    return;
+                }
                 if (snapshot != null && snapshot.exists()) {
+                    Log.d(TAG, "User snapshot received. Data: " + snapshot.getData());
                     userSnapshot.setValue(snapshot);
+                } else {
+                    Log.w(TAG, "User snapshot is null or does not exist.");
+                    userSnapshot.setValue(null);
                 }
             });
+        } else {
+            Log.d(TAG, "userListener already exists.");
         }
 
-        // Attach history listener if not already attached
         if (historyListener == null) {
+            Log.d(TAG, "historyListener is null, creating new one.");
             Query historyQuery = FirebaseFirestore.getInstance().collection("users").document(userId).collection("history").orderBy("timestamp", Query.Direction.DESCENDING);
             historyListener = historyQuery.addSnapshotListener((snapshots, e) -> {
-                if (e != null) return;
+                if (e != null) {
+                    Log.e(TAG, "Error fetching history snapshot", e);
+                    return;
+                }
+                Log.d(TAG, "History snapshot received.");
                 historySnapshot.setValue(snapshots);
             });
+        } else {
+             Log.d(TAG, "historyListener already exists.");
         }
     }
 
@@ -78,7 +102,6 @@ public class SharedViewModel extends ViewModel {
         if (currentUser == null) return;
         String userId = currentUser.getUid();
 
-        // Remove previous listener to avoid multiple listeners on different dates
         if (workoutListener != null) {
             workoutListener.remove();
         }
@@ -86,7 +109,6 @@ public class SharedViewModel extends ViewModel {
         DocumentReference workoutDocRef = FirebaseFirestore.getInstance().collection("users").document(userId).collection("workouts").document(dateString);
         workoutListener = workoutDocRef.addSnapshotListener((snapshot, e) -> {
             if (e != null) {
-                // On error, post a null value to indicate no data or an issue
                 workoutSnapshot.postValue(null);
                 return;
             }
@@ -97,6 +119,7 @@ public class SharedViewModel extends ViewModel {
     @Override
     protected void onCleared() {
         super.onCleared();
+        Log.d(TAG, "onCleared() called. Removing listeners.");
         if (userListener != null) userListener.remove();
         if (historyListener != null) historyListener.remove();
         if (workoutListener != null) workoutListener.remove();

@@ -331,10 +331,27 @@
                             android:textColor="#666666" />
 
                         <TextView
+                            android:id="@+id/tvDateJoined"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:textColor="#666666" />
+
+                        <TextView
+                            android:id="@+id/tvPrimaryLocation"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:textColor="#666666" />
+
+                        <TextView
                             android:id="@+id/tvChangePassword"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
+                            android:layout_marginTop="16dp"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true"
                             android:text="Change Password"
                             android:textColor="@color/red_logout"
                             android:textStyle="bold" />
@@ -408,6 +425,16 @@
                             android:text="Drink Water Reminder" />
 
                         <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginEnd="16dp"
+                            android:layout_marginBottom="8dp"
+                            android:text="Get reminders to stay hydrated throughout the day."
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp" />
+
+                        <TextView
                             android:id="@+id/tvWaterTime"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -427,6 +454,16 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
                             android:text="Workout Alerts" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginEnd="16dp"
+                            android:layout_marginBottom="8dp"
+                            android:text="When enabled, the app will send you a notification at your set time that it's time to work out."
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp" />
 
                         <TextView
                             android:id="@+id/tvWorkoutTime"
