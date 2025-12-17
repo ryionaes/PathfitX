@@ -224,12 +224,25 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
                     // Document exists, so we can update it
                     boolean isRestDay = document.getBoolean("isRestDay") != null && document.getBoolean("isRestDay");
                     if (isRestDay) {
-                        Toast.makeText(getContext(), "This was a rest day. Now it's a workout day!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "Cannot add workouts to a rest day.", Toast.LENGTH_SHORT).show();
+                        callback.onResult(false);
+                        return;
+                    }
+
+                    List<HashMap<String, Object>> exercises = (List<HashMap<String, Object>>) document.get("exercises");
+                    if (exercises != null) {
+                        for (HashMap<String, Object> existingExercise : exercises) {
+                            if (existingExercise.get("title").equals(exercise.getTitle())) {
+                                Toast.makeText(getContext(), "Exercise already exists in the workout.", Toast.LENGTH_SHORT).show();
+                                callback.onResult(false);
+                                return;
+                            }
+                        }
                     }
 
                     Map<String, Object> updates = new HashMap<>();
                     updates.put("exercises", FieldValue.arrayUnion(exercise));
-                    updates.put("isRestDay", false); // Adding an exercise makes it not a rest day
+                    updates.put("isRestDay", false);
                     updates.put("workoutName", "Custom Plan");
 
                     workoutDocRef.update(updates)
@@ -242,7 +255,7 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
                     newWorkout.put("isRestDay", false);
                     newWorkout.put("time", "45 min");
                     newWorkout.put("equipment", "With Equipment");
-                    newWorkout.put("exercises", Collections.singletonList(exercise)); // Initialize with a list
+                    newWorkout.put("exercises", Collections.singletonList(exercise));
 
                     workoutDocRef.set(newWorkout)
                             .addOnSuccessListener(aVoid -> handleSuccess(exercise.getTitle(), callback))

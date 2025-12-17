@@ -66,8 +66,9 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
     private String selectedEquipment = "With Equipment";
     private String selectedWorkout = "No Workout Planned";
     private boolean isRestDay = false;
+    private double userWeight = 70.0; // Default weight in kg
     private final ArrayList<WorkoutType> workoutTypes = new ArrayList<>();
-    private final ArrayList<String> timeOptions = new ArrayList<>(Arrays.asList("15 min", "30 min", "45 min", "1 hr", "1 hr, 30 min"));
+    private final ArrayList<String> timeOptions = new ArrayList<>(Arrays.asList("15 min", "30 min", "45 min", "1 hr", "1 hr, 30 min", "Free Time"));
     private final ArrayList<String> equipmentOptions = new ArrayList<>(Arrays.asList("With Equipment", "No Equipment"));
 
     private OnDateSelectedListener mListener;
@@ -137,6 +138,9 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
 
         String username = snapshot.getString("username");
         String profileImageUri = snapshot.getString("profileImageUri");
+        if (snapshot.contains("weight") && snapshot.get("weight") != null) {
+            userWeight = snapshot.getDouble("weight");
+        }
 
         tvUserName.setText(username != null ? username : "Fitness User");
 
@@ -188,9 +192,15 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         workoutData.put("equipment", selectedEquipment);
 
         FirebaseFirestore.getInstance().collection("users").document(userId).collection("workouts").document(dateId)
-                .set(workoutData)
+                .update(workoutData)
                 .addOnSuccessListener(aVoid -> Log.d(TAG, "Workout saved for " + dateId))
-                .addOnFailureListener(e -> Log.e(TAG, "Error saving workout", e));
+                .addOnFailureListener(e -> {
+                    // If the document doesn't exist, set it instead of updating
+                    FirebaseFirestore.getInstance().collection("users").document(userId).collection("workouts").document(dateId)
+                            .set(workoutData)
+                            .addOnSuccessListener(aVoid2 -> Log.d(TAG, "Workout created for " + dateId))
+                            .addOnFailureListener(e2 -> Log.e(TAG, "Error saving workout", e2));
+                });
     }
 
     @Override
@@ -200,6 +210,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         if (mListener != null) {
             mListener.onDateSelected(selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
         }
+        updateGenericUI();
     }
 
     @Override
@@ -254,6 +265,35 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
                 });
     }
 
+    private double parseDurationInMinutes(String time) {
+        if (time == null || time.isEmpty() || "Free Time".equalsIgnoreCase(time)) {
+            return 0; // Indicates free time
+        }
+        time = time.toLowerCase();
+        double minutes = 0;
+        if (time.contains("hr")) {
+            String[] parts = time.split("hr");
+            try {
+                minutes += Double.parseDouble(parts[0].trim()) * 60;
+                if (parts.length > 1 && parts[1].contains("min")) {
+                    String minPart = parts[1].replace(",", "").replace("min", "").trim();
+                    if (!minPart.isEmpty()) {
+                        minutes += Double.parseDouble(minPart);
+                    }
+                }
+            } catch (NumberFormatException e) {
+                return 0;
+            }
+        } else if (time.contains("min")) {
+            try {
+                minutes = Double.parseDouble(time.replace("min", "").trim());
+            } catch (NumberFormatException e) {
+                return 0;
+            }
+        }
+        return minutes;
+    }
+
     private void updateGenericUI() {
         if (!isAdded()) return;
         switchRestDay.setChecked(isRestDay);
@@ -261,7 +301,9 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         tvEquipmentOption.setText(selectedEquipment);
         tvWorkoutTitle.setText(selectedWorkout);
 
+        boolean isToday = selectedDate.equals(LocalDate.now());
         boolean hasWorkout = !exerciseList.isEmpty();
+        btnStartWorkout.setVisibility(isToday && hasWorkout ? View.VISIBLE : View.GONE);
 
         if (isRestDay) {
             workoutDetailsGroup.setVisibility(View.GONE);
@@ -279,14 +321,23 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
 
             int exerciseCount = exerciseList.size();
             Set<String> muscleGroups = new HashSet<>();
+            double totalMet = 0;
             for (Exercise exercise : exerciseList) {
                 if (exercise.getMuscleTargets() != null) {
                     muscleGroups.addAll(exercise.getMuscleTargets());
                 }
+                totalMet += exercise.getMet();
             }
             int muscleCount = muscleGroups.size();
+            double averageMet = exerciseList.isEmpty() ? 0 : totalMet / exerciseList.size();
+            double durationInMinutes = parseDurationInMinutes(selectedTime);
+            double caloriesBurned = ExerciseDatabase.calculateCalories(userWeight, averageMet, durationInMinutes);
 
-            tvWorkoutSubtitle.setText(String.format("%d Exercises • %d Muscles", exerciseCount, muscleCount));
+            if ("Free Time".equalsIgnoreCase(selectedTime)) {
+                tvWorkoutSubtitle.setText(String.format("%d Exercises • %d Muscles", exerciseCount, muscleCount));
+            } else {
+                tvWorkoutSubtitle.setText(String.format("%d Exercises • %d Muscles • %.0f est. Cal Burn", exerciseCount, muscleCount, caloriesBurned));
+            }
             tvRestDayMessage.setVisibility(View.GONE);
         } else { // Empty Day
             workoutDetailsGroup.setVisibility(View.GONE);
@@ -334,6 +385,11 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         });
 
         btnAddExercise.setOnClickListener(v -> {
+            if (isRestDay) {
+                Toast.makeText(getContext(), "Cannot add exercises on a rest day.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
             if (!"Custom Plan".equals(selectedWorkout)) {
                 selectedWorkout = "Custom Plan";
             }
@@ -356,8 +412,15 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
                 Toast.makeText(getContext(), "No workout planned for today!", Toast.LENGTH_SHORT).show();
                 return;
             }
+
+            double durationInMinutes = parseDurationInMinutes(selectedTime);
+
             Intent intent = new Intent(getActivity(), LiveSessionActivity.class);
             intent.putExtra("exerciseList", (Serializable) exerciseList);
+            intent.putExtra("userWeight", userWeight);
+            intent.putExtra("selectedDate", selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
+            intent.putExtra("workoutDuration", durationInMinutes);
+
             startActivity(intent);
         });
 
@@ -455,6 +518,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
                 if (map.get("bodyPart") != null) exercise.setBodyPart(Exercise.BodyPart.valueOf((String) map.get("bodyPart")));
                 if (map.get("muscleTargets") != null) exercise.setMuscleTargets((List<String>) map.get("muscleTargets"));
                 if (map.get("imageUrl") != null) exercise.setImageUrl((String) map.get("imageUrl"));
+                if (map.get("met") != null) exercise.setMet((Double) map.get("met"));
                 exercise.setAddedToWorkout(true);
                 exercises.add(exercise);
             } catch (Exception e) {

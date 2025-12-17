@@ -83,7 +83,7 @@ public class ProgressFragment extends Fragment {
             historyList.clear();
             long totalVol = 0;
             int totalWorkouts = 0;
-            int totalCalories = 0;
+            double totalCalories = 0;
 
             for (QueryDocumentSnapshot document : snapshots) {
                 WorkoutHistory item = document.toObject(WorkoutHistory.class);
@@ -91,14 +91,14 @@ public class ProgressFragment extends Fragment {
 
                 totalVol += item.getTotalVolume();
                 totalWorkouts++;
-                totalCalories += (item.getDurationSeconds() / 60) * 5; // Simple calorie estimation
+                totalCalories += item.getCaloriesBurned();
             }
 
             adapter.notifyDataSetChanged();
 
             tvVolumeValue.setText(String.format("%,d", totalVol));
             valWorkouts.setText(String.valueOf(totalWorkouts));
-            valCalories.setText(String.format("%,d", totalCalories));
+            valCalories.setText(String.format("%,.0f", totalCalories));
         }
     }
 
@@ -117,6 +117,8 @@ public class ProgressFragment extends Fragment {
         ((TextView) view.findViewById(R.id.tvVolumeValue)).setText(history.getTotalVolume() + " kg");
         ((TextView) view.findViewById(R.id.tvExercisesCompletedValue)).setText(String.valueOf(history.getExercisesCount()));
         ((TextView) view.findViewById(R.id.tvCompletionRateValue)).setText(history.getCompletionRate() + "%");
+        ((TextView) view.findViewById(R.id.tvCaloriesBurnedValue)).setText(String.format("%.0f", history.getCaloriesBurned()));
+
 
         builder.setView(view);
         AlertDialog dialog = builder.create();

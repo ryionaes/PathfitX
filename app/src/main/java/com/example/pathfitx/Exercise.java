@@ -22,22 +22,25 @@ public class Exercise implements Serializable {
     private Category category;
     private BodyPart bodyPart;
     private List<String> muscleTargets = new ArrayList<>();
+    private double met = 1.0; // Default MET value
 
     private int sets = 3;
     private int reps = 10;
     private int kg = 10;
+    private int completedSets = 0;
 
     private boolean isAddedToWorkout = false;
 
     public Exercise() {}
 
-    public Exercise(String title, String tags, String imageUrl, Category category, BodyPart bodyPart, List<String> muscleTargets) {
+    public Exercise(String title, String tags, String imageUrl, Category category, BodyPart bodyPart, List<String> muscleTargets, double met) {
         this.title = title;
         this.tags = tags;
         this.imageUrl = imageUrl;
         this.category = category;
         this.bodyPart = bodyPart;
         this.muscleTargets = muscleTargets != null ? muscleTargets : new ArrayList<>();
+        this.met = met;
         updateDetails();
     }
 
@@ -49,9 +52,11 @@ public class Exercise implements Serializable {
     public Category getCategory() { return category; }
     public BodyPart getBodyPart() { return bodyPart; }
     public List<String> getMuscleTargets() { return muscleTargets; }
+    public double getMet() { return met; }
     public int getSets() { return sets; }
     public int getReps() { return reps; }
     public int getKg() { return kg; }
+    public int getCompletedSets() { return completedSets; }
     public boolean isAddedToWorkout() { return isAddedToWorkout; }
 
     // Setters
@@ -62,16 +67,20 @@ public class Exercise implements Serializable {
     public void setCategory(Category category) { this.category = category; }
     public void setBodyPart(BodyPart bodyPart) { this.bodyPart = bodyPart; }
     public void setMuscleTargets(List<String> muscleTargets) { this.muscleTargets = muscleTargets; }
+    public void setMet(double met) { this.met = met; }
     public void setSets(int sets) { this.sets = Math.max(0, sets); updateDetails(); }
     public void setReps(int reps) { this.reps = Math.max(0, reps); updateDetails(); }
     public void setKg(int kg) { this.kg = Math.max(0, kg); updateDetails(); }
+    public void setCompletedSets(int completedSets) { this.completedSets = completedSets; }
     public void setAddedToWorkout(boolean added) { isAddedToWorkout = added; updateDetails(); }
 
     private void updateDetails() {
         if (isAddedToWorkout) {
             this.details = sets + " Sets • " + reps + " Reps • " + kg + " kg";
         } else {
-            this.details = tags + " • " + (muscleTargets != null ? muscleTargets.size() : 0) + " Muscle Targets";
+            // Imbes na "0 Muscle Targets", pwedeng Category na lang or yung tags
+            this.details = tags + " • " + (muscleTargets != null && !muscleTargets.isEmpty() ?
+                    muscleTargets.size() + " Targets" : "General Fitness");
         }
     }
 }

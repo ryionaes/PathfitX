@@ -7,21 +7,25 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.bumptech.glide.Glide;
+
 import java.util.List;
 
 public class LiveAdapter extends RecyclerView.Adapter<LiveAdapter.ViewHolder> {
 
     private List<Exercise> list;
-    private OnSetChangedListener listener;
+    private OnSetCompletedListener listener;
 
-    public interface OnSetChangedListener {
-        void onSetCompleted(boolean isCompleted);
+    public interface OnSetCompletedListener {
+        void onSetCompleted(Exercise exercise, boolean isChecked);
     }
 
-    public LiveAdapter(List<Exercise> list, OnSetChangedListener listener) {
+    public LiveAdapter(List<Exercise> list, OnSetCompletedListener listener) {
         this.list = list;
         this.listener = listener;
     }
@@ -38,6 +42,7 @@ public class LiveAdapter extends RecyclerView.Adapter<LiveAdapter.ViewHolder> {
         Exercise exercise = list.get(position);
         holder.tvTitle.setText(exercise.getTitle());
         
+
         Glide.with(holder.itemView.getContext())
                 .load(exercise.getImageUrl())
                 .placeholder(R.drawable.ic_workout)
@@ -47,6 +52,7 @@ public class LiveAdapter extends RecyclerView.Adapter<LiveAdapter.ViewHolder> {
         holder.setsContainer.removeAllViews();
 
         for (int i = 1; i <= exercise.getSets(); i++) {
+            final int currentSetIndex = i - 1;
             View setView = LayoutInflater.from(holder.itemView.getContext())
                     .inflate(R.layout.item_set_row, holder.setsContainer, false);
 
@@ -55,31 +61,32 @@ public class LiveAdapter extends RecyclerView.Adapter<LiveAdapter.ViewHolder> {
             ImageView btnCheck = setView.findViewById(R.id.btn_check_set);
             LinearLayout rowContainer = setView.findViewById(R.id.container_set_row);
 
-            tvSetNum.setText("Set " + i);
+            tvSetNum.setText("Set " + (currentSetIndex + 1));
             tvDetails.setText(exercise.getReps() + " reps • " + exercise.getKg() + " kg");
 
             // Click Listener
+            boolean isSetCompleted = currentSetIndex < exercise.getCompletedSets();
+            updateSetAppearance(rowContainer, tvSetNum, btnCheck, isSetCompleted);
+
             btnCheck.setOnClickListener(v -> {
                 boolean isSelected = rowContainer.getTag() != null && (boolean) rowContainer.getTag();
 
                 if (!isSelected) {
-                    // MARK AS DONE
-                    rowContainer.setBackgroundResource(R.drawable.bg_workout_done);
-                    tvSetNum.setTextColor(Color.parseColor("#2E7D32"));
-                    btnCheck.setColorFilter(Color.parseColor("#2E7D32"));
-                    rowContainer.setTag(true);
-
-                    // 3. Notify Activity: +1 Completed
-                    if (listener != null) listener.onSetCompleted(true);
+                    // Logic to check set
+                    if (currentSetIndex > exercise.getCompletedSets()) {
+                        Toast.makeText(holder.itemView.getContext(), "Complete previous set first.", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    updateSetAppearance(rowContainer, tvSetNum, btnCheck, true);
+                    if (listener != null) listener.onSetCompleted(exercise, true);
                 } else {
-                    // UNDO
-                    rowContainer.setBackgroundResource(R.drawable.bg_card_goals);
-                    tvSetNum.setTextColor(Color.parseColor("#102040"));
-                    btnCheck.clearColorFilter();
-                    rowContainer.setTag(false);
-
-                    // 3. Notify Activity: -1 Completed
-                    if (listener != null) listener.onSetCompleted(false);
+                    // Logic to un-check set
+                    if (currentSetIndex < exercise.getCompletedSets() - 1) {
+                        Toast.makeText(holder.itemView.getContext(), "Undo subsequent sets first.", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    updateSetAppearance(rowContainer, tvSetNum, btnCheck, false);
+                    if (listener != null) listener.onSetCompleted(exercise, false);
                 }
             });
 
@@ -87,8 +94,25 @@ public class LiveAdapter extends RecyclerView.Adapter<LiveAdapter.ViewHolder> {
         }
     }
 
+    private void updateSetAppearance(LinearLayout row, TextView setNum, ImageView check, boolean isCompleted) {
+        if (isCompleted) {
+            row.setBackgroundResource(R.drawable.bg_workout_done);
+            setNum.setTextColor(Color.parseColor("#2E7D32"));
+            check.setColorFilter(Color.parseColor("#2E7D32"));
+            row.setTag(true);
+        } else {
+            row.setBackgroundResource(R.drawable.bg_card_goals);
+            setNum.setTextColor(Color.parseColor("#102040"));
+            check.clearColorFilter();
+            row.setTag(false);
+        }
+    }
+
+
     @Override
-    public int getItemCount() { return list.size(); }
+    public int getItemCount() {
+        return list.size();
+    }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvTitle;
