@@ -517,7 +517,21 @@ public class ProfileFragment extends Fragment {
     private void sendPasswordResetEmail() {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null && currentUser.getEmail() != null) {
-            // TODO: Send password reset email
+            String email = currentUser.getEmail();
+            FirebaseAuth.getInstance().sendPasswordResetEmail(email)
+                    .addOnCompleteListener(task -> {
+                        if (getContext() == null) return; // Fragment not attached.
+                        if (task.isSuccessful()) {
+                            Toast.makeText(getContext(), "Password reset email sent to " + email, Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getContext(), "Failed to send reset email. " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                            Log.e(TAG, "sendPasswordResetEmail:failure", task.getException());
+                        }
+                    });
+        } else {
+            if (getContext() != null) {
+                Toast.makeText(getContext(), "Could not find user's email.", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
