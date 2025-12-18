@@ -65,12 +65,7 @@
 
         <activity
             android:name=".GetInfo"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:exported="false"/>
 
         <activity
             android:name=".MainActivity"
@@ -83,7 +78,10 @@
         <activity
             android:name=".LoginActivity"
             android:exported="true">
-
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
         
         <receiver android:name=".NotificationReceiver" android:exported="false" />
