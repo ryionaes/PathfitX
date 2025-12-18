@@ -1,7 +1,6 @@
 package com.example.pathfitx;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,52 +10,57 @@ public class WorkoutPlanDatabase {
     private static final Map<String, WorkoutPlan> allWorkoutPlans = new LinkedHashMap<>();
 
     static {
-        // Push Day
-        List<Exercise> pushDayExercises = new ArrayList<>();
-        pushDayExercises.add(ExerciseDatabase.getExercise("Push-Ups", 3, 15, 0));
-        pushDayExercises.add(ExerciseDatabase.getExercise("Barbell Bench Press", 3, 8, 50));
-        pushDayExercises.add(ExerciseDatabase.getExercise("Incline Dumbbell Press", 3, 10, 15));
-        pushDayExercises.add(ExerciseDatabase.getExercise("Overhead Barbell Press", 3, 8, 30));
-        pushDayExercises.add(ExerciseDatabase.getExercise("Dumbbell Lateral Raises", 3, 12, 5));
-        allWorkoutPlans.put("Push Day", new WorkoutPlan("Push Day", pushDayExercises));
+        populateWorkoutPlans();
+    }
 
-        // Pull Day
-        List<Exercise> pullDayExercises = new ArrayList<>();
-        pullDayExercises.add(ExerciseDatabase.getExercise("Pull-Ups", 3, 5, 0));
-        pullDayExercises.add(ExerciseDatabase.getExercise("Deadlift", 3, 5, 80));
-        pullDayExercises.add(ExerciseDatabase.getExercise("Barbell Bent-Over Rows", 3, 8, 40));
-        pullDayExercises.add(ExerciseDatabase.getExercise("Lat Pulldowns", 3, 10, 40));
-        pullDayExercises.add(ExerciseDatabase.getExercise("Barbell Bicep Curl", 3, 10, 15));
-        allWorkoutPlans.put("Pull Day", new WorkoutPlan("Pull Day", pullDayExercises));
+    private static void populateWorkoutPlans() {
+        // 1. PUSH DAY (Chest, Shoulders, Triceps)
+        List<Exercise> pushDay = new ArrayList<>();
+        pushDay.add(ExerciseDatabase.getExercise("Barbell Bench Press", 3, 10, 40));
+        pushDay.add(ExerciseDatabase.getExercise("Dumbbell Bench Press", 3, 12, 15));
+        pushDay.add(ExerciseDatabase.getExercise("Seated Dumbbell Shoulder Press", 3, 10, 10));
+        pushDay.add(ExerciseDatabase.getExercise("Tricep Rope Pushdowns", 3, 15, 12));
+        pushDay.add(ExerciseDatabase.getExercise("Push-Ups", 3, 20, 0));
+        allWorkoutPlans.put("Push Day", new WorkoutPlan("Push Day", pushDay));
 
-        // Leg Day
-        List<Exercise> legDayExercises = new ArrayList<>();
-        legDayExercises.add(ExerciseDatabase.getExercise("Squats", 3, 10, 60));
-        legDayExercises.add(ExerciseDatabase.getExercise("Romanian Deadlift", 3, 10, 50));
-        legDayExercises.add(ExerciseDatabase.getExercise("Leg Press", 3, 12, 100));
-        legDayExercises.add(ExerciseDatabase.getExercise("Walking Lunges", 3, 12, 10));
-        legDayExercises.add(ExerciseDatabase.getExercise("Standing Calf Raises", 3, 15, 20));
-        allWorkoutPlans.put("Leg Day", new WorkoutPlan("Leg Day", legDayExercises));
+        // 2. PULL DAY (Back, Biceps, Rear Delts)
+        List<Exercise> pullDay = new ArrayList<>();
+        pullDay.add(ExerciseDatabase.getExercise("Pull-Ups", 3, 8, 0));
+        pullDay.add(ExerciseDatabase.getExercise("Deadlift", 3, 5, 60));
+        pullDay.add(ExerciseDatabase.getExercise("Seated Cable Row", 3, 12, 30));
+        pullDay.add(ExerciseDatabase.getExercise("Dumbbell Bicep Curl", 3, 12, 10));
+        pullDay.add(ExerciseDatabase.getExercise("Face Pulls", 3, 15, 15));
+        allWorkoutPlans.put("Pull Day", new WorkoutPlan("Pull Day", pullDay));
 
-        // Cardio
-        List<Exercise> cardioExercises = new ArrayList<>();
-        cardioExercises.add(ExerciseDatabase.getExercise("Running", 1, 30, 0));
-        cardioExercises.add(ExerciseDatabase.getExercise("Jump Rope", 3, 5, 0));
-        cardioExercises.add(ExerciseDatabase.getExercise("Burpees", 3, 10, 0));
-        cardioExercises.add(ExerciseDatabase.getExercise("Cycling", 1, 30, 0));
-        cardioExercises.add(ExerciseDatabase.getExercise("Rowing Machine", 1, 15, 0));
-        allWorkoutPlans.put("Cardio", new WorkoutPlan("Cardio", cardioExercises));
+        // 3. LEG DAY (Quads, Hamstrings, Calves)
+        List<Exercise> legDay = new ArrayList<>();
+        legDay.add(ExerciseDatabase.getExercise("Barbell Back Squat", 3, 8, 50));
+        legDay.add(ExerciseDatabase.getExercise("Leg Press", 3, 12, 80));
+        legDay.add(ExerciseDatabase.getExercise("Romanian Deadlift", 3, 10, 40));
+        legDay.add(ExerciseDatabase.getExercise("Leg Extensions", 3, 15, 20));
+        legDay.add(ExerciseDatabase.getExercise("Standing Calf Raises", 4, 20, 10));
+        // FIXED: Pinalitan ang 'new LegDay' ng 'new WorkoutPlan'
+        allWorkoutPlans.put("Leg Day", new WorkoutPlan("Leg Day", legDay));
 
-        // Core
-        List<Exercise> coreExercises = new ArrayList<>();
-        coreExercises.add(ExerciseDatabase.getExercise("Plank", 3, 60, 0));
-        coreExercises.add(ExerciseDatabase.getExercise("Crunches", 3, 20, 0));
-        coreExercises.add(ExerciseDatabase.getExercise("Russian Twists", 3, 15, 0));
-        coreExercises.add(ExerciseDatabase.getExercise("Hanging Leg Raises", 3, 12, 0));
-        coreExercises.add(ExerciseDatabase.getExercise("Bicycle Crunches", 3, 20, 0));
-        allWorkoutPlans.put("Core", new WorkoutPlan("Core", coreExercises));
+        // 4. CORE & CARDIO
+        List<Exercise> coreCardio = new ArrayList<>();
+        coreCardio.add(ExerciseDatabase.getExercise("Plank", 3, 60, 0));
+        coreCardio.add(ExerciseDatabase.getExercise("Russian Twists", 3, 20, 5));
+        coreCardio.add(ExerciseDatabase.getExercise("Hanging Leg Raises", 3, 12, 0));
+        coreCardio.add(ExerciseDatabase.getExercise("Running", 1, 15, 0));
+        coreCardio.add(ExerciseDatabase.getExercise("Mountain Climbers", 3, 30, 0));
+        allWorkoutPlans.put("Cardio & Core", new WorkoutPlan("Cardio & Core", coreCardio));
 
-        // Custom Plan
+        // 5. FULL BODY (Mix)
+        List<Exercise> fullBody = new ArrayList<>();
+        fullBody.add(ExerciseDatabase.getExercise("Push-Ups", 3, 15, 0));
+        fullBody.add(ExerciseDatabase.getExercise("Squats", 3, 15, 0));
+        fullBody.add(ExerciseDatabase.getExercise("Inverted Rows", 3, 10, 0));
+        fullBody.add(ExerciseDatabase.getExercise("Arnold Press", 3, 10, 10));
+        fullBody.add(ExerciseDatabase.getExercise("Mountain Climbers", 3, 10, 0));
+        allWorkoutPlans.put("Full Body", new WorkoutPlan("Full Body", fullBody));
+
+        // Custom Plan Placeholder
         allWorkoutPlans.put("Custom Plan", new WorkoutPlan("Custom Plan", new ArrayList<>()));
     }
 

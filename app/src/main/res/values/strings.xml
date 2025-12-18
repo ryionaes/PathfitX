@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">PathfitX</string>
     <string name="button_next">Next</string>
@@ -176,7 +177,160 @@
         <item>Zamboanga City, Zamboanga del Sur</item>
         <item>Other</item>
     </string-array>
-    
+
+    <string-array name="update_location_array">
+        <item>Alaminos, Pangasinan</item>
+        <item>Angeles, Pampanga</item>
+        <item>Antipolo, Rizal</item>
+        <item>Bacolod, Negros Occidental</item>
+        <item>Bacoor, Cavite</item>
+        <item>Bago, Negros Occidental</item>
+        <item>Baguio, Benguet</item>
+        <item>Bais, Negros Oriental</item>
+        <item>Balanga, Bataan</item>
+        <item>Baliwag, Bulacan</item>
+        <item>Batac, Ilocos Norte</item>
+        <item>Batangas City, Batangas</item>
+        <item>Bayawan, Negros Oriental</item>
+        <item>Baybay, Leyte</item>
+        <item>Bayugan, Agusan del Sur</item>
+        <item>Biñan, Laguna</item>
+        <item>Bislig, Surigao del Sur</item>
+        <item>Bogo, Cebu</item>
+        <item>Borongan, Eastern Samar</item>
+        <item>Butuan, Agusan del Norte</item>
+        <item>Cabadbaran, Agusan del Norte</item>
+        <item>Cabanatuan, Nueva Ecija</item>
+        <item>Cabuyao, Laguna</item>
+        <item>Cadiz, Negros Occidental</item>
+        <item>Cagayan de Oro, Misamis Oriental</item>
+        <item>Calaca, Batangas</item>
+        <item>Calamba, Laguna</item>
+        <item>Calapan, Oriental Mindoro</item>
+        <item>Calbayog, Samar</item>
+        <item>Caloocan, Metro Manila (NCR)</item>
+        <item>Candon, Ilocos Sur</item>
+        <item>Canlaon, Negros Oriental</item>
+        <item>Carcar, Cebu</item>
+        <item>Carmona, Cavite</item>
+        <item>Catbalogan, Samar</item>
+        <item>Cauayan, Isabela</item>
+        <item>Cavite City, Cavite</item>
+        <item>Cebu City, Cebu</item>
+        <item>Cotabato City, Maguindanao del Norte</item>
+        <item>Dagupan, Pangasinan</item>
+        <item>Danao, Cebu</item>
+        <item>Dapitan, Zamboanga del Norte</item>
+        <item>Dasmariñas, Cavite</item>
+        <item>Davao City, Davao del Sur</item>
+        <item>Digos, Davao del Sur</item>
+        <item>Dipolog, Zamboanga del Norte</item>
+        <item>Dumaguete, Negros Oriental</item>
+        <item>El Salvador, Misamis Oriental</item>
+        <item>Escalante, Negros Occidental</item>
+        <item>Gapan, Nueva Ecija</item>
+        <item>General Santos, South Cotabato</item>
+        <item>General Trias, Cavite</item>
+        <item>Gingoog, Misamis Oriental</item>
+        <item>Guihulngan, Negros Oriental</item>
+        <item>Himamaylan, Negros Occidental</item>
+        <item>Ilagan, Isabela</item>
+        <item>Iligan, Lanao del Norte</item>
+        <item>Iloilo City, Iloilo</item>
+        <item>Imus, Cavite</item>
+        <item>Iriga, Camarines Sur</item>
+        <item>Isabela City, Basilan</item>
+        <item>Kabankalan, Negros Occidental</item>
+        <item>Kidapawan, Cotabato (North Cotabato)</item>
+        <item>Koronadal, South Cotabato</item>
+        <item>La Carlota, Negros Occidental</item>
+        <item>Lamitan, Basilan</item>
+        <item>Laoag, Ilocos Norte</item>
+        <item>Lapu-Lapu, Cebu</item>
+        <item>Las Piñas, Metro Manila (NCR)</item>
+        <item>Legazpi, Albay</item>
+        <item>Ligao, Albay</item>
+        <item>Lipa, Batangas</item>
+        <item>Lucena, Quezon</item>
+        <item>Maasin, Southern Leyte</item>
+        <item>Mabalacat, Pampanga</item>
+        <item>Makati, Metro Manila (NCR)</item>
+        <item>Malabon, Metro Manila (NCR)</item>
+        <item>Malaybalay, Bukidnon</item>
+        <item>Malolos, Bulacan</item>
+        <item>Mandaluyong, Metro Manila (NCR)</item>
+        <item>Mandaue, Cebu</item>
+        <item>Manila, Metro Manila (NCR)</item>
+        <item>Marawi, Lanao del Sur</item>
+        <item>Marikina, Metro Manila (NCR)</item>
+        <item>Masbate City, Masbate</item>
+        <item>Mati, Davao Oriental</item>
+        <item>Meycauayan, Bulacan</item>
+        <item>Muñoz (Science City of Muñoz), Nueva Ecija</item>
+        <item>Muntinlupa, Metro Manila (NCR)</item>
+        <item>Naga, Camarines Sur</item>
+        <item>Naga, Cebu</item>
+        <item>Navotas, Metro Manila (NCR)</item>
+        <item>Olongapo, Zambales</item>
+        <item>Ormoc, Leyte</item>
+        <item>Oroquieta, Misamis Occidental</item>
+        <item>Ozamiz, Misamis Occidental</item>
+        <item>Pagadian, Zamboanga del Sur</item>
+        <item>Palayan, Nueva Ecija</item>
+        <item>Panabo, Davao del Norte</item>
+        <item>Parañaque, Metro Manila (NCR)</item>
+        <item>Pasay, Metro Manila (NCR)</item>
+        <item>Pasig, Metro Manila (NCR)</item>
+        <item>Passi, Iloilo</item>
+        <item>Puerto Princesa, Palawan</item>
+        <item>Quezon City, Metro Manila (NCR)</item>
+        <item>Roxas, Capiz</item>
+        <item>Sagay, Negros Occidental</item>
+        <item>Samal (Island Garden City of Samal), Davao del Norte</item>
+        <item>San Carlos, Negros Occidental</item>
+        <item>San Carlos, Pangasinan</item>
+        <item>San Fernando, La Union</item>
+        <item>San Fernando, Pampanga</item>
+        <item>San Jose, Nueva Ecija</item>
+        <item>San Jose del Monte, Bulacan</item>
+        <item>San Juan, Metro Manila (NCR)</item>
+        <item>San Pablo, Laguna</item>
+        <item>San Pedro, Laguna</item>
+        <item>Santa Rosa, Laguna</item>
+        <item>Santiago, Isabela</item>
+        <item>Santo Tomas, Batangas</item>
+        <item>Silay, Negros Occidental</item>
+        <item>Sipalay, Negros Occidental</item>
+        <item>Sorsogon City, Sorsogon</item>
+        <item>Surigao City, Surigao del Norte</item>
+        <item>Tabaco, Albay</item>
+        <item>Tabuk, Kalinga</item>
+        <item>Tacloban, Leyte</item>
+        <item>Tacurong, Sultan Kudarat</item>
+        <item>Tagaytay, Cavite</item>
+        <item>Tagbilaran, Bohol</item>
+        <item>Taguig, Metro Manila (NCR)</item>
+        <item>Tagum, Davao del Norte</item>
+        <item>Talisay, Cebu</item>
+        <item>Talisay, Negros Occidental</item>
+        <item>Tanauan, Batangas</item>
+        <item>Tandag, Surigao del Sur</item>
+        <item>Tangub, Misamis Occidental</item>
+        <item>Tanjay, Negros Oriental</item>
+        <item>Tarlac City, Tarlac</item>
+        <item>Tayabas, Quezon</item>
+        <item>Toledo, Cebu</item>
+        <item>Trece Martires, Cavite</item>
+        <item>Tuguegarao, Cagayan</item>
+        <item>Urdaneta, Pangasinan</item>
+        <item>Valencia, Bukidnon</item>
+        <item>Valenzuela, Metro Manila (NCR)</item>
+        <item>Victorias, Negros Occidental</item>
+        <item>Vigan, Ilocos Sur</item>
+        <item>Zamboanga City, Zamboanga del Sur</item>
+        <item>Other</item>
+    </string-array>
+
     <!-- Notification Texts -->
     <string name="notif_water_title">Time to Drink Water!</string>
     <string name="notif_water_message">Stay hydrated. Drink a glass of water now.</string>

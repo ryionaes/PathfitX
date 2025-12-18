@@ -48,9 +48,9 @@ public class LiveAdapter extends RecyclerView.Adapter<LiveAdapter.ViewHolder> {
         Exercise exercise = list.get(position);
         holder.tvTitle.setText(exercise.getTitle());
 
-
+        // UPDATED: Loading local resource ID instead of URL
         Glide.with(holder.itemView.getContext())
-                .load(exercise.getImageUrl())
+                .load(exercise.getImageResId())
                 .placeholder(R.drawable.ic_workout)
                 .error(R.drawable.ic_workout)
                 .into(holder.img);
@@ -90,7 +90,6 @@ public class LiveAdapter extends RecyclerView.Adapter<LiveAdapter.ViewHolder> {
                 boolean isSelected = rowContainer.getTag() != null && (boolean) rowContainer.getTag();
 
                 if (!isSelected) {
-                    // Logic to check set
                     if (currentSetIndex > exercise.getCompletedSets()) {
                         Toast.makeText(holder.itemView.getContext(), "Complete previous set first.", Toast.LENGTH_SHORT).show();
                         return;
@@ -98,7 +97,6 @@ public class LiveAdapter extends RecyclerView.Adapter<LiveAdapter.ViewHolder> {
                     updateSetAppearance(rowContainer, tvSetNum, btnCheck, true);
                     if (listener != null) listener.onSetCompleted(exercise, true);
                 } else {
-                    // Logic to un-check set
                     if (currentSetIndex < exercise.getCompletedSets() - 1) {
                         Toast.makeText(holder.itemView.getContext(), "Undo subsequent sets first.", Toast.LENGTH_SHORT).show();
                         return;
@@ -125,7 +123,6 @@ public class LiveAdapter extends RecyclerView.Adapter<LiveAdapter.ViewHolder> {
             row.setTag(false);
         }
     }
-
 
     @Override
     public int getItemCount() {

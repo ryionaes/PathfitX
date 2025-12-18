@@ -4,18 +4,18 @@ import java.io.Serializable;
 
 public class WorkoutType implements Serializable {
     private String name;
-    private String imageUrl;
+    private int imageResId;
 
-    public WorkoutType(String name, String imageUrl) {
+    public WorkoutType(String name, int imageResId) {
         this.name = name;
-        this.imageUrl = imageUrl;
+        this.imageResId = imageResId;
     }
 
     public String getName() {
         return name;
     }
 
-    public String getImageUrl() {
-        return imageUrl;
+    public int getImageResId() {
+        return imageResId;
     }
 }

@@ -15,10 +15,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -58,11 +60,11 @@ public class ProfileFragment extends Fragment {
     private static final String ARG_OPEN_NOTIFICATIONS = "open_notifications";
 
     // UI
-    private TextView tvUserName, tvEditProfile, tvWeight, tvHeight, tvAge, tvChangePassword, tvEditGoals;
+    private TextView tvUserName, tvEditProfile, tvWeight, tvHeight, tvAge, tvChangePassword, tvEditGoals, tvChangeAddress;
     private ImageView ivProfile, ivArrowAccount, ivArrowNotifications, ivArrowHelp, ivArrowAbout;
     private CardView btnCamera;
     private Button btnLogout;
-    private TextView contentAccountInfo, tvDateJoined, tvPrimaryLocation;
+    private TextView contentAccountInfo, tvDateJoined, tvPrimaryAddress;
     private LinearLayout layoutAccountDetails, contentHelp, contentAbout;
     private LinearLayout layoutNotificationSettings;
     private SwitchMaterial switchWaterReminder, switchWorkoutAlerts;
@@ -143,7 +145,7 @@ public class ProfileFragment extends Fragment {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         String name = snapshot.getString("username");
         String email = snapshot.getString("email");
-        String location = snapshot.getString("location");
+        String address = snapshot.getString("location");
         String profileImageUri = snapshot.getString("profileImageUri");
         List<String> goals = (List<String>) snapshot.get("goals");
 
@@ -179,7 +181,7 @@ public class ProfileFragment extends Fragment {
             tvDateJoined.setText("Member since: " + sdf.format(new Date(creationTimestamp)));
         }
 
-        tvPrimaryLocation.setText("Location: " + (location != null ? location : "N/A"));
+        tvPrimaryAddress.setText("Address: " + (address != null ? address : "N/A"));
 
         // Set switch state based on database, defaulting to false if not present
         boolean waterReminderEnabled = snapshot.contains("waterReminder") ? Boolean.TRUE.equals(snapshot.getBoolean("waterReminder")) : false;
@@ -347,6 +349,40 @@ public class ProfileFragment extends Fragment {
         builder.create().show();
     }
 
+    private void showChangeAddressDialog() {
+        if (getContext() == null) return;
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        LayoutInflater inflater = requireActivity().getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_change_location, null);
+        builder.setView(dialogView);
+
+        final Spinner spinnerLocation = dialogView.findViewById(R.id.spinnerLocation);
+
+        DocumentSnapshot snapshot = sharedViewModel.getUserSnapshot().getValue();
+        if (snapshot != null && snapshot.contains("location")) {
+            String currentAddress = snapshot.getString("location");
+            ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getContext(), R.array.update_location_array, android.R.layout.simple_spinner_item);
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spinnerLocation.setAdapter(adapter);
+            if (currentAddress != null) {
+                int spinnerPosition = adapter.getPosition(currentAddress);
+                spinnerLocation.setSelection(spinnerPosition);
+            }
+        }
+
+        builder.setPositiveButton("Save", (dialog, which) -> {
+            String selectedAddress = spinnerLocation.getSelectedItem().toString();
+
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("location", selectedAddress);
+            updateUserProfile(updates);
+        });
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+        builder.create().show();
+    }
+
     private void updateUserProfile(Map<String, Object> updates) {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser == null) {
@@ -375,8 +411,9 @@ public class ProfileFragment extends Fragment {
         layoutAccountDetails = view.findViewById(R.id.layoutAccountDetails);
         contentAccountInfo = view.findViewById(R.id.contentAccountInfo);
         tvDateJoined = view.findViewById(R.id.tvDateJoined);
-        tvPrimaryLocation = view.findViewById(R.id.tvPrimaryLocation);
+        tvPrimaryAddress = view.findViewById(R.id.tvPrimaryLocation);
         tvChangePassword = view.findViewById(R.id.tvChangePassword);
+        tvChangeAddress = view.findViewById(R.id.tvChangeLocation);
         layoutNotificationSettings = view.findViewById(R.id.layoutNotificationSettings);
         switchWaterReminder = view.findViewById(R.id.switchWaterReminder);
         switchWorkoutAlerts = view.findViewById(R.id.switchWorkoutAlerts);
@@ -396,6 +433,7 @@ public class ProfileFragment extends Fragment {
         view.findViewById(R.id.btnSettings).setOnClickListener(v -> toggleVisibility(contentHelp, ivArrowHelp));
         view.findViewById(R.id.btnPrivacy).setOnClickListener(v -> toggleVisibility(contentAbout, ivArrowAbout));
         tvChangePassword.setOnClickListener(v -> sendPasswordResetEmail());
+        tvChangeAddress.setOnClickListener(v -> showChangeAddressDialog());
         switchWaterReminder.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) checkNotificationPermission();
             tvWaterTime.setVisibility(isChecked ? View.VISIBLE : View.GONE);

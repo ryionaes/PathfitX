@@ -1,86 +1,113 @@
 package com.example.pathfitx;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 
 public class Exercise implements Serializable {
-    private static final long serialVersionUID = 1L;
-
-    public enum Category {
-        STRENGTH, CARDIO, HIIT, YOGA
-    }
-
-    public enum BodyPart {
-        CHEST, BACK, LEGS, SHOULDERS, ARMS, CORE, FULL_BODY, VARIES
-    }
-
     private String title;
-    private String details;
-    private String imageUrl;
-    private String tags; // e.g., "Hard", "Medium", "Easy"
+    private String tags;
+    private int imageResId; // Gagamitin natin ito para sa classmate's drawables [cite: 57, 60]
+    private String imageUrl; // I-keep natin ito just in case (deprecated)
     private Category category;
     private BodyPart bodyPart;
-    private List<String> muscleTargets = new ArrayList<>();
-    private double met = 1.0; // Default MET value
+    private List<String> muscleTargets;
+    private double met;
+    private String details;
 
-    private int sets = 3;
-    private int reps = 10;
-    private int kg = 10;
+    // Workout Progress State
+    private int sets;
+    private int reps;
+    private int kg;
     private int completedSets = 0;
-
     private boolean isAddedToWorkout = false;
 
+    public enum Category { STRENGTH, CARDIO, HIIT, YOGA }
+    public enum BodyPart { CHEST, BACK, LEGS, SHOULDERS, ARMS, CORE, FULL_BODY }
+
+    // Empty Constructor para sa Firebase parsing [cite: 192]
     public Exercise() {}
 
-    public Exercise(String title, String tags, String imageUrl, Category category, BodyPart bodyPart, List<String> muscleTargets, double met) {
+    // Main Constructor na gagamitin ng ExerciseDatabase natin kanina [cite: 57, 60]
+    public Exercise(String title, String tags, int imageResId, Category category, BodyPart bodyPart, List<String> muscleTargets, double met) {
         this.title = title;
         this.tags = tags;
-        this.imageUrl = imageUrl;
+        this.imageResId = imageResId;
         this.category = category;
         this.bodyPart = bodyPart;
-        this.muscleTargets = muscleTargets != null ? muscleTargets : new ArrayList<>();
+        this.muscleTargets = muscleTargets;
         this.met = met;
-        updateDetails();
     }
 
-    // Getters
+    // Copy constructor to create a new instance from a template
+    public Exercise(Exercise other) {
+        this.title = other.title;
+        this.tags = other.tags;
+        this.imageResId = other.imageResId;
+        this.imageUrl = other.imageUrl;
+        this.category = other.category;
+        this.bodyPart = other.bodyPart;
+        this.muscleTargets = other.muscleTargets != null ? new java.util.ArrayList<>(other.muscleTargets) : null;
+        this.met = other.met;
+        this.details = other.details;
+        this.sets = other.sets;
+        this.reps = other.reps;
+        this.kg = other.kg;
+        this.completedSets = other.completedSets;
+        this.isAddedToWorkout = other.isAddedToWorkout;
+    }
+
+
+    // Getters and Setters
     public String getTitle() { return title; }
-    public String getDetails() { return details; }
-    public String getImageUrl() { return imageUrl; }
-    public String getTags() { return tags; }
-    public Category getCategory() { return category; }
-    public BodyPart getBodyPart() { return bodyPart; }
-    public List<String> getMuscleTargets() { return muscleTargets; }
-    public double getMet() { return met; }
-    public int getSets() { return sets; }
-    public int getReps() { return reps; }
-    public int getKg() { return kg; }
-    public int getCompletedSets() { return completedSets; }
-    public boolean isAddedToWorkout() { return isAddedToWorkout; }
-
-    // Setters
     public void setTitle(String title) { this.title = title; }
-    public void setDetails(String details) { this.details = details; }
-    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
-    public void setTags(String tags) { this.tags = tags; }
-    public void setCategory(Category category) { this.category = category; }
-    public void setBodyPart(BodyPart bodyPart) { this.bodyPart = bodyPart; }
-    public void setMuscleTargets(List<String> muscleTargets) { this.muscleTargets = muscleTargets; }
-    public void setMet(double met) { this.met = met; }
-    public void setSets(int sets) { this.sets = Math.max(0, sets); updateDetails(); }
-    public void setReps(int reps) { this.reps = Math.max(0, reps); updateDetails(); }
-    public void setKg(int kg) { this.kg = Math.max(0, kg); updateDetails(); }
-    public void setCompletedSets(int completedSets) { this.completedSets = completedSets; }
-    public void setAddedToWorkout(boolean added) { isAddedToWorkout = added; updateDetails(); }
 
-    private void updateDetails() {
-        if (isAddedToWorkout) {
-            this.details = sets + " Sets • " + reps + " Reps • " + kg + " kg";
-        } else {
-            // Imbes na "0 Muscle Targets", pwedeng Category na lang or yung tags
-            this.details = tags + " • " + (muscleTargets != null && !muscleTargets.isEmpty() ?
-                    muscleTargets.size() + " Targets" : "General Fitness");
+    public String getTags() { return tags; }
+
+    public int getImageResId() { return imageResId; }
+    public void setImageResId(int imageResId) { this.imageResId = imageResId; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
+    public Category getCategory() { return category; }
+    public void setCategory(Category category) { this.category = category; }
+
+    public BodyPart getBodyPart() { return bodyPart; }
+    public void setBodyPart(BodyPart bodyPart) { this.bodyPart = bodyPart; }
+
+    public List<String> getMuscleTargets() { return muscleTargets; }
+    public void setMuscleTargets(List<String> muscleTargets) { this.muscleTargets = muscleTargets; }
+
+    public double getMet() { return met; }
+    public void setMet(double met) { this.met = met; }
+
+    public int getSets() { return sets; }
+    public void setSets(int sets) { this.sets = sets; }
+
+    public int getReps() { return reps; }
+    public void setReps(int reps) { this.reps = reps; }
+
+    public int getKg() { return kg; }
+    public void setKg(int kg) { this.kg = kg; }
+
+    public int getCompletedSets() { return completedSets; }
+    public void setCompletedSets(int completedSets) { this.completedSets = completedSets; }
+
+    public boolean isAddedToWorkout() { return isAddedToWorkout; }
+    public void setAddedToWorkout(boolean addedToWorkout) { isAddedToWorkout = addedToWorkout; }
+
+    public void setDetails(String details) {
+        this.details = details;
+    }
+
+    // Helper method para sa UI [cite: 73]
+    public String getDetails() {
+        if (details != null && !details.isEmpty()) {
+            return details;
         }
+        if (muscleTargets != null) {
+            return String.join(", ", muscleTargets);
+        }
+        return "";
     }
 }

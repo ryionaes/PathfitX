@@ -256,9 +256,22 @@ public class ProgressFragment extends Fragment {
         tvWorkoutTitle.setText(history.getWorkoutName());
         etWorkoutTitle.setText(history.getWorkoutName());
 
+        // --- BAGONG LOGIC DITO ---
+        Calendar workoutDate = Calendar.getInstance();
+        workoutDate.setTime(history.getTimestamp());
+        Calendar today = Calendar.getInstance();
+
+        boolean isToday = isSameDay(today, workoutDate);
+
+        if (isToday) {
+            ivEditIcon.setVisibility(View.VISIBLE); // Pwedeng i-edit kung ngayong araw lang
+        } else {
+            ivEditIcon.setVisibility(View.GONE);    // Itago ang edit icon kung nakalipas na ang araw
+        }
+        // -------------------------
+
         tvWorkoutTitle.setVisibility(View.VISIBLE);
         etWorkoutTitle.setVisibility(View.GONE);
-        ivEditIcon.setVisibility(View.VISIBLE); // Show edit icon
 
         ivEditIcon.setOnClickListener(v -> {
             tvWorkoutTitle.setVisibility(View.GONE);
@@ -266,6 +279,7 @@ public class ProgressFragment extends Fragment {
             etWorkoutTitle.requestFocus();
         });
 
+        // Ang rest ng code para sa TextViews (Duration, Volume, etc.) ay mananatiling pareho...
         ((TextView) view.findViewById(R.id.tvDurationValue)).setText((history.getDurationSeconds() / 60) + " min");
         ((TextView) view.findViewById(R.id.tvVolumeValue)).setText(history.getTotalVolume() + " kg");
         ((TextView) view.findViewById(R.id.tvExercisesCompletedValue)).setText(String.valueOf(history.getExercisesCount()));
@@ -279,7 +293,8 @@ public class ProgressFragment extends Fragment {
 
         View.OnClickListener closeAction = v -> {
             String newName = etWorkoutTitle.getText().toString().trim();
-            if (!newName.isEmpty() && !newName.equals(history.getWorkoutName())) {
+            // Siguraduhin din na hindi mag-uupdate kung hindi naman "isToday"
+            if (isToday && !newName.isEmpty() && !newName.equals(history.getWorkoutName())) {
                 updateWorkoutName(history, newName);
             }
             dialog.dismiss();

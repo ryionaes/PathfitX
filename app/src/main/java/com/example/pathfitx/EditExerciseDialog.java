@@ -46,15 +46,17 @@ public class EditExerciseDialog extends DialogFragment {
 
         // Init Views
         ImageView imgExercise = view.findViewById(R.id.img_dialog_exercise);
+
+        // UPDATED: Using imageResId for the local drawables from your classmate
         Glide.with(this)
-                .load(exercise.getImageUrl())
+                .load(exercise.getImageResId())
                 .placeholder(R.drawable.ic_workout)
                 .error(R.drawable.ic_workout)
                 .into(imgExercise);
 
         ((TextView) view.findViewById(R.id.tv_dialog_exercise_name)).setText(exercise.getTitle());
 
-        // Setup Inputs
+        // Setup Inputs - Keeping your original logic
         setupInput(view.findViewById(R.id.input_sets), "SETS", currentSets, val -> currentSets = val);
         setupInput(view.findViewById(R.id.input_reps), "REPS", currentReps, val -> currentReps = val);
         setupInput(view.findViewById(R.id.input_kg), "KG", currentKg, val -> currentKg = val);

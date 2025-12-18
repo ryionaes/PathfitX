@@ -38,18 +38,9 @@ public class SwapWorkoutAdapter extends RecyclerView.Adapter<SwapWorkoutAdapter.
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         WorkoutType option = options.get(position);
         holder.tvWorkoutName.setText(option.getName());
-        
-        // Use Glide if image is a URL, else use resource ID if it's an int (but we are migrating to URLs, assume URL for now or handle both if WorkoutType changes)
-        // Since WorkoutType still has int imageResId, we can keep using it OR change WorkoutType as well.
-        // The user said "replace it to imageUrl" on "all remaining java class".
-        // Assuming WorkoutType will also be updated to use String imageUrl.
-        
-        // Wait, I need to check if I can update WorkoutType first.
-        // If I update WorkoutType, I need to find where it is instantiated.
-        // Let's assume for now I will update WorkoutType to String imageUrl.
-        
+
         Glide.with(holder.itemView.getContext())
-             .load(option.getImageUrl())
+             .load(option.getImageResId()) // Use the resource ID
              .placeholder(R.drawable.ic_workout)
              .error(R.drawable.ic_workout)
              .into(holder.ivWorkoutImage);
