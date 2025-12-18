@@ -1,22 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
 
-    <!-- LAYER 1: The Blurred Shadow -->
-    <item android:gravity="top" android:height="15dp">
-        <shape android:shape="rectangle">
-            <gradient
-                android:startColor="@color/prim_soft"
-                android:endColor="@android:color/transparent"
-                android:angle="90" />
-        </shape>
-    </item>
+    <solid android:color="@color/white"/>
 
-    <!-- LAYER 2: The Actual White Background -->
-    <item android:top="12dp" android:left="0dp" android:right="0dp" android:bottom="0dp">
-        <shape android:shape="rectangle">
+    <corners
+        android:topLeftRadius="30dp"
+        android:topRightRadius="30dp"
+        android:bottomLeftRadius="0dp"
+        android:bottomRightRadius="0dp"/>
 
-            <solid android:color="#FFFFFF"/>
-        </shape>
-    </item>
-
-</layer-list>
+    <stroke
+        android:width="1dp"
+        android:color="#E0E0E0"/>
+</shape>
