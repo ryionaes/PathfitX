@@ -10,6 +10,8 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -126,11 +128,11 @@ public class ProfileFragment extends Fragment {
         sharedViewModel.getUserSnapshot().observe(getViewLifecycleOwner(), this::updateUI);
 
         if (getArguments() != null && getArguments().getBoolean(ARG_OPEN_NOTIFICATIONS)) {
-            view.post(() -> {
-                if (layoutNotificationSettings.getVisibility() != View.VISIBLE) {
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                if (isAdded() && layoutNotificationSettings.getVisibility() != View.VISIBLE) {
                     toggleVisibility(layoutNotificationSettings, ivArrowNotifications);
                 }
-            });
+            }, 200); // A small delay to ensure the UI is ready
         }
     }
 

@@ -330,6 +330,12 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
             BottomNavigationView nav = getActivity().findViewById(R.id.bottom_navigation);
             if (nav != null) nav.setSelectedItemId(R.id.nav_profile);
         });
+
+        ivNotificationIcon.setOnClickListener(v -> {
+            getParentFragmentManager().beginTransaction().replace(R.id.fragment_container, ProfileFragment.newInstance(true)).addToBackStack(null).commit();
+            BottomNavigationView nav = getActivity().findViewById(R.id.bottom_navigation);
+            if (nav != null) nav.setSelectedItemId(R.id.nav_profile);
+        });
     }
 
     private void showResumeWorkoutDialog() {

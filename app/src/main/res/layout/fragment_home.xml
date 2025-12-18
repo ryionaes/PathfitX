@@ -56,7 +56,8 @@
             android:id="@+id/iv_notification_icon"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:src="@android:drawable/ic_popup_reminder"/>
+            android:src="@android:drawable/ic_popup_reminder"
+            app:tint="@color/prim_red" />
     </LinearLayout>
 
     <!-- 2. Calendar Strip -->
