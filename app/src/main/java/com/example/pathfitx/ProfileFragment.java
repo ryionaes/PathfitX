@@ -1,5 +1,5 @@
 package com.example.pathfitx;
-
+import com.google.android.material.R.attr;
 import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.PendingIntent;
@@ -27,6 +27,7 @@ import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.view.ContextThemeWrapper;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -54,6 +55,7 @@ import java.util.Map;
 public class ProfileFragment extends Fragment {
 
     private static final String TAG = "ProfileFragment";
+    private static final String ARG_OPEN_NOTIFICATIONS = "open_notifications";
 
     // UI
     private TextView tvUserName, tvEditProfile, tvWeight, tvHeight, tvAge, tvChangePassword, tvEditGoals;
@@ -81,6 +83,14 @@ public class ProfileFragment extends Fragment {
 
     public ProfileFragment() {
         // Required empty public constructor
+    }
+
+    public static ProfileFragment newInstance(boolean openNotifications) {
+        ProfileFragment fragment = new ProfileFragment();
+        Bundle args = new Bundle();
+        args.putBoolean(ARG_OPEN_NOTIFICATIONS, openNotifications);
+        fragment.setArguments(args);
+        return fragment;
     }
 
     @Override
@@ -112,6 +122,14 @@ public class ProfileFragment extends Fragment {
 
         sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
         sharedViewModel.getUserSnapshot().observe(getViewLifecycleOwner(), this::updateUI);
+
+        if (getArguments() != null && getArguments().getBoolean(ARG_OPEN_NOTIFICATIONS)) {
+            view.post(() -> {
+                if (layoutNotificationSettings.getVisibility() != View.VISIBLE) {
+                    toggleVisibility(layoutNotificationSettings, ivArrowNotifications);
+                }
+            });
+        }
     }
 
     private void updateUI(DocumentSnapshot snapshot) {
@@ -217,17 +235,29 @@ public class ProfileFragment extends Fragment {
     }
 
     private void displayGoals(List<String> goals) {
+        if (getContext() == null) return;
+        chipGroupGoals.removeAllViews();
+
         if (goals == null || goals.isEmpty()) {
             Chip noGoalsChip = new Chip(getContext());
             noGoalsChip.setText("No goals set");
-            chipGroupGoals.removeAllViews();
             chipGroupGoals.addView(noGoalsChip);
             return;
         }
-        chipGroupGoals.removeAllViews();
+
+        // Gamit tayo ng ContextThemeWrapper para sa ating GoalChip style
         for (String goal : goals) {
-            Chip chip = new Chip(getContext());
+            // Pinalitan ko yung attribute sa R.attr.chipStyle para compatible sa lahat
+            Chip chip = new Chip(new ContextThemeWrapper(getContext(), R.style.GoalChip), null, attr.chipStyle);
             chip.setText(goal);
+
+            // Eto ang "Puwersa" method: Kahit anong style ang ilagay ng system,
+            // ito ang masusunod na kulay at border para siguradong red at no border
+            chip.setChipBackgroundColorResource(R.color.red_bg_light); // Yung light red bg
+            chip.setTextColor(ContextCompat.getColor(getContext(), R.color.prim_red)); // Yung dark red text
+            chip.setChipStrokeWidth(0f); // Siguradong walang border
+            chip.setChipStrokeColorResource(android.R.color.transparent); // Gawing transparent yung stroke
+
             chipGroupGoals.addView(chip);
         }
     }

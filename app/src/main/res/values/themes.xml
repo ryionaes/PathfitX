@@ -1,10 +1,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
     <style name="Base.Theme.PathfitX" parent="Theme.Material3.Light.NoActionBar">
-
         <item name="colorPrimary">@color/prim_red</item>
-
-
     </style>
 
     <style name="Theme.PathfitX" parent="Base.Theme.PathfitX" />
@@ -17,5 +14,18 @@
 
     <style name="App.Custom.Indicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
     </style>
+
+    <style name="GoalChip" parent="Widget.Material3.Chip.Suggestion">
+        <item name="chipBackgroundColor">@color/red_bg_light</item>
+        <item name="android:textColor">@color/prim_red</item>
+        <item name="chipStrokeWidth">0dp</item>
+        <item name="chipStrokeColor">@android:color/transparent</item>
+        <item name="android:textStyle">bold</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Material3.Corner.Medium</item>
+    </style>
+
+    <style name="RoundedSquare" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">-5dp</item> </style>
 
 </resources>

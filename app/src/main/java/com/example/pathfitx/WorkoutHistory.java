@@ -1,6 +1,7 @@
 package com.example.pathfitx;
 
 import com.google.firebase.firestore.Exclude;
+import java.util.Date;
 
 public class WorkoutHistory {
     private String documentId;
@@ -8,20 +9,18 @@ public class WorkoutHistory {
     private int durationSeconds;
     private int totalVolume;
     private int completionRate;
-    private long timestamp;
-    private String date;
+    private Date timestamp;
     private int exercisesCount;
     private double caloriesBurned;
 
     public WorkoutHistory() {} // Required for Firestore
 
-    public WorkoutHistory(String workoutName, int durationSeconds, int totalVolume, int completionRate, long timestamp, String date, int exercisesCount, double caloriesBurned) {
+    public WorkoutHistory(String workoutName, int durationSeconds, int totalVolume, int completionRate, Date timestamp, int exercisesCount, double caloriesBurned) {
         this.workoutName = workoutName;
         this.durationSeconds = durationSeconds;
         this.totalVolume = totalVolume;
         this.completionRate = completionRate;
         this.timestamp = timestamp;
-        this.date = date;
         this.exercisesCount = exercisesCount;
         this.caloriesBurned = caloriesBurned;
     }
@@ -36,8 +35,7 @@ public class WorkoutHistory {
     public int getDurationSeconds() { return durationSeconds; }
     public int getTotalVolume() { return totalVolume; }
     public int getCompletionRate() { return completionRate; }
-    public long getTimestamp() { return timestamp; }
-    public String getDate() { return date; }
+    public Date getTimestamp() { return timestamp; }
     public int getExercisesCount() { return exercisesCount; }
     public double getCaloriesBurned() { return caloriesBurned; }
 }

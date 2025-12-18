@@ -16,6 +16,7 @@ import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
 public class SharedViewModel extends ViewModel {
 
@@ -24,6 +25,7 @@ public class SharedViewModel extends ViewModel {
     private final MutableLiveData<DocumentSnapshot> userSnapshot = new MutableLiveData<>();
     private final MutableLiveData<QuerySnapshot> historySnapshot = new MutableLiveData<>();
     private final MutableLiveData<DocumentSnapshot> workoutSnapshot = new MutableLiveData<>();
+    private final MutableLiveData<Date> registrationDate = new MutableLiveData<>();
 
     private ListenerRegistration userListener;
     private ListenerRegistration historyListener;
@@ -39,6 +41,10 @@ public class SharedViewModel extends ViewModel {
 
     public LiveData<DocumentSnapshot> getWorkoutSnapshot() {
         return workoutSnapshot;
+    }
+
+    public LiveData<Date> getRegistrationDate() {
+        return registrationDate;
     }
 
     public String getUserId() {
@@ -71,6 +77,9 @@ public class SharedViewModel extends ViewModel {
                 if (snapshot != null && snapshot.exists()) {
                     Log.d(TAG, "User snapshot received. Data: " + snapshot.getData());
                     userSnapshot.setValue(snapshot);
+                    if (currentUser.getMetadata() != null) {
+                        registrationDate.setValue(new Date(currentUser.getMetadata().getCreationTimestamp()));
+                    }
                 } else {
                     Log.w(TAG, "User snapshot is null or does not exist.");
                     userSnapshot.setValue(null);

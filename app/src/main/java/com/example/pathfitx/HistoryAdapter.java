@@ -43,8 +43,11 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
         holder.tvTitle.setText(item.getWorkoutName());
 
         int minutes = item.getDurationSeconds() / 60;
-        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd", Locale.getDefault());
-        String dateStr = sdf.format(new Date(item.getTimestamp()));
+        String dateStr = "No date";
+        if (item.getTimestamp() != null) {
+            SimpleDateFormat sdf = new SimpleDateFormat("MMM dd", Locale.getDefault());
+            dateStr = sdf.format(item.getTimestamp());
+        }
 
         holder.tvDate.setText(dateStr + " • " + minutes + " min");
 

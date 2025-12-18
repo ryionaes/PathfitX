@@ -94,19 +94,31 @@ public class LoginActivity extends AppCompatActivity {
         View dialogView = inflater.inflate(R.layout.dialog_forgot_password, null);
         builder.setView(dialogView);
 
-        final TextInputEditText etForgotPasswordEmail = dialogView.findViewById(R.id.etForgotPasswordEmail);
+        AlertDialog dialog = builder.create();
 
-        builder.setPositiveButton("Reset", (dialog, which) -> {
+        // 1. Gawing transparent ang window background para mawala yung white part
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+        }
+
+        final TextInputEditText etForgotPasswordEmail = dialogView.findViewById(R.id.etForgotPasswordEmail);
+        TextView btnCancel = dialogView.findViewById(R.id.btnCancelDialog);
+        TextView btnReset = dialogView.findViewById(R.id.btnResetDialog);
+
+        // 2. Setup listeners para sa custom buttons natin
+        btnReset.setOnClickListener(v -> {
             String email = etForgotPasswordEmail.getText().toString().trim();
             if (!TextUtils.isEmpty(email)) {
                 sendPasswordReset(email);
+                dialog.dismiss();
             } else {
                 Toast.makeText(this, "Please enter your email", Toast.LENGTH_SHORT).show();
             }
         });
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
 
-        builder.create().show();
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
     }
 
     private void sendPasswordReset(String email) {

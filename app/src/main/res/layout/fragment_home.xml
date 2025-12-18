@@ -20,12 +20,15 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <ImageView
+        <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/iv_profile_icon"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@drawable/bg_selected_date"
-            android:backgroundTint="#E0E0E0"/>
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:scaleType="centerCrop"
+            android:backgroundTint="#E0E0E0"
+            app:shapeAppearanceOverlay="@style/RoundedSquare"
+            app:strokeColor="@color/white"
+            app:strokeWidth="2dp" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -50,6 +53,7 @@
         </LinearLayout>
 
         <ImageView
+            android:id="@+id/iv_notification_icon"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@android:drawable/ic_popup_reminder"/>
@@ -111,7 +115,7 @@
                     android:textSize="24sp"
                     android:textStyle="bold"
                     android:layout_marginTop="12dp"
-                    app:layout_constraintEnd_toStartOf="@+id/btn_swap"
+                    app:layout_constraintEnd_toStartOf="@id/btn_swap"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     android:layout_marginEnd="8dp"/>
@@ -247,7 +251,7 @@
                             android:textSize="16sp"
                             android:textStyle="bold"
                             app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toBottomOf="@+id/tv_recovering_today" />
+                            app:layout_constraintTop_toBottomOf="@id/tv_recovering_today" />
 
                         <com.google.android.material.switchmaterial.SwitchMaterial
                             android:id="@+id/switch_rest_day"
