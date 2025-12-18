@@ -2,6 +2,7 @@ package com.example.pathfitx;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -29,7 +30,9 @@ import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldPath;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.WriteBatch;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -48,6 +51,8 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
 
     private static final String TAG = "HomeFragment";
     private static final String ARG_SELECTED_DATE = "selectedDate";
+    public static final String PREFS_NAME = "WorkoutPrefs";
+    public static final String KEY_DEFAULT_TIME = "default_time";
 
     private RecyclerView rvCalendar, rvExercises;
     private CalendarAdapter calendarAdapter;
@@ -126,9 +131,11 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
     private void setupViewModel() {
         sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
 
+        SharedPreferences prefs = requireActivity().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        globalDefaultTime = prefs.getString(KEY_DEFAULT_TIME, "45 min");
+
         sharedViewModel.getUserSnapshot().observe(getViewLifecycleOwner(), userSnapshot -> {
             if (userSnapshot != null && userSnapshot.exists()) {
-                if (userSnapshot.contains("defaultTime")) globalDefaultTime = userSnapshot.getString("defaultTime");
                 if (userSnapshot.contains("defaultEquipment")) globalDefaultEquipment = userSnapshot.getString("defaultEquipment");
                 if (userSnapshot.contains("weight_kg")) userWeight = userSnapshot.getDouble("weight_kg");
 
@@ -157,7 +164,6 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         if (snapshot != null && snapshot.exists()) {
             isRestDay = snapshot.getBoolean("isRestDay") != null && snapshot.getBoolean("isRestDay");
 
-            // DITO ANG FIX: Kunin ang field kung meron, kung wala, gamitin ang GLOBAL DEFAULT
             selectedTime = snapshot.getString("time") != null ? snapshot.getString("time") : globalDefaultTime;
             selectedEquipment = snapshot.getString("equipment") != null ? snapshot.getString("equipment") : globalDefaultEquipment;
 
@@ -169,7 +175,6 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
                 selectedWorkout = "Rest Day";
             }
         } else {
-            // KAPAG WALANG DATA SA FIREBASE PARA SA ARAW NA ITO
             isRestDay = false;
             selectedWorkout = "No Workout Planned";
             selectedTime = globalDefaultTime;
@@ -441,25 +446,77 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
 
     @Override
     public void onSetAsDefault(String option) {
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user == null) return;
-        Map<String, Object> updates = new HashMap<>();
         if (timeOptions.contains(option)) {
-            selectedTime = option;
-            globalDefaultTime = option;
-            updates.put("defaultTime", option);
+            SharedPreferences prefs = requireActivity().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            String oldDefaultTime = prefs.getString(KEY_DEFAULT_TIME, "45 min"); // Capture the old default
+            String newDefaultTime = option;
+
+            if (oldDefaultTime.equals(newDefaultTime)) { // No change needed
+                selectedTime = newDefaultTime;
+                updateGenericUI();
+                saveWorkoutsForDate(selectedDate);
+                return;
+            }
+
+            // 1. Save new default to SharedPreferences
+            prefs.edit().putString(KEY_DEFAULT_TIME, newDefaultTime).apply();
+
+            // 2. Update local variables
+            this.globalDefaultTime = newDefaultTime;
+            this.selectedTime = newDefaultTime;
+
+            // 3. Batch update Firestore for future workouts
+            updateWorkoutsToNewDefault(oldDefaultTime, newDefaultTime);
+
+            // 4. Update UI and save current day
+            updateGenericUI();
+            saveWorkoutsForDate(selectedDate);
+
+            Toast.makeText(getContext(), "Default time updated for all workouts.", Toast.LENGTH_SHORT).show();
+
         } else if (equipmentOptions.contains(option)) {
             selectedEquipment = option;
             globalDefaultEquipment = option;
-            updates.put("defaultEquipment", option);
-        }
 
-        // SINAVE SA USER PROFILE (GLOBAL)
-        FirebaseFirestore.getInstance().collection("users").document(user.getUid()).update(updates).addOnSuccessListener(aVoid -> {
-            Toast.makeText(getContext(), "Set as global default", Toast.LENGTH_SHORT).show();
-            // HINDI TATAWAG NG saveWorkoutsForDate DITO PARA MANATILING GLOBAL
-            updateGenericUI();
-        });
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            if (user != null) {
+                FirebaseFirestore.getInstance().collection("users").document(user.getUid())
+                        .update("defaultEquipment", option);
+            }
+        }
+    }
+
+    private void updateWorkoutsToNewDefault(String oldDefault, String newDefault) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) return;
+
+        String today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("users").document(user.getUid()).collection("workouts")
+                .whereGreaterThanOrEqualTo(FieldPath.documentId(), today) // Correctly query by document ID
+                .whereEqualTo("time", oldDefault)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (queryDocumentSnapshots.isEmpty()) {
+                        Log.d(TAG, "No future workouts found with the old default time. Nothing to update.");
+                        return;
+                    }
+
+                    WriteBatch batch = db.batch();
+                    for (DocumentSnapshot doc : queryDocumentSnapshots) {
+                        batch.update(doc.getReference(), "time", newDefault);
+                    }
+
+                    batch.commit().addOnSuccessListener(aVoid -> {
+                        Log.d(TAG, "Successfully updated " + queryDocumentSnapshots.size() + " workouts to the new default time.");
+                    }).addOnFailureListener(e -> {
+                        Log.e(TAG, "Error committing batch update for default time", e);
+                    });
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error finding workouts with old default time", e);
+                });
     }
 
     private void swapWorkout(String workoutName) {
