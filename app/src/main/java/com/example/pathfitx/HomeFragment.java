@@ -224,6 +224,11 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         exerciseList.remove(position);
         if (exerciseList.isEmpty()) {
             selectedWorkout = "No Workout Planned";
+        } else {
+            WorkoutPlan templatePlan = WorkoutPlanDatabase.getWorkoutPlan(selectedWorkout);
+            if (templatePlan != null && !"Custom Plan".equals(selectedWorkout)) {
+                selectedWorkout = "Custom Plan";
+            }
         }
         saveWorkoutsForDate(selectedDate);
     }
@@ -246,23 +251,18 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
     }
 
     private void swapWorkout(String workoutName) {
-        if ("Custom Plan".equals(workoutName)) {
+        WorkoutPlan plan = WorkoutPlanDatabase.getWorkoutPlan(workoutName);
+        if (plan != null) {
+            selectedWorkout = workoutName;
+            tvWorkoutTitle.setText(selectedWorkout);
             exerciseList.clear();
+
+            if (plan.getExercises() != null) {
+                exerciseList.addAll(plan.getExercises());
+            }
             isRestDay = false;
             saveWorkoutsForDate(selectedDate);
-            return;
         }
-        FirebaseFirestore.getInstance().collection("workout_templates").document(workoutName).get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        List<HashMap<String, Object>> exercisesMap = (List<HashMap<String, Object>>) documentSnapshot.get("exercises");
-                        exerciseList.clear();
-                        exerciseList.addAll(parseExercisesFromMap(exercisesMap));
-                        isRestDay = false;
-                        selectedWorkout = workoutName;
-                        saveWorkoutsForDate(selectedDate);
-                    }
-                });
     }
 
     private double parseDurationInMinutes(String time) {
@@ -478,12 +478,10 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
 
     private void setupWorkoutTypes() {
         workoutTypes.clear();
-        workoutTypes.add(new WorkoutType("Push Day", ""));
-        workoutTypes.add(new WorkoutType("Pull Day", ""));
-        workoutTypes.add(new WorkoutType("Leg Day", ""));
-        workoutTypes.add(new WorkoutType("Upper Body", ""));
-        workoutTypes.add(new WorkoutType("Cardio & Core", ""));
-        workoutTypes.add(new WorkoutType("Custom Plan", ""));
+        List<WorkoutPlan> plans = WorkoutPlanDatabase.getAllWorkoutPlans();
+        for (WorkoutPlan plan : plans) {
+            workoutTypes.add(new WorkoutType(plan.getName(), ""));
+        }
     }
 
     private void showOptionsBottomSheet(String type) {
