@@ -21,7 +21,10 @@ public class Exercise implements Serializable {
     private int completedSets = 0;
     private boolean isAddedToWorkout = false;
 
-    public enum Category { STRENGTH, CARDIO, HIIT, YOGA }
+    public enum Category {
+        LOSE_WEIGHT, GAIN_WEIGHT, MAINTAIN_WEIGHT, GAIN_MUSCLE, STAY_ACTIVE,
+        IMPROVE_FLEXIBILITY, INCREASE_ENDURANCE, BOOST_ENERGY_LEVEL, STRENGTH, CARDIO, HIIT, YOGA
+    }
     public enum BodyPart { CHEST, BACK, LEGS, SHOULDERS, ARMS, CORE, FULL_BODY }
 
     // Empty Constructor para sa Firebase parsing [cite: 192]

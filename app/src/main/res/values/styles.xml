@@ -14,4 +14,18 @@
         <item name="android:backgroundTint">@color/white</item>
         <item name="android:textColor">@color/black</item>
     </style>
+
+    <style name="SecondaryFilterChip" parent="Widget.MaterialComponents.Chip.Filter">
+        <!-- Makes the text smaller -->
+        <item name="android:textSize">10sp</item>
+        <!-- Makes the chip shorter -->
+        <item name="chipMinHeight">30dp</item>
+        <!-- Reduces the space on the left and right of the text -->
+        <item name="chipStartPadding">8dp</item>
+        <item name="chipEndPadding">8dp</item>
+        <!-- Set text to not be bold or all caps -->
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+
 </resources>

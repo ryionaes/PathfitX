@@ -17,6 +17,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
 import androidx.constraintlayout.widget.Group;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
@@ -53,6 +54,9 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
     private static final String ARG_SELECTED_DATE = "selectedDate";
     public static final String PREFS_NAME = "WorkoutPrefs";
     public static final String KEY_DEFAULT_TIME = "default_time";
+    public static final String KEY_WORKOUT_IN_PROGRESS = "workout_in_progress";
+    public static final String KEY_SAVE_TYPE = "save_type";
+
 
     private RecyclerView rvCalendar, rvExercises;
     private CalendarAdapter calendarAdapter;
@@ -126,6 +130,12 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         setupWorkoutTypes();
         setupExercises();
         setupClickListeners();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        updateStartButton();
     }
 
     private void setupViewModel() {
@@ -250,7 +260,21 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
             }
         }
         if (exerciseAdapter != null) exerciseAdapter.notifyDataSetChanged();
+        updateStartButton();
     }
+
+    private void updateStartButton() {
+        SharedPreferences prefs = requireActivity().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        boolean workoutInProgress = prefs.getBoolean(KEY_WORKOUT_IN_PROGRESS, false);
+        String saveType = prefs.getString(KEY_SAVE_TYPE, "");
+
+        if (workoutInProgress && "deliberate".equals(saveType)) {
+            btnStartWorkout.setText("Resume Workout");
+        } else {
+            btnStartWorkout.setText("Start Workout");
+        }
+    }
+
 
     private String formatMinutesToReadableTime(int totalMinutes) {
         if (totalMinutes < 60) {
@@ -275,18 +299,15 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         });
 
         btnStartWorkout.setOnClickListener(v -> {
-            if (exerciseList == null || exerciseList.isEmpty() || isRestDay) {
-                Toast.makeText(getContext(), "No workout planned for today!", Toast.LENGTH_SHORT).show();
-                return;
-            }
+            SharedPreferences prefs = requireActivity().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            boolean workoutInProgress = prefs.getBoolean(KEY_WORKOUT_IN_PROGRESS, false);
+            String saveType = prefs.getString(KEY_SAVE_TYPE, "");
 
-            double durationInMinutes = parseDurationInMinutes(selectedTime);
-            Intent intent = new Intent(getActivity(), LiveSessionActivity.class);
-            intent.putExtra("exerciseList", (Serializable) exerciseList);
-            intent.putExtra("userWeight", userWeight);
-            intent.putExtra("selectedDate", selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
-            intent.putExtra("workoutDuration", durationInMinutes);
-            startActivity(intent);
+            if (workoutInProgress && "deliberate".equals(saveType)) {
+                showResumeWorkoutDialog();
+            } else {
+                startWorkout();
+            }
         });
 
         switchRestDay.setOnCheckedChangeListener((btn, isChecked) -> {
@@ -309,6 +330,37 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
             BottomNavigationView nav = getActivity().findViewById(R.id.bottom_navigation);
             if (nav != null) nav.setSelectedItemId(R.id.nav_profile);
         });
+    }
+
+    private void showResumeWorkoutDialog() {
+        new AlertDialog.Builder(getContext())
+            .setTitle("Resume Workout")
+            .setMessage("Do you want to continue where you left off?")
+            .setPositiveButton("Continue", (dialog, which) -> {
+                startActivity(new Intent(getActivity(), LiveSessionActivity.class));
+            })
+            .setNegativeButton("Discard", (dialog, which) -> {
+                SharedPreferences.Editor editor = requireActivity().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit();
+                editor.clear();
+                editor.apply();
+                updateStartButton();
+            })
+            .show();
+    }
+
+    private void startWorkout() {
+        if (exerciseList == null || exerciseList.isEmpty() || isRestDay) {
+            Toast.makeText(getContext(), "No workout planned for today!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        double durationInMinutes = parseDurationInMinutes(selectedTime);
+        Intent intent = new Intent(getActivity(), LiveSessionActivity.class);
+        intent.putExtra("exerciseList", (Serializable) exerciseList);
+        intent.putExtra("userWeight", userWeight);
+        intent.putExtra("selectedDate", selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
+        intent.putExtra("workoutDuration", durationInMinutes);
+        startActivity(intent);
     }
 
     private List<Exercise> parseExercisesFromMap(List<HashMap<String, Object>> map) {
@@ -474,16 +526,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
 
             Toast.makeText(getContext(), "Default time updated for all workouts.", Toast.LENGTH_SHORT).show();
 
-        } else if (equipmentOptions.contains(option)) {
-            selectedEquipment = option;
-            globalDefaultEquipment = option;
-
-            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-            if (user != null) {
-                FirebaseFirestore.getInstance().collection("users").document(user.getUid())
-                        .update("defaultEquipment", option);
-            }
-        }
+        } 
     }
 
     private void updateWorkoutsToNewDefault(String oldDefault, String newDefault) {

@@ -13,6 +13,7 @@ import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -21,6 +22,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -74,10 +76,12 @@ public class LiveSessionActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
     private String userId;
+    private boolean isFinishingWorkout = false;
 
     // Constants for SharedPreferences (Persistence)
-    private static final String PREFS_NAME = "LiveSessionPrefs";
+    private static final String PREFS_NAME = "WorkoutPrefs";
     private static final String KEY_WORKOUT_IN_PROGRESS = "workout_in_progress";
+    private static final String KEY_SAVE_TYPE = "save_type";
     private static final String KEY_WORKOUT_LIST = "workout_list";
     private static final String KEY_TIME_SWAP_BUFF = "time_swap_buff";
     private static final String KEY_START_TIME = "start_time";
@@ -96,7 +100,7 @@ public class LiveSessionActivity extends AppCompatActivity {
 
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         if (prefs.getBoolean(KEY_WORKOUT_IN_PROGRESS, false)) {
-            showResumeWorkoutDialog();
+            resumeSavedWorkout();
         } else {
             initializeNewWorkout();
         }
@@ -152,7 +156,6 @@ public class LiveSessionActivity extends AppCompatActivity {
             btnPause.setIconResource(android.R.drawable.ic_media_play);
             isRunning = false;
             if (liveAdapter != null) liveAdapter.setPaused(true);
-            saveWorkoutState();
         }
     }
 
@@ -205,7 +208,6 @@ public class LiveSessionActivity extends AppCompatActivity {
             completedSets += isChecked ? 1 : -1;
             exercise.setCompletedSets(exercise.getCompletedSets() + (isChecked ? 1 : -1));
             updateProgress();
-            saveWorkoutState();
         });
 
         rvLiveWorkout.setLayoutManager(new LinearLayoutManager(this));
@@ -222,6 +224,7 @@ public class LiveSessionActivity extends AppCompatActivity {
     }
 
     private void finishWorkout() {
+        isFinishingWorkout = true;
         timerHandler.removeCallbacks(updateTimerThread);
         long finalMillis = isRunning ? (timeSwapBuff + (System.currentTimeMillis() - startTime)) : timeSwapBuff;
         isRunning = false;
@@ -283,6 +286,7 @@ public class LiveSessionActivity extends AppCompatActivity {
             String finalTitle = etWorkoutTitle.getText().toString().trim();
             if (!finalTitle.isEmpty()) workoutName = finalTitle;
             saveWorkoutToHistory(durationSeconds, totalVolume, completionRate, exercisesCount, caloriesBurned);
+            isFinishingWorkout = true;
             finish();
         };
         view.findViewById(R.id.btnClose).setOnClickListener(closeAction);
@@ -304,19 +308,6 @@ public class LiveSessionActivity extends AppCompatActivity {
         db.collection("users").document(userId).collection("history").add(historyData);
     }
 
-    private void showResumeWorkoutDialog() {
-        new AlertDialog.Builder(this)
-                .setTitle("Workout in Progress")
-                .setMessage("Mayroon kang hindi natapos na workout. Gusto mo ba itong ituloy?")
-                .setPositiveButton("Tuloy", (dialog, which) -> resumeSavedWorkout())
-                .setNegativeButton("Bago", (dialog, which) -> {
-                    clearSavedWorkoutState();
-                    initializeNewWorkout();
-                })
-                .setCancelable(false)
-                .show();
-    }
-
     private void resumeSavedWorkout() {
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         workoutName = prefs.getString(KEY_WORKOUT_NAME, "My Workout");
@@ -336,9 +327,10 @@ public class LiveSessionActivity extends AppCompatActivity {
         btnFinish.setOnClickListener(v -> finishWorkout());
     }
 
-    private void saveWorkoutState() {
+    private void saveWorkoutState(String saveType) {
         SharedPreferences.Editor editor = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit();
         editor.putBoolean(KEY_WORKOUT_IN_PROGRESS, true);
+        editor.putString(KEY_SAVE_TYPE, saveType);
         editor.putString(KEY_WORKOUT_LIST, serializeWorkoutList(workoutList));
         editor.putLong(KEY_TIME_SWAP_BUFF, timeSwapBuff + (isRunning ? (System.currentTimeMillis() - startTime) : 0));
         editor.putString(KEY_WORKOUT_NAME, workoutName);
@@ -382,10 +374,41 @@ public class LiveSessionActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onBackPressed() {
+        AlertDialog dialog = new AlertDialog.Builder(this)
+            .setTitle("Exit Workout")
+            .setMessage("Do you want to save your progress?")
+            .setPositiveButton("Save & Exit", (dialogInterface, which) -> {
+                isFinishingWorkout = true;
+                saveWorkoutState("deliberate");
+                finish();
+            })
+            .setNegativeButton("Discard & Exit", (dialogInterface, which) -> {
+                isFinishingWorkout = true;
+                clearSavedWorkoutState();
+                finish();
+            })
+            .setNeutralButton("Cancel", null)
+            .show();
+
+        dialog.setOnShowListener(d -> {
+            Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            positiveButton.setTextColor(ContextCompat.getColor(this, R.color.prim_red));
+
+            Button negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
+            negativeButton.setTextColor(Color.GRAY);
+
+            Button neutralButton = dialog.getButton(AlertDialog.BUTTON_NEUTRAL);
+            neutralButton.setTextColor(Color.GRAY);
+        });
+    }
+
+    @Override
     protected void onPause() {
         super.onPause();
-        if (isRunning || completedSets > 0) {
-            saveWorkoutState();
+        if (!isFinishingWorkout && (isRunning || completedSets > 0)) {
+            pauseWorkout();
+            saveWorkoutState("unexpected");
         }
     }
 

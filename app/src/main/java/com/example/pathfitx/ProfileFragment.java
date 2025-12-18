@@ -247,18 +247,18 @@ public class ProfileFragment extends Fragment {
             return;
         }
 
-        // Gamit tayo ng ContextThemeWrapper para sa ating GoalChip style
+        // Use a ContextThemeWrapper for our GoalChip style
         for (String goal : goals) {
-            // Pinalitan ko yung attribute sa R.attr.chipStyle para compatible sa lahat
+            // Replaced the attribute with R.attr.chipStyle for compatibility
             Chip chip = new Chip(new ContextThemeWrapper(getContext(), R.style.GoalChip), null, attr.chipStyle);
             chip.setText(goal);
 
-            // Eto ang "Puwersa" method: Kahit anong style ang ilagay ng system,
-            // ito ang masusunod na kulay at border para siguradong red at no border
-            chip.setChipBackgroundColorResource(R.color.red_bg_light); // Yung light red bg
-            chip.setTextColor(ContextCompat.getColor(getContext(), R.color.prim_red)); // Yung dark red text
-            chip.setChipStrokeWidth(0f); // Siguradong walang border
-            chip.setChipStrokeColorResource(android.R.color.transparent); // Gawing transparent yung stroke
+            // This is the "Force" method: Whatever style the system applies,
+            // this color and border will be used to ensure it's red and has no border
+            chip.setChipBackgroundColorResource(R.color.red_bg_light); // The light red bg
+            chip.setTextColor(ContextCompat.getColor(getContext(), R.color.prim_red)); // The dark red text
+            chip.setChipStrokeWidth(0f); // Make sure there's no border
+            chip.setChipStrokeColorResource(android.R.color.transparent); // Make the stroke transparent
 
             chipGroupGoals.addView(chip);
         }

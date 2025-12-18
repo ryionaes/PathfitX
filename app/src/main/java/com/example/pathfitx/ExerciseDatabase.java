@@ -18,7 +18,7 @@ public class ExerciseDatabase {
         // ==========================================
         // 1. CHEST (Pectorals) - Average MET: 3.5 - 6.0
         // ==========================================
-        addExercise("Push-Ups", "Medium", R.drawable.ex_push_up, Exercise.Category.STRENGTH, Exercise.BodyPart.CHEST, Arrays.asList("Chest", "Triceps", "General"), 3.8);
+        addExercise("Push-Ups", "Medium", R.drawable.ex_push_up, Exercise.Category.STRENGTH, Exercise.BodyPart.CHEST, Arrays.asList("Chest", "Triceps", "General", "Maintain Weight"), 3.8);
         addExercise("Barbell Bench Press", "Hard", R.drawable.ex_bench_press, Exercise.Category.STRENGTH, Exercise.BodyPart.CHEST, Arrays.asList("Chest", "Gain Weight", "General"), 6.0);
         addExercise("Dumbbell Bench Press", "Medium", R.drawable.ex_dumbbell_bench_press, Exercise.Category.STRENGTH, Exercise.BodyPart.CHEST, Arrays.asList("Chest", "Gain Muscle"), 5.0);
         addExercise("Incline Barbell Bench Press", "Hard", R.drawable.ex_incline_bench_press, Exercise.Category.STRENGTH, Exercise.BodyPart.CHEST, Arrays.asList("Upper Chest", "General"), 6.0);
@@ -46,7 +46,7 @@ public class ExerciseDatabase {
         // ==========================================
         addExercise("Squats", "Medium", R.drawable.ex_squats, Exercise.Category.STRENGTH, Exercise.BodyPart.LEGS, Arrays.asList("Legs", "Glutes", "General"), 5.0);
         addExercise("Barbell Back Squat", "Hard", R.drawable.ex_barbell_squat, Exercise.Category.STRENGTH, Exercise.BodyPart.LEGS, Arrays.asList("Legs", "Gain Weight", "General"), 7.0);
-        addExercise("Bodyweight Squats", "Easy", R.drawable.ex_body_squat, Exercise.Category.STRENGTH, Exercise.BodyPart.LEGS, Arrays.asList("Legs", "General"), 4.0);
+        addExercise("Bodyweight Squats", "Easy", R.drawable.ex_body_squat, Exercise.Category.STRENGTH, Exercise.BodyPart.LEGS, Arrays.asList("Legs", "General", "Maintain Weight"), 4.0);
         addExercise("Leg Press", "Medium", R.drawable.ex_leg_press, Exercise.Category.STRENGTH, Exercise.BodyPart.LEGS, Arrays.asList("Legs", "Gain Weight", "General"), 5.0);
         addExercise("Walking Lunges", "Medium", R.drawable.ex_walking_lunges, Exercise.Category.STRENGTH, Exercise.BodyPart.LEGS, Arrays.asList("Legs", "General"), 5.0);
         addExercise("Romanian Deadlift", "Hard", R.drawable.ex_romanian_deadlift, Exercise.Category.STRENGTH, Exercise.BodyPart.LEGS, Arrays.asList("Hamstrings", "Glutes", "Gain Weight"), 6.0);
@@ -86,7 +86,7 @@ public class ExerciseDatabase {
         // ==========================================
         // 6. CORE - Average MET: 3.0 - 6.0
         // ==========================================
-        addExercise("Plank", "Medium", R.drawable.ex_plank, Exercise.Category.STRENGTH, Exercise.BodyPart.CORE, Arrays.asList("Core", "Stability", "General"), 3.5);
+        addExercise("Plank", "Medium", R.drawable.ex_plank, Exercise.Category.STRENGTH, Exercise.BodyPart.CORE, Arrays.asList("Core", "Stability", "General", "Maintain Weight"), 3.5);
         addExercise("Crunches", "Easy", R.drawable.ex_crunches, Exercise.Category.STRENGTH, Exercise.BodyPart.CORE, Arrays.asList("Abs", "General"), 3.0);
         addExercise("Sit-Ups", "Medium", R.drawable.ex_sit_up, Exercise.Category.STRENGTH, Exercise.BodyPart.CORE, Arrays.asList("Abs", "General"), 4.0);
         addExercise("Russian Twists", "Medium", R.drawable.ex_russian_twist, Exercise.Category.STRENGTH, Exercise.BodyPart.CORE, Arrays.asList("Obliques", "Core", "General"), 4.0);
@@ -103,14 +103,14 @@ public class ExerciseDatabase {
         // ==========================================
         // 7. CARDIO / HIIT
         // ==========================================
-        addExercise("Running", "Medium", R.drawable.ex_running, Exercise.Category.CARDIO, Exercise.BodyPart.FULL_BODY, Arrays.asList("Cardio", "General"), 9.8);
-        addExercise("Jump Rope", "Medium", R.drawable.ex_jump_rope, Exercise.Category.CARDIO, Exercise.BodyPart.FULL_BODY, Arrays.asList("Lose Weight", "General"), 11.0);
-        addExercise("Mountain Climbers", "Medium", R.drawable.ex_mountain_climbers, Exercise.Category.HIIT, Exercise.BodyPart.CORE, Arrays.asList("Lose Weight", "Core", "General"), 8.0);
-        addExercise("Butt Kicks", "Medium", R.drawable.ex_butt_kick, Exercise.Category.CARDIO, Exercise.BodyPart.LEGS, Arrays.asList("Cardio", "General"), 8.0);
-        addExercise("Box Jumps", "Hard", R.drawable.ex_box_jump, Exercise.Category.HIIT, Exercise.BodyPart.LEGS, Arrays.asList("Explosive", "General"), 9.0);
+        addExercise("Running", "Medium", R.drawable.ex_running, Exercise.Category.CARDIO, Exercise.BodyPart.FULL_BODY, Arrays.asList("Cardio", "General", "Maintain Weight"), 9.8);
+        addExercise("Jump Rope", "Medium", R.drawable.ex_jump_rope, Exercise.Category.CARDIO, Exercise.BodyPart.FULL_BODY, Arrays.asList("Lose Weight", "General", "Boost Energy Level"), 11.0);
+        addExercise("Mountain Climbers", "Medium", R.drawable.ex_mountain_climbers, Exercise.Category.HIIT, Exercise.BodyPart.CORE, Arrays.asList("Lose Weight", "Core", "General", "Boost Energy Level"), 8.0);
+        addExercise("Butt Kicks", "Medium", R.drawable.ex_butt_kick, Exercise.Category.CARDIO, Exercise.BodyPart.LEGS, Arrays.asList("Cardio", "General", "Boost Energy Level"), 8.0);
+        addExercise("Box Jumps", "Hard", R.drawable.ex_box_jump, Exercise.Category.HIIT, Exercise.BodyPart.LEGS, Arrays.asList("Explosive", "General", "Boost Energy Level"), 9.0);
         addExercise("Kettlebell Swings", "Medium", R.drawable.ex_kettlebell_swing, Exercise.Category.STRENGTH, Exercise.BodyPart.FULL_BODY, Arrays.asList("Hips", "General"), 8.0);
         addExercise("Rowing Machine", "Hard", R.drawable.ex_rowing_machine, Exercise.Category.CARDIO, Exercise.BodyPart.FULL_BODY, Arrays.asList("Lose Weight", "Increase Endurance", "General"), 8.5);
-        addExercise("Stair Climber", "Medium", R.drawable.ex_stair_climber, Exercise.Category.CARDIO, Exercise.BodyPart.LEGS, Arrays.asList("Lose Weight", "Endurance"), 9.0);
+        addExercise("Stair Climber", "Medium", R.drawable.ex_stair_climber, Exercise.Category.CARDIO, Exercise.BodyPart.LEGS, Arrays.asList("Lose Weight", "Increase Endurance"), 9.0);
         addExercise("Battle Ropes", "Hard", R.drawable.ex_battle_ropes, Exercise.Category.HIIT, Exercise.BodyPart.ARMS, Arrays.asList("Full Body", "General"), 10.0);
         addExercise("Farmer's Walk", "Medium", R.drawable.ex_farmers_walk, Exercise.Category.STRENGTH, Exercise.BodyPart.FULL_BODY, Arrays.asList("Grip", "Core", "General"), 5.5);
         addExercise("Bear Crawl", "Medium", R.drawable.ex_bear_crawl, Exercise.Category.HIIT, Exercise.BodyPart.FULL_BODY, Arrays.asList("Full Body", "Core"), 8.0);

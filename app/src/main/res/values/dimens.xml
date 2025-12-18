@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="chip_corner_radius">28dp</dimen>
+    <dimen name="secondary_chip_min_height">40dp</dimen>
+    <dimen name="secondary_chip_corner_radius">20dp</dimen>
+</resources>

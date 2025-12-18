@@ -21,7 +21,6 @@ public class WorkoutAdapter extends RecyclerView.Adapter<WorkoutAdapter.ViewHold
         void onExerciseClick(Exercise exercise);
     }
 
-    // Callback interface to report the result of the add operation
     public interface AddExerciseCallback {
         void onResult(boolean success);
     }
@@ -31,8 +30,8 @@ public class WorkoutAdapter extends RecyclerView.Adapter<WorkoutAdapter.ViewHold
         this.listener = listener;
     }
 
-    public void setExercises(List<Exercise> exercises) {
-        this.exercises = new ArrayList<>(exercises);
+    public void updateList(List<Exercise> newList) {
+        this.exercises = new ArrayList<>(newList);
         notifyDataSetChanged();
     }
 
@@ -50,7 +49,6 @@ public class WorkoutAdapter extends RecyclerView.Adapter<WorkoutAdapter.ViewHold
         holder.tvName.setText(item.getTitle());
         holder.tvTags.setText(item.getDetails());
 
-        // FIXED: Marunong mag-load ng local at remote images
         Object imageSource = item.getImageResId() != 0 ? item.getImageResId() : item.getImageUrl();
 
         Glide.with(holder.itemView.getContext())
@@ -71,7 +69,6 @@ public class WorkoutAdapter extends RecyclerView.Adapter<WorkoutAdapter.ViewHold
             if (listener != null) {
                 listener.onExerciseAdd(item, success -> {
                     if (success) {
-                        // Check icon from your classmate's version
                         holder.btnAdd.setImageResource(R.drawable.ic_check);
                     }
                 });

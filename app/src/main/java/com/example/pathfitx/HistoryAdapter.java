@@ -3,6 +3,7 @@ package com.example.pathfitx;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -32,7 +33,6 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // Gumagamit ng item_workout_history.xml
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_workout_history, parent, false);
         return new ViewHolder(view);
     }
@@ -41,14 +41,11 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         WorkoutHistory item = list.get(position);
 
-        // Iset ang Workout Title
         holder.tvTitle.setText(item.getWorkoutName());
 
-        // I-format ang Date
         SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
         String dateStr = (item.getTimestamp() != null) ? sdf.format(item.getTimestamp()) : "Unknown Date";
 
-        // HOUR FORMAT SUPPORT para sa Duration
         int totalMinutes = item.getDurationSeconds() / 60;
         String durationStr;
         if (totalMinutes < 60) {
@@ -59,11 +56,10 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
             durationStr = (m == 0) ? h + " hr" : h + " hr, " + m + " min";
         }
 
-        // Pinagsama ang Date, Duration, at Volume sa tvHistoryDate dahil ito lang ang available na TextView
         String fullDetails = String.format(Locale.getDefault(), "%s • %s • %,d kg", dateStr, durationStr, item.getTotalVolume());
-        holder.tvDate.setText(fullDetails);
+        holder.tvDetails.setText(fullDetails);
 
-        holder.itemView.setOnClickListener(v -> {
+        holder.btnView.setOnClickListener(v -> {
             if (listener != null) listener.onHistoryItemClick(item);
         });
     }
@@ -74,13 +70,14 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvTitle, tvDate;
+        TextView tvTitle, tvDetails;
+        Button btnView;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            // Ang mga ID na ito ay tugma sa iyong item_workout_history.xml
             tvTitle = itemView.findViewById(R.id.tvHistoryTitle);
-            tvDate = itemView.findViewById(R.id.tvHistoryDate);
+            tvDetails = itemView.findViewById(R.id.tvHistoryDate);
+            btnView = itemView.findViewById(R.id.btnViewHistory);
         }
     }
 }

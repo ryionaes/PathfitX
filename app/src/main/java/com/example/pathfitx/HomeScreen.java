@@ -1,11 +1,14 @@
 package com.example.pathfitx;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.MenuItem;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
@@ -22,6 +25,10 @@ public class HomeScreen extends AppCompatActivity implements OnDateSelectedListe
     private String selectedDate;
     private SharedViewModel sharedViewModel;
     private Date registrationDate;
+    public static final String PREFS_NAME = "WorkoutPrefs";
+    private static final String KEY_WORKOUT_IN_PROGRESS = "workout_in_progress";
+    private static final String KEY_SAVE_TYPE = "save_type";
+
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -45,7 +52,36 @@ public class HomeScreen extends AppCompatActivity implements OnDateSelectedListe
         if (savedInstanceState == null) {
             loadFragment(HomeFragment.newInstance(selectedDate));
         }
+        checkForUnfinishedWorkout();
     }
+
+    private void checkForUnfinishedWorkout() {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        if (prefs.getBoolean(KEY_WORKOUT_IN_PROGRESS, false)) {
+            String saveType = prefs.getString(KEY_SAVE_TYPE, "");
+            if ("unexpected".equals(saveType)) {
+                showResumeWorkoutDialog();
+            }
+        }
+    }
+
+    private void showResumeWorkoutDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Workout in Progress")
+                .setMessage("It looks like your last workout session was interrupted. Would you like to continue?")
+                .setPositiveButton("Continue", (dialog, which) -> {
+                    Intent intent = new Intent(this, LiveSessionActivity.class);
+                    startActivity(intent);
+                })
+                .setNegativeButton("Discard", (dialog, which) -> {
+                    SharedPreferences.Editor editor = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit();
+                    editor.clear();
+                    editor.apply();
+                })
+                .setCancelable(false)
+                .show();
+    }
+
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {

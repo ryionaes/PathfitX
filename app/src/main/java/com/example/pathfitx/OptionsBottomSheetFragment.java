@@ -83,12 +83,17 @@ public class OptionsBottomSheetFragment extends BottomSheetDialogFragment {
             dismiss();
         });
 
-        view.findViewById(R.id.btn_set_as_default).setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onSetAsDefault(selectedOption);
-            }
-            dismiss();
-        });
+        View setAsDefaultButton = view.findViewById(R.id.btn_set_as_default);
+        if ("Equipment".equals(title)) {
+            setAsDefaultButton.setVisibility(View.GONE);
+        } else {
+            setAsDefaultButton.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onSetAsDefault(selectedOption);
+                }
+                dismiss();
+            });
+        }
     }
 
     @Override
