@@ -62,6 +62,8 @@ public class GetGoals extends AppCompatActivity {
         if (username != null && !username.isEmpty()) {
             String greeting = "Hey, " + username + ". 👋 Let‘s start with your goals.";
             setUser.setText(greeting);
+        } else {
+            setUser.setText("Hey, User. 👋 Let‘s start with your goals.");
         }
 
         // Button Listeners

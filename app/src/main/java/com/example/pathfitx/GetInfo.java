@@ -7,6 +7,8 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -30,6 +32,7 @@ public class GetInfo extends AppCompatActivity {
     private static final String TAG = "GetInfoActivity";
     private EditText ageEditText;
     private Spinner locationSpinner;
+    private RadioGroup genderRadioGroup;
 
     // Firebase
     private FirebaseAuth mAuth;
@@ -48,6 +51,7 @@ public class GetInfo extends AppCompatActivity {
 
         ageEditText = findViewById(R.id.ageEditText);
         locationSpinner = findViewById(R.id.country_spinner);
+        genderRadioGroup = findViewById(R.id.radioGroupFM);
         ImageButton backBtn = findViewById(R.id.backButton);
         Button nextBtn = findViewById(R.id.nextButton);
 
@@ -61,6 +65,12 @@ public class GetInfo extends AppCompatActivity {
     private void saveInfoAndContinue() {
         String ageStr = ageEditText.getText().toString().trim();
         String location = locationSpinner.getSelectedItem().toString();
+
+        int selectedGenderId = genderRadioGroup.getCheckedRadioButtonId();
+        if (selectedGenderId == -1) {
+            Toast.makeText(this, "Please select your gender", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         if (ageStr.isEmpty()) {
             ageEditText.setError("Please enter your age");
@@ -85,9 +95,13 @@ public class GetInfo extends AppCompatActivity {
             return;
         }
 
+        RadioButton selectedRadioButton = findViewById(selectedGenderId);
+        String gender = selectedRadioButton.getText().toString();
+
         Map<String, Object> userInfo = new HashMap<>();
         userInfo.put("age", age);
         userInfo.put("location", location);
+        userInfo.put("gender", gender);
 
         db.collection("users").document(currentUser.getUid())
                 .update(userInfo)

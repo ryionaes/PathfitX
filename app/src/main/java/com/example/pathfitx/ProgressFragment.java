@@ -137,7 +137,12 @@ public class ProgressFragment extends Fragment {
         DatePickerDialog datePickerDialog = new DatePickerDialog(getContext(), (view, year1, month1, dayOfMonth) -> {
             Calendar selectedDate = Calendar.getInstance();
             selectedDate.set(year1, month1, dayOfMonth);
-            fetchHistoryForDate(selectedDate);
+
+            if (isSameDay(Calendar.getInstance(), selectedDate)) {
+                Toast.makeText(getContext(), "To view today's progress, head to the progress screen", Toast.LENGTH_SHORT).show();
+            } else {
+                fetchHistoryForDate(selectedDate);
+            }
         }, year, month, day);
 
         if (registrationDate != null) {

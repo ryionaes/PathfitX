@@ -36,8 +36,11 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.WriteBatch;
 
 import java.io.Serializable;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -70,6 +73,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
 
     private List<Exercise> exerciseList = new ArrayList<>();
     private LocalDate selectedDate;
+    private LocalDate registrationDate;
 
     private String globalDefaultTime = "45 min";
     private String globalDefaultEquipment = "With Equipment";
@@ -125,7 +129,6 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         tvYear.setText(String.valueOf(selectedDate.getYear()));
 
         setupViewModel();
-        setupCalendar();
         setupOptionPickers();
         setupWorkoutTypes();
         setupExercises();
@@ -144,6 +147,16 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         SharedPreferences prefs = requireActivity().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         globalDefaultTime = prefs.getString(KEY_DEFAULT_TIME, "45 min");
 
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            long creationTimestamp = user.getMetadata().getCreationTimestamp();
+            registrationDate = Instant.ofEpochMilli(creationTimestamp).atZone(ZoneId.systemDefault()).toLocalDate();
+        } else {
+            registrationDate = LocalDate.now().minusMonths(1); // Fallback
+        }
+
+        setupCalendar();
+
         sharedViewModel.getUserSnapshot().observe(getViewLifecycleOwner(), userSnapshot -> {
             if (userSnapshot != null && userSnapshot.exists()) {
                 if (userSnapshot.contains("defaultEquipment")) globalDefaultEquipment = userSnapshot.getString("defaultEquipment");
@@ -152,7 +165,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
                 tvUserName.setText(userSnapshot.getString("username") != null ? userSnapshot.getString("username") : "Fitness User");
                 String img = userSnapshot.getString("profileImageUri");
                 if (ivProfileIcon != null) {
-                    Glide.with(this).load(img != null && !img.isEmpty() ? Uri.parse(img) : R.drawable.ic_profile_default).circleCrop().into(ivProfileIcon);
+                    Glide.with(this).load(img != null && !img.isEmpty() ? Uri.parse(img) : R.drawable.pfp).circleCrop().into(ivProfileIcon);
                 }
 
                 userDefaultsLoaded = true;
@@ -433,8 +446,19 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
     private void setupCalendar() {
         rvCalendar.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
         List<LocalDate> dates = new ArrayList<>();
-        LocalDate start = LocalDate.now().minusMonths(1);
-        for (int i = 0; i < 90; i++) dates.add(start.plusDays(i));
+        LocalDate today = LocalDate.now();
+
+        if (registrationDate == null) {
+            registrationDate = today.minusMonths(1);
+        }
+
+        long daysBetween = ChronoUnit.DAYS.between(registrationDate, today);
+
+        LocalDate start = registrationDate;
+        for (int i = 0; i < daysBetween + 30; i++) { // Show 30 days past today
+            dates.add(start.plusDays(i));
+        }
+
         int pos = dates.indexOf(selectedDate);
         calendarAdapter = new CalendarAdapter(dates, pos, this);
         rvCalendar.setAdapter(calendarAdapter);
@@ -532,7 +556,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
 
             Toast.makeText(getContext(), "Default time updated for all workouts.", Toast.LENGTH_SHORT).show();
 
-        } 
+        }
     }
 
     private void updateWorkoutsToNewDefault(String oldDefault, String newDefault) {
