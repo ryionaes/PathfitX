@@ -21,6 +21,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -61,7 +63,7 @@ public class ProfileFragment extends Fragment {
     private static final String ARG_OPEN_NOTIFICATIONS = "open_notifications";
 
     // UI
-    private TextView tvUserName, tvEditProfile, tvWeight, tvHeight, tvAge, tvChangePassword, tvEditGoals, tvChangeAddress;
+    private TextView tvUserName, tvGender, tvEditProfile, tvWeight, tvHeight, tvAge, tvChangePassword, tvEditGoals, tvChangeAddress;
     private ImageView ivProfile, ivArrowAccount, ivArrowNotifications, ivArrowHelp, ivArrowAbout;
     private CardView btnCamera;
     private Button btnLogout;
@@ -155,10 +157,12 @@ public class ProfileFragment extends Fragment {
         String name = snapshot.getString("username");
         String email = snapshot.getString("email");
         String address = snapshot.getString("location");
+        String gender = snapshot.getString("gender");
         String profileImageUri = snapshot.getString("profileImageUri");
         List<String> goals = (List<String>) snapshot.get("goals");
 
         tvUserName.setText(name != null ? name : "Guest");
+        tvGender.setText(gender != null ? gender : "N/A");
 
         Object weightObj = snapshot.get("weight_kg");
         if (weightObj instanceof Number) {
@@ -227,6 +231,7 @@ public class ProfileFragment extends Fragment {
     private void updateUIForGuest() {
         if (!isAdded() || getContext() == null) return;
         tvUserName.setText("Guest");
+        tvGender.setText("N/A");
         tvWeight.setText("N/A");
         tvHeight.setText("N/A");
         tvAge.setText("N/A");
@@ -240,8 +245,16 @@ public class ProfileFragment extends Fragment {
     }
 
     private void loadProfileImage(String uriString) {
-        if (uriString != null && isAdded() && getContext() != null) {
-            Glide.with(getContext()).load(Uri.parse(uriString)).placeholder(android.R.drawable.sym_def_app_icon).error(android.R.drawable.sym_def_app_icon).into(ivProfile);
+        if (isAdded() && getContext() != null) {
+            if (uriString != null && !uriString.isEmpty()) {
+                Glide.with(getContext()).load(Uri.parse(uriString))
+                    .placeholder(R.drawable.pfp) // Use pfp as placeholder
+                    .error(R.drawable.pfp) // Use pfp on error
+                    .into(ivProfile);
+            } else {
+                // Load the default placeholder if URI is null or empty
+                ivProfile.setImageResource(R.drawable.pfp);
+            }
         }
     }
 
@@ -316,6 +329,15 @@ public class ProfileFragment extends Fragment {
         final EditText etWeight = dialogView.findViewById(R.id.etEditWeight);
         final EditText etHeight = dialogView.findViewById(R.id.etEditHeight);
         final EditText etAge = dialogView.findViewById(R.id.etEditAge);
+        final RadioGroup rgGender = dialogView.findViewById(R.id.rgGender);
+        final RadioButton rbMale = dialogView.findViewById(R.id.rbMale);
+        final RadioButton rbFemale = dialogView.findViewById(R.id.rbFemale);
+        final TextView tvRemoveProfilePicture = dialogView.findViewById(R.id.tvRemoveProfilePicture);
+
+        builder.setPositiveButton("Save", null); // Set to null, we'll override later
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+        AlertDialog dialog = builder.create();
 
         DocumentSnapshot snapshot = sharedViewModel.getUserSnapshot().getValue();
         if (snapshot != null) {
@@ -323,39 +345,95 @@ public class ProfileFragment extends Fragment {
             etWeight.setText(String.valueOf(snapshot.getDouble("weight_kg")));
             etHeight.setText(String.valueOf(snapshot.getDouble("height_cm")));
             etAge.setText(String.valueOf(snapshot.getLong("age").intValue()));
+
+            String gender = snapshot.getString("gender");
+            if (gender != null) {
+                if (gender.equalsIgnoreCase("Male")) {
+                    rbMale.setChecked(true);
+                } else if (gender.equalsIgnoreCase("Female")) {
+                    rbFemale.setChecked(true);
+                }
+            }
+
+            String profileImageUri = snapshot.getString("profileImageUri");
+            if (profileImageUri != null && !profileImageUri.isEmpty()) {
+                tvRemoveProfilePicture.setTextColor(ContextCompat.getColor(getContext(), R.color.prim_red));
+                tvRemoveProfilePicture.setOnClickListener(v -> {
+                    removeProfilePicture();
+                    dialog.dismiss();
+                });
+            } else {
+                tvRemoveProfilePicture.setTextColor(ContextCompat.getColor(getContext(), android.R.color.darker_gray));
+                tvRemoveProfilePicture.setClickable(false);
+            }
         }
 
-        builder.setPositiveButton("Save", (dialog, which) -> {
-            String username = etUsername.getText().toString().trim();
-            String weightStr = etWeight.getText().toString().trim();
-            String heightStr = etHeight.getText().toString().trim();
-            String ageStr = etAge.getText().toString().trim();
+        dialog.setOnShowListener(d -> {
+            Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            positiveButton.setOnClickListener(v -> {
+                String username = etUsername.getText().toString().trim();
+                String weightStr = etWeight.getText().toString().trim();
+                String heightStr = etHeight.getText().toString().trim();
+                String ageStr = etAge.getText().toString().trim();
 
-            if (TextUtils.isEmpty(username) || TextUtils.isEmpty(weightStr) || TextUtils.isEmpty(heightStr) || TextUtils.isEmpty(ageStr)) {
-                Toast.makeText(getContext(), "All fields are required.", Toast.LENGTH_SHORT).show();
-                return;
-            }
+                if (TextUtils.isEmpty(username) || TextUtils.isEmpty(weightStr) || TextUtils.isEmpty(heightStr) || TextUtils.isEmpty(ageStr)) {
+                    Toast.makeText(getContext(), "All fields are required.", Toast.LENGTH_SHORT).show();
+                    return; // Keep dialog open
+                }
 
-            try {
-                double weight = Double.parseDouble(weightStr);
-                double height = Double.parseDouble(heightStr);
-                int age = Integer.parseInt(ageStr);
+                try {
+                    double weight = Double.parseDouble(weightStr);
+                    double height = Double.parseDouble(heightStr);
+                    int age = Integer.parseInt(ageStr);
 
-                Map<String, Object> updates = new HashMap<>();
-                updates.put("username", username);
-                updates.put("weight_kg", weight);
-                updates.put("height_cm", height);
-                updates.put("age", age);
+                    String gender = "";
+                    int selectedGenderId = rgGender.getCheckedRadioButtonId();
+                    if (selectedGenderId == R.id.rbMale) {
+                        gender = "Male";
+                    } else if (selectedGenderId == R.id.rbFemale) {
+                        gender = "Female";
+                    }
 
-                updateUserProfile(updates);
+                    Map<String, Object> updates = new HashMap<>();
+                    updates.put("username", username);
+                    updates.put("weight_kg", weight);
+                    updates.put("height_cm", height);
+                    updates.put("age", age);
+                    updates.put("gender", gender);
 
-            } catch (NumberFormatException e) {
-                Toast.makeText(getContext(), "Please enter valid numbers for weight, height, and age.", Toast.LENGTH_SHORT).show();
-            }
+                    updateUserProfile(updates);
+                    dialog.dismiss(); // Dismiss on success
+
+                } catch (NumberFormatException e) {
+                    Toast.makeText(getContext(), "Please enter valid numbers for weight, height, and age.", Toast.LENGTH_SHORT).show();
+                     // Keep dialog open
+                }
+            });
         });
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
 
-        builder.create().show();
+        dialog.show();
+    }
+
+    private void removeProfilePicture() {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            Toast.makeText(getContext(), "You must be logged in.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        FirebaseFirestore.getInstance().collection("users").document(currentUser.getUid())
+            .update("profileImageUri", null) // Set to null to remove
+            .addOnSuccessListener(aVoid -> {
+                if (isAdded() && getContext() != null) {
+                    Toast.makeText(getContext(), "Profile picture removed.", Toast.LENGTH_SHORT).show();
+                    ivProfile.setImageResource(R.drawable.pfp); // Manually reset the image
+                }
+            })
+            .addOnFailureListener(e -> {
+                if (isAdded() && getContext() != null) {
+                    Toast.makeText(getContext(), "Failed to remove profile picture.", Toast.LENGTH_SHORT).show();
+                }
+            });
     }
 
     private void showChangeAddressDialog() {
@@ -406,6 +484,7 @@ public class ProfileFragment extends Fragment {
 
     private void initViews(View view) {
         tvUserName = view.findViewById(R.id.tvUserName);
+        tvGender = view.findViewById(R.id.tvGender);
         tvEditProfile = view.findViewById(R.id.tvEditProfile);
         ivProfile = view.findViewById(R.id.ivProfile);
         btnCamera = view.findViewById(R.id.btnCamera);

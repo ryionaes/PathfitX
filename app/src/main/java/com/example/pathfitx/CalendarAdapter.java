@@ -58,9 +58,9 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.ViewHo
             holder.tvMonthName.setVisibility(View.VISIBLE);
         } else {
             holder.container.setBackground(null);
+            holder.tvMonthName.setVisibility(View.GONE);
             holder.tvDayName.setTextColor(Color.parseColor("#757575"));
             holder.tvDayNumber.setTextColor(Color.BLACK);
-            holder.tvMonthName.setVisibility(View.GONE);
         }
     }
 

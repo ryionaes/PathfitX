@@ -13,13 +13,13 @@
         android:layout_marginStart="16dp"
         android:layout_marginBottom="20dp"
         android:background="@drawable/bg_backbutton"
+        android:contentDescription="@string/back_button_desc"
         android:scaleType="centerInside"
         android:src="@drawable/ic_back"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:tint="@color/prim_red"
-        android:contentDescription="@string/back_button_desc"
-        tools:ignore="ImageContrastCheck"/>
+        tools:ignore="ImageContrastCheck" />
 
     <Button
         android:id="@+id/nextButton"
@@ -38,18 +38,88 @@
         app:layout_constraintStart_toEndOf="@+id/backButton"
         app:layout_constraintTop_toTopOf="@+id/backButton" />
 
+    <TextView
+        android:id="@+id/textView7"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="57dp"
+        android:fontFamily="@font/roboto_medium"
+        android:text=" About "
+        android:textColor="@color/black"
+        android:textSize="14sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textView8"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/roboto_medium"
+        android:text="You"
+        android:textColor="@color/prim_red"
+        android:textSize="14sp"
+        app:layout_constraintStart_toEndOf="@+id/textView7"
+        app:layout_constraintTop_toTopOf="@+id/textView7" />
+
+    <ImageView
+        android:id="@+id/imageView3"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="-20dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="24dp"
+        app:srcCompat="@drawable/pb_getinfo"
+        app:layout_constraintBottom_toTopOf="@+id/textView11"
+        app:layout_constraintDimensionRatio="379:129"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView8" />
+
+    <TextView
+        android:id="@+id/textView11"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="-40dp"
+        android:layout_marginEnd="16dp"
+        android:fontFamily="@font/roboto_semibold"
+        android:text="Tell us a little bit about yourself. 🤔"
+        android:textColor="@color/black"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageView3" />
+
+    <TextView
+        android:id="@+id/textView12"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="16dp"
+        android:fontFamily="@font/roboto_medium"
+        android:text="Please select your sex at birth:"
+        android:textColor="@color/gray_400"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView11" />
+
     <RadioGroup
         android:id="@+id/radioGroupFM"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="226dp"
+        android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         android:orientation="horizontal"
         android:weightSum="2"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@+id/textView12">
 
         <RadioButton
             android:id="@+id/radioButtonM"
@@ -62,11 +132,9 @@
             android:checked="false"
             android:elevation="6dp"
             android:fontFamily="@font/roboto_black"
-
             android:gravity="center"
             android:outlineProvider="background"
             android:text="@string/Male"
-
             android:textAlignment="center"
             android:textColor="@color/radio_text_selector_getinfo" />
 
@@ -74,20 +142,19 @@
             android:id="@+id/radioButtonF"
             android:layout_width="0dp"
             android:layout_height="70dp"
-            android:layout_weight="1"
             android:layout_marginStart="8dp"
-            android:text="@string/Female"
-            android:gravity="center"
-            android:button="@null"
-            android:textAlignment="center"
-            android:fontFamily="@font/roboto_black"
-
+            android:layout_weight="1"
             android:background="@drawable/radio_selector_bg_getinfo"
-            android:textColor="@color/radio_text_selector_getinfo"
-
+            android:button="@null"
             android:elevation="6dp"
-            android:outlineProvider="background" />
+            android:fontFamily="@font/roboto_black"
+            android:gravity="center"
+            android:outlineProvider="background"
+            android:text="@string/Female"
+            android:textAlignment="center"
+            android:textColor="@color/radio_text_selector_getinfo" />
     </RadioGroup>
+
     <TextView
         android:id="@+id/textViewAgeLabel"
         android:layout_width="wrap_content"
@@ -95,9 +162,9 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="24dp"
         android:text="How old are you?"
+        android:textColor="@color/gray_500"
         android:textSize="12sp"
         android:textStyle="bold"
-        android:textColor="@color/gray_500"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/radioGroupFM" />
 
@@ -106,8 +173,8 @@
         android:layout_width="0dp"
         android:layout_height="50dp"
         android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
         android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
         android:background="@drawable/bg_edittext_selector"
         android:ems="10"
         android:fontFamily="@font/roboto_regular"
@@ -117,7 +184,7 @@
         android:maxLength="3"
         android:textColor="@android:color/black"
         android:textColorHint="@android:color/secondary_text_light"
-        android:textSize="13dp"
+        android:textSize="13sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textViewAgeLabel"
@@ -130,9 +197,9 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="24dp"
         android:text="Where do you live?"
+        android:textColor="@color/gray_500"
         android:textSize="12sp"
         android:textStyle="bold"
-        android:textColor="@color/gray_500"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/ageEditText" />
 
@@ -140,75 +207,13 @@
         android:id="@+id/country_spinner"
         android:layout_width="0dp"
         android:layout_height="50dp"
-        android:layout_marginTop="8dp"
         android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
         android:background="@drawable/bg_edittext_selector"
         android:minHeight="48dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textViewLocationLabel" />
-
-    <TextView
-        android:id="@+id/textView7"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text=" About "
-        android:layout_marginTop="57dp"
-        android:layout_marginStart="16dp"
-        android:fontFamily="@font/roboto_medium"
-        android:textSize="14dp"
-        android:textColor="@color/black"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/textView8"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="57dp"
-        android:text="You"
-        android:fontFamily="@font/roboto_medium"
-        android:textSize="14dp"
-        android:textColor="@color/prim_red"
-        app:layout_constraintStart_toEndOf="@+id/textView7"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <ImageView
-        android:id="@+id/imageView3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="47dp"
-        android:layout_marginStart="16dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView7"
-        app:srcCompat="@drawable/pb_getinfo" />
-
-    <TextView
-        android:id="@+id/textView11"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="23dp"
-        android:fontFamily="@font/roboto_semibold"
-        android:text="Tell us a little bit about yourself. 🤔"
-        android:textColor="@color/black"
-        android:textSize="20sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView3" />
-
-    <TextView
-        android:id="@+id/textView12"
-        android:layout_width="324dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="10dp"
-        android:fontFamily="@font/roboto_medium"
-        android:text="Please select which sex we should use to calculate
-your calorie needs:"
-        android:textColor="@color/gray_400"
-        android:textSize="12sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView11" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

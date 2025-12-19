@@ -5,19 +5,19 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".GetGoals"
-    android:background="@color/white">
+    android:background="@color/white"
+    tools:context=".GetGoals">
 
     <TextView
         android:id="@+id/textView1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="27dp"
+        android:layout_marginTop="57dp"
         android:fontFamily="@font/roboto_medium"
         android:text="Set up your "
         android:textColor="@color/black"
-        android:textSize="14dp"
+        android:textSize="14sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -25,22 +25,26 @@
         android:id="@+id/textView6"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="27dp"
         android:fontFamily="@font/roboto_medium"
         android:text="Goals"
         android:textColor="@color/prim_red"
         android:textSize="14sp"
         app:layout_constraintStart_toEndOf="@+id/textView1"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@+id/textView1" />
 
     <ImageView
         android:id="@+id/imageView2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="-20dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="24dp"
+        app:layout_constraintBottom_toTopOf="@+id/setUser"
+        app:layout_constraintDimensionRatio="379:129"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView1"
+        app:layout_constraintTop_toBottomOf="@+id/textView6"
         app:srcCompat="@drawable/pb_getgoals" />
 
     <TextView
@@ -48,12 +52,13 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="23dp"
+        android:layout_marginTop="-40dp"
         android:layout_marginEnd="16dp"
         android:fontFamily="@font/roboto_semibold"
         android:text="Hey, User. 👋 Let ‘s start with your goals."
         android:textColor="@color/black"
         android:textSize="20sp"
+        android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageView2" />
@@ -63,7 +68,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="4dp"
         android:fontFamily="@font/roboto_medium"
         android:text="Select up to 3 that are important to you."
         android:textColor="@color/gray_400"
@@ -376,7 +381,7 @@
         android:layout_width="46dp"
         android:layout_height="46dp"
         android:layout_marginStart="16dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="20dp"
         android:background="@drawable/bg_backbutton"
         android:scaleType="centerInside"
         android:src="@drawable/ic_back"
@@ -391,7 +396,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginEnd="16dp"
         android:backgroundTint="@color/prim_red"
-        android:fontFamily="@font/roboto_semibold"
+        android.fontFamily="@font/roboto_semibold"
         android:text="Next"
         android:textColor="#FFFFFF"
         android:textSize="16sp"
@@ -399,7 +404,7 @@
         app:layout_constraintBottom_toBottomOf="@+id/backButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/backButton"
-        app:layout_constraintTop_toTopOf="@id/backButton"
+        app:layout_constraintTop_toTopOf="@+id/backButton"
         app:rippleColor="#7d3d37" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

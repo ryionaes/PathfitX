@@ -1,7 +1,6 @@
 package com.example.pathfitx;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
@@ -14,21 +13,9 @@ import android.widget.LinearLayout;
 
 public class WelcomePage extends AppCompatActivity {
 
-    private static final String PREFS_NAME = "MyPrefsFile";
-    private static final String FIRST_TIME_KEY = "isFirstTime";
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-        if (!settings.getBoolean(FIRST_TIME_KEY, true)) {
-            Intent intent = new Intent(WelcomePage.this, HomeScreen.class);
-            startActivity(intent);
-            finish();
-            return;
-        }
-
         setContentView(R.layout.activity_welcome_page);
 
         ViewPager2 viewPager = findViewById(R.id.onboarding_view_pager);
@@ -46,10 +33,6 @@ public class WelcomePage extends AppCompatActivity {
         setTabMargin(tabLayout, 12);
 
         continueButton.setOnClickListener(v -> {
-            SharedPreferences.Editor editor = settings.edit();
-            editor.putBoolean(FIRST_TIME_KEY, false);
-            editor.apply();
-
             Intent intent = new Intent(WelcomePage.this, HomeScreen.class);
             startActivity(intent);
             finish();
