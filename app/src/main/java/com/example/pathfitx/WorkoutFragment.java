@@ -5,10 +5,12 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -186,7 +188,7 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
         chipGroupFilters.removeAllViews();
         currentSubFilter = null;
         if (filters == null || filters.isEmpty()) {
-            // Don't filter here, let the calling method do it.
+            updateChipGroupAlignment();
             return;
         }
 
@@ -203,6 +205,8 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
             chip.setText(toTitleCase(filterName));
             chipGroupFilters.addView(chip);
         }
+
+        updateChipGroupAlignment();
     }
 
     private String toTitleCase(String text) {
@@ -210,7 +214,6 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
             return "";
         }
 
-        // Split by underscores (common in DB/Enum names) or spaces
         String[] words = text.split("[_\\s]+");
         StringBuilder titleCase = new StringBuilder();
 
@@ -249,7 +252,6 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
                     if (currentSubFilter == null) {
                         matchesFilter = true; // No goal selected, show all
                     } else if (exercise.getMuscleTargets() != null) {
-                        // Check if the list of muscle targets contains the selected goal.
                         for (String target : exercise.getMuscleTargets()) {
                             if (target.equalsIgnoreCase(currentSubFilter)) {
                                 matchesFilter = true;
@@ -333,5 +335,25 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
     public void onExerciseClick(Exercise exercise) {
         ExerciseDetailDialog dialog = new ExerciseDetailDialog(exercise);
         dialog.show(getChildFragmentManager(), "ExerciseDetailDialog");
+    }
+
+    private void updateChipGroupAlignment() {
+        HorizontalScrollView scrollView = getView().findViewById(R.id.scroll_chips_secondary);
+        ChipGroup chipGroup = getView().findViewById(R.id.chipGroupFilters);
+
+        chipGroup.post(() -> {
+            int chipGroupWidth = chipGroup.getWidth();
+            int scrollViewWidth = scrollView.getWidth();
+
+            FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) chipGroup.getLayoutParams();
+
+            if (chipGroupWidth < scrollViewWidth) {
+                params.gravity = Gravity.CENTER_HORIZONTAL;
+            } else {
+                params.gravity = Gravity.START;
+            }
+
+            chipGroup.setLayoutParams(params);
+        });
     }
 }
