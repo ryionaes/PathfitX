@@ -1,6 +1,7 @@
 package com.example.pathfitx;
 
-import androidx.core.content.ContextCompat;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -12,14 +13,17 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.view.ContextThemeWrapper;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.firebase.auth.FirebaseAuth;
@@ -28,6 +32,7 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -54,6 +59,7 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
     private Chip chipAll, chipMuscle, chipGoals;
     private HorizontalScrollView scrollChipsSecondary;
     private ChipGroup chipGroupFilters;
+    private LinearLayout chipGroupPrimary;
 
     private String currentMainFilter = "All";
     private String currentSubFilter = null;
@@ -105,6 +111,7 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
         chipGoals = view.findViewById(R.id.chip_goals);
         scrollChipsSecondary = view.findViewById(R.id.scroll_chips_secondary);
         chipGroupFilters = view.findViewById(R.id.chipGroupFilters);
+        chipGroupPrimary = view.findViewById(R.id.chipGroupCategory);
     }
 
     private void setupViewModel() {
@@ -116,7 +123,7 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
                     userGoals = loadedGoals;
                     if ("By Goals".equals(currentMainFilter)) {
                         populateSecondaryFilters(userGoals);
-                        filterExercises(); // Re-filter now that goals are loaded
+                        filterExercises();
                     }
                 }
             }
@@ -213,10 +220,8 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
         if (text == null || text.isEmpty()) {
             return "";
         }
-
         String[] words = text.split("[_\\s]+");
         StringBuilder titleCase = new StringBuilder();
-
         for (String word : words) {
             if (!word.isEmpty()) {
                 titleCase.append(Character.toUpperCase(word.charAt(0)))
@@ -224,7 +229,6 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
                         .append(" ");
             }
         }
-
         return titleCase.toString().trim();
     }
 
@@ -242,7 +246,7 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
                     break;
                 case "By Muscle":
                     if (currentSubFilter == null) {
-                        matchesFilter = true; // No sub-filter selected, show all muscles
+                        matchesFilter = true;
                     } else if (exercise.getBodyPart() != null) {
                         String muscleAsEnum = currentSubFilter.trim().replace(" ", "_").toUpperCase();
                         matchesFilter = exercise.getBodyPart().name().equals(muscleAsEnum);
@@ -250,7 +254,7 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
                     break;
                 case "By Goals":
                     if (currentSubFilter == null) {
-                        matchesFilter = true; // No goal selected, show all
+                        matchesFilter = true;
                     } else if (exercise.getMuscleTargets() != null) {
                         for (String target : exercise.getMuscleTargets()) {
                             if (target.equalsIgnoreCase(currentSubFilter)) {
@@ -269,7 +273,6 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
         adapter.updateList(filteredList);
     }
 
-
     @Override
     public void onAddExercise(Exercise exercise) {
         addExerciseToWorkout(exercise, success -> {});
@@ -280,42 +283,82 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
         addExerciseToWorkout(exercise, callback);
     }
 
+    private Map<String, Object> exerciseToMap(Exercise exercise) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("title", exercise.getTitle());
+        map.put("sets", exercise.getSets());
+        map.put("reps", exercise.getReps());
+        map.put("kg", exercise.getKg());
+        map.put("category", exercise.getCategory() != null ? exercise.getCategory().name() : null);
+        map.put("bodyPart", exercise.getBodyPart() != null ? exercise.getBodyPart().name() : null);
+        map.put("muscleTargets", exercise.getMuscleTargets());
+        map.put("imageUrl", exercise.getImageUrl());
+        map.put("imageResId", exercise.getImageResId());
+        map.put("met", exercise.getMet());
+        map.put("addedToWorkout", exercise.isAddedToWorkout());
+        return map;
+    }
+
     private void addExerciseToWorkout(final Exercise exercise, final WorkoutAdapter.AddExerciseCallback callback) {
         if (userId == null || selectedDate == null) {
+            Toast.makeText(getContext(), "Error: Cannot add exercise.", Toast.LENGTH_SHORT).show();
             callback.onResult(false);
             return;
         }
 
-        final DocumentReference workoutDocRef = db.collection("users").document(userId).collection("workouts").document(selectedDate);
-        workoutDocRef.get().addOnCompleteListener(task -> {
-            if (!isAdded()) return;
+        if (exercise.getSets() == 0) exercise.setSets(3);
+        if (exercise.getReps() == 0) exercise.setReps(10);
 
-            if (task.isSuccessful()) {
-                DocumentSnapshot document = task.getResult();
-                if (document != null && document.exists()) {
-                    if (Boolean.TRUE.equals(document.getBoolean("isRestDay"))) {
-                        Toast.makeText(getContext(), "It's a Rest Day.", Toast.LENGTH_SHORT).show();
-                        callback.onResult(false);
-                        return;
-                    }
-                    workoutDocRef.update("exercises", FieldValue.arrayUnion(exercise))
-                        .addOnSuccessListener(aVoid -> handleSuccess(exercise.getTitle(), callback))
-                        .addOnFailureListener(e -> handleFailure(e, callback));
-                } else {
-                     // No workout for this day, create one
-                    Map<String, Object> newWorkout = new HashMap<>();
-                    newWorkout.put("workoutName", "Custom Plan");
-                    newWorkout.put("isRestDay", false);
-                    newWorkout.put("time", "45 min"); 
-                    newWorkout.put("equipment", "With Equipment");
-                    newWorkout.put("exercises", Collections.singletonList(exercise));
-                    
-                    workoutDocRef.set(newWorkout)
-                        .addOnSuccessListener(aVoid -> handleSuccess(exercise.getTitle(), callback))
-                        .addOnFailureListener(e -> handleFailure(e, callback));
-                }
-            } else {
+        final DocumentReference workoutDocRef = db.collection("users").document(userId).collection("workouts").document(selectedDate);
+
+        workoutDocRef.get().addOnCompleteListener(task -> {
+            if (!isAdded() || !task.isSuccessful()) {
                 handleFailure(task.getException(), callback);
+                return;
+            }
+
+            DocumentSnapshot document = task.getResult();
+            Map<String, Object> exerciseMap = exerciseToMap(exercise);
+
+            if (document != null && document.exists()) {
+                if (Boolean.TRUE.equals(document.getBoolean("isRestDay"))) {
+                    Toast.makeText(getContext(), "Cannot add exercises on a rest day.", Toast.LENGTH_SHORT).show();
+                    callback.onResult(false);
+                    return;
+                }
+
+                List<Map<String, Object>> existingExercises = (List<Map<String, Object>>) document.get("exercises");
+                if (existingExercises != null) {
+                    for (Map<String, Object> existingMap : existingExercises) {
+                        if (exercise.getTitle().equals(existingMap.get("title"))) {
+                            Toast.makeText(getContext(), exercise.getTitle() + " already exists.", Toast.LENGTH_SHORT).show();
+                            callback.onResult(false);
+                            return;
+                        }
+                    }
+                }
+
+                Map<String, Object> updates = new HashMap<>();
+                updates.put("exercises", FieldValue.arrayUnion(exerciseMap));
+                updates.put("workoutName", "Custom Plan");
+                workoutDocRef.update(updates)
+                        .addOnSuccessListener(aVoid -> handleSuccess(exercise.getTitle(), callback))
+                        .addOnFailureListener(e -> handleFailure(e, callback));
+
+            } else {
+                SharedPreferences prefs = requireActivity().getSharedPreferences(HomeFragment.PREFS_NAME, Context.MODE_PRIVATE);
+                String defaultTime = prefs.getString(HomeFragment.KEY_DEFAULT_TIME, "45 min");
+
+                Map<String, Object> newWorkout = new HashMap<>();
+                newWorkout.put("workoutName", "Custom Plan");
+                newWorkout.put("isRestDay", false);
+                newWorkout.put("time", defaultTime);
+                newWorkout.put("equipment", "With Equipment");
+                newWorkout.put("exercises", Collections.singletonList(exerciseMap));
+
+                workoutDocRef.set(newWorkout)
+                        .addOnSuccessListener(aVoid -> handleSuccess(exercise.getTitle(), callback))
+                        .addOnFailureListener(e -> handleFailure(e, callback));
             }
         });
     }
@@ -326,8 +369,8 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
     }
 
     private void handleFailure(Exception e, WorkoutAdapter.AddExerciseCallback callback) {
-        Log.e(TAG, "Error: ", e);
-        if (getContext() != null) Toast.makeText(getContext(), "Failed to add.", Toast.LENGTH_SHORT).show();
+        Log.e(TAG, "Error modifying workout", e);
+        if (getContext() != null) Toast.makeText(getContext(), "Failed to modify workout.", Toast.LENGTH_SHORT).show();
         callback.onResult(false);
     }
 
@@ -344,15 +387,12 @@ public class WorkoutFragment extends Fragment implements WorkoutAdapter.OnExerci
         chipGroup.post(() -> {
             int chipGroupWidth = chipGroup.getWidth();
             int scrollViewWidth = scrollView.getWidth();
-
             FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) chipGroup.getLayoutParams();
-
             if (chipGroupWidth < scrollViewWidth) {
                 params.gravity = Gravity.CENTER_HORIZONTAL;
             } else {
                 params.gravity = Gravity.START;
             }
-
             chipGroup.setLayoutParams(params);
         });
     }

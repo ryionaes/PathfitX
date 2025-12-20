@@ -1,6 +1,7 @@
 package com.example.pathfitx;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.ArrayAdapter;
@@ -30,6 +31,9 @@ import java.util.Map;
 public class GetInfo extends AppCompatActivity {
 
     private static final String TAG = "GetInfoActivity";
+    private static final String PREFS_NAME = "UserPrefs";
+    private static final String REG_STEP_KEY = "REGISTRATION_STEP";
+
     private EditText ageEditText;
     private Spinner locationSpinner;
     private RadioGroup genderRadioGroup;
@@ -107,7 +111,13 @@ public class GetInfo extends AppCompatActivity {
                 .update(userInfo)
                 .addOnSuccessListener(aVoid -> {
                     Log.d(TAG, "User info successfully saved!");
-                    Intent intent = new Intent(GetInfo.this, GetHeight.class);
+
+                    SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putString(REG_STEP_KEY, "STEP_INFO");
+                    editor.apply();
+
+                    Intent intent = new Intent(GetInfo.this, GetHeight.class); // Correct: Goes to GetHeight
                     startActivity(intent);
                 })
                 .addOnFailureListener(e -> {

@@ -52,11 +52,6 @@ public class ProgressFragment extends Fragment {
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_progress, container, false);
     }
@@ -68,7 +63,11 @@ public class ProgressFragment extends Fragment {
         setupRecyclerView();
 
         sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
+
+        // Observe history data from ViewModel
         sharedViewModel.getHistorySnapshot().observe(getViewLifecycleOwner(), this::updateTodayHistoryUI);
+
+        // Observe registration date for date picker constraints
         sharedViewModel.getRegistrationDate().observe(getViewLifecycleOwner(), date -> {
             this.registrationDate = date;
         });
@@ -110,7 +109,6 @@ public class ProgressFragment extends Fragment {
 
                     if (isSameDay(today, itemDate)) {
                         historyList.add(item);
-
                         totalVol += item.getTotalVolume();
                         totalWorkouts++;
                         totalCalories += item.getCaloriesBurned();
@@ -121,7 +119,6 @@ public class ProgressFragment extends Fragment {
             }
 
             adapter.notifyDataSetChanged();
-
             tvVolumeValue.setText(String.format("%,d", totalVol));
             valWorkouts.setText(String.valueOf(totalWorkouts));
             valCalories.setText(String.format(Locale.getDefault(), "%.1f", totalCalories));
@@ -139,7 +136,7 @@ public class ProgressFragment extends Fragment {
             selectedDate.set(year1, month1, dayOfMonth);
 
             if (isSameDay(Calendar.getInstance(), selectedDate)) {
-                Toast.makeText(getContext(), "To view today's progress, head to the progress screen", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Showing today's progress", Toast.LENGTH_SHORT).show();
             } else {
                 fetchHistoryForDate(selectedDate);
             }
@@ -149,7 +146,6 @@ public class ProgressFragment extends Fragment {
             datePickerDialog.getDatePicker().setMinDate(registrationDate.getTime());
         }
         datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis());
-
         datePickerDialog.show();
     }
 
@@ -174,8 +170,6 @@ public class ProgressFragment extends Fragment {
                             totalWorkouts++;
                             totalCalories += item.getCaloriesBurned();
                         }
-                    } else {
-                        Log.w(TAG, "WorkoutHistory item has null timestamp: " + document.getId());
                     }
                 }
                 showDailySummaryDialog(dailyHistoryList, totalVol, totalWorkouts, totalCalories);
@@ -239,11 +233,8 @@ public class ProgressFragment extends Fragment {
         view.findViewById(R.id.btnClose).setOnClickListener(v -> dialog.dismiss());
     }
 
-
     private boolean isSameDay(Calendar cal1, Calendar cal2) {
-        if (cal1 == null || cal2 == null) {
-            return false;
-        }
+        if (cal1 == null || cal2 == null) return false;
         return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
                 cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR);
     }
@@ -261,7 +252,6 @@ public class ProgressFragment extends Fragment {
         tvWorkoutTitle.setText(history.getWorkoutName());
         etWorkoutTitle.setText(history.getWorkoutName());
 
-        // --- BAGONG LOGIC DITO ---
         Calendar workoutDate = Calendar.getInstance();
         workoutDate.setTime(history.getTimestamp());
         Calendar today = Calendar.getInstance();
@@ -269,11 +259,10 @@ public class ProgressFragment extends Fragment {
         boolean isToday = isSameDay(today, workoutDate);
 
         if (isToday) {
-            ivEditIcon.setVisibility(View.VISIBLE); // Pwedeng i-edit kung ngayong araw lang
+            ivEditIcon.setVisibility(View.VISIBLE);
         } else {
-            ivEditIcon.setVisibility(View.GONE);    // Itago ang edit icon kung nakalipas na ang araw
+            ivEditIcon.setVisibility(View.GONE);
         }
-        // -------------------------
 
         tvWorkoutTitle.setVisibility(View.VISIBLE);
         etWorkoutTitle.setVisibility(View.GONE);
@@ -284,7 +273,6 @@ public class ProgressFragment extends Fragment {
             etWorkoutTitle.requestFocus();
         });
 
-        // Ang rest ng code para sa TextViews (Duration, Volume, etc.) ay mananatiling pareho...
         ((TextView) view.findViewById(R.id.tvDurationValue)).setText((history.getDurationSeconds() / 60) + " min");
         ((TextView) view.findViewById(R.id.tvVolumeValue)).setText(history.getTotalVolume() + " kg");
         ((TextView) view.findViewById(R.id.tvExercisesCompletedValue)).setText(String.valueOf(history.getExercisesCount()));
@@ -298,7 +286,6 @@ public class ProgressFragment extends Fragment {
 
         View.OnClickListener closeAction = v -> {
             String newName = etWorkoutTitle.getText().toString().trim();
-            // Siguraduhin din na hindi mag-uupdate kung hindi naman "isToday"
             if (isToday && !newName.isEmpty() && !newName.equals(history.getWorkoutName())) {
                 updateWorkoutName(history, newName);
             }
@@ -327,7 +314,6 @@ public class ProgressFragment extends Fragment {
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(getContext(), "Failed to update name.", Toast.LENGTH_SHORT).show();
-                    Log.e(TAG, "Error updating workout name", e);
                 });
     }
 }

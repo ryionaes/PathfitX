@@ -19,6 +19,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.constraintlayout.widget.Group;
+import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -49,6 +50,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClickListener, EditExerciseDialog.DialogListener, CalendarAdapter.OnDateClickListener, OptionsBottomSheetFragment.OnOptionSelectedListener, SwapWorkoutBottomSheetFragment.OnOptionSelectedListener {
@@ -60,7 +62,6 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
     public static final String KEY_WORKOUT_IN_PROGRESS = "workout_in_progress";
     public static final String KEY_SAVE_TYPE = "save_type";
 
-
     private RecyclerView rvCalendar, rvExercises;
     private CalendarAdapter calendarAdapter;
     private ExerciseAdapter exerciseAdapter;
@@ -70,8 +71,9 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
     private MaterialButton btnSwap, btnAddExercise, btnStartWorkout;
     private Group workoutDetailsGroup;
     private View restDayCard;
+    private NestedScrollView mainScrollView;
 
-    private List<Exercise> exerciseList = new ArrayList<>();
+    private final List<Exercise> exerciseList = new ArrayList<>();
     private LocalDate selectedDate;
     private LocalDate registrationDate;
 
@@ -106,7 +108,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         if (context instanceof OnDateSelectedListener) {
             mListener = (OnDateSelectedListener) context;
         } else {
-            throw new RuntimeException(context.toString() + " must implement OnDateSelectedListener");
+            throw new RuntimeException(context + " must implement OnDateSelectedListener");
         }
     }
 
@@ -143,16 +145,15 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
 
     private void setupViewModel() {
         sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
-
         SharedPreferences prefs = requireActivity().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         globalDefaultTime = prefs.getString(KEY_DEFAULT_TIME, "45 min");
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null) {
+        if (user != null && user.getMetadata() != null) {
             long creationTimestamp = user.getMetadata().getCreationTimestamp();
             registrationDate = Instant.ofEpochMilli(creationTimestamp).atZone(ZoneId.systemDefault()).toLocalDate();
         } else {
-            registrationDate = LocalDate.now().minusMonths(1); // Fallback
+            registrationDate = LocalDate.now().minusMonths(1);
         }
 
         setupCalendar();
@@ -160,33 +161,31 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         sharedViewModel.getUserSnapshot().observe(getViewLifecycleOwner(), userSnapshot -> {
             if (userSnapshot != null && userSnapshot.exists()) {
                 if (userSnapshot.contains("defaultEquipment")) globalDefaultEquipment = userSnapshot.getString("defaultEquipment");
-                if (userSnapshot.contains("weight_kg")) userWeight = userSnapshot.getDouble("weight_kg");
-
+                if (userSnapshot.contains("weight_kg")) {
+                    Double weight = userSnapshot.getDouble("weight_kg");
+                    if (weight != null) userWeight = weight;
+                }
                 tvUserName.setText(userSnapshot.getString("username") != null ? userSnapshot.getString("username") : "Fitness User");
                 String img = userSnapshot.getString("profileImageUri");
                 if (ivProfileIcon != null) {
                     Glide.with(this).load(img != null && !img.isEmpty() ? Uri.parse(img) : R.drawable.pfp).circleCrop().into(ivProfileIcon);
                 }
-
                 userDefaultsLoaded = true;
                 updateWorkoutUI(sharedViewModel.getWorkoutSnapshot().getValue());
             }
         });
 
         sharedViewModel.getWorkoutSnapshot().observe(getViewLifecycleOwner(), snapshot -> {
-            if (userDefaultsLoaded) {
-                updateWorkoutUI(snapshot);
-            }
+            if (userDefaultsLoaded) updateWorkoutUI(snapshot);
         });
     }
 
     private void updateWorkoutUI(DocumentSnapshot snapshot) {
         if (!isAdded()) return;
-
         exerciseList.clear();
         if (snapshot != null && snapshot.exists()) {
-            isRestDay = snapshot.getBoolean("isRestDay") != null && snapshot.getBoolean("isRestDay");
-
+            Boolean restDay = snapshot.getBoolean("isRestDay");
+            isRestDay = restDay != null && restDay;
             selectedTime = snapshot.getString("time") != null ? snapshot.getString("time") : globalDefaultTime;
             selectedEquipment = snapshot.getString("equipment") != null ? snapshot.getString("equipment") : globalDefaultEquipment;
 
@@ -214,9 +213,8 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         tvWorkoutTitle.setText(selectedWorkout);
         switchRestDay.setChecked(isRestDay);
 
-        boolean hasWorkout = exerciseList != null && !exerciseList.isEmpty();
+        boolean hasWorkout = !exerciseList.isEmpty();
         boolean isToday = selectedDate.equals(LocalDate.now());
-
         btnStartWorkout.setVisibility(isToday && hasWorkout && !isRestDay ? View.VISIBLE : View.GONE);
 
         if (isRestDay) {
@@ -236,7 +234,6 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
 
             if (hasWorkout) {
                 workoutDetailsGroup.setVisibility(View.VISIBLE);
-
                 Set<String> muscles = new HashSet<>();
                 double totalCalories = 0;
                 double totalDurationMinutes = parseDurationInMinutes(selectedTime);
@@ -261,11 +258,10 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
                     }
                 }
 
-                String timeDisplay = formatMinutesToReadableTime((int) totalDurationMinutes);
                 if ("Free Time".equalsIgnoreCase(selectedTime)) {
                     tvWorkoutSubtitle.setText(String.format(Locale.getDefault(), "%d Exercises • %d Muscles", exerciseList.size(), muscles.size()));
                 } else {
-                    tvWorkoutSubtitle.setText(String.format(Locale.getDefault(), "%d Exercises • %s • %.1f Cal", exerciseList.size(), timeDisplay, totalCalories));
+                    tvWorkoutSubtitle.setText(String.format(Locale.getDefault(), "%d Exercises • %d Muscles • %.0f est. cal burn", exerciseList.size(), muscles.size(), totalCalories));
                 }
             } else {
                 workoutDetailsGroup.setVisibility(View.GONE);
@@ -278,25 +274,8 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
 
     private void updateStartButton() {
         SharedPreferences prefs = requireActivity().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        boolean workoutInProgress = prefs.getBoolean(KEY_WORKOUT_IN_PROGRESS, false);
-        String saveType = prefs.getString(KEY_SAVE_TYPE, "");
-
-        if (workoutInProgress && "deliberate".equals(saveType)) {
-            btnStartWorkout.setText("Resume Workout");
-        } else {
-            btnStartWorkout.setText("Start Workout");
-        }
-    }
-
-
-    private String formatMinutesToReadableTime(int totalMinutes) {
-        if (totalMinutes < 60) {
-            return totalMinutes + " min";
-        } else {
-            int hours = totalMinutes / 60;
-            int minutes = totalMinutes % 60;
-            return (minutes == 0) ? hours + " hr" : hours + " hr, " + minutes + " min";
-        }
+        boolean inProgress = prefs.getBoolean(KEY_WORKOUT_IN_PROGRESS, false);
+        btnStartWorkout.setText(inProgress && "deliberate".equals(prefs.getString(KEY_SAVE_TYPE, "")) ? "Resume Workout" : "Start Workout");
     }
 
     private void setupClickListeners() {
@@ -304,19 +283,14 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
             if (isRestDay) return;
             if (exerciseList.isEmpty()) selectedWorkout = "Custom Plan";
             saveWorkoutsForDate(selectedDate);
-
             WorkoutFragment wf = WorkoutFragment.newInstance(selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
             getParentFragmentManager().beginTransaction().replace(R.id.fragment_container, wf).addToBackStack(null).commit();
-            BottomNavigationView nav = getActivity().findViewById(R.id.bottom_navigation);
-            if (nav != null) nav.setSelectedItemId(R.id.nav_workout);
+            ((BottomNavigationView)requireActivity().findViewById(R.id.bottom_navigation)).setSelectedItemId(R.id.nav_workout);
         });
 
         btnStartWorkout.setOnClickListener(v -> {
             SharedPreferences prefs = requireActivity().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-            boolean workoutInProgress = prefs.getBoolean(KEY_WORKOUT_IN_PROGRESS, false);
-            String saveType = prefs.getString(KEY_SAVE_TYPE, "");
-
-            if (workoutInProgress && "deliberate".equals(saveType)) {
+            if (prefs.getBoolean(KEY_WORKOUT_IN_PROGRESS, false) && "deliberate".equals(prefs.getString(KEY_SAVE_TYPE, ""))) {
                 showResumeWorkoutDialog();
             } else {
                 startWorkout();
@@ -330,7 +304,9 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
                     exerciseList.clear();
                     selectedWorkout = "Rest Day";
                 } else {
-                    selectedWorkout = exerciseList.isEmpty() ? "No Workout Planned" : "Custom Plan";
+                    selectedWorkout = "No Workout Planned";
+                    selectedTime = globalDefaultTime;
+                    selectedEquipment = globalDefaultEquipment;
                 }
                 saveWorkoutsForDate(selectedDate);
                 updateGenericUI();
@@ -338,47 +314,34 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         });
 
         btnSwap.setOnClickListener(v -> showSwapWorkoutBottomSheet());
-        ivProfileIcon.setOnClickListener(v -> {
-            getParentFragmentManager().beginTransaction().replace(R.id.fragment_container, ProfileFragment.newInstance(false)).addToBackStack(null).commit();
-            BottomNavigationView nav = getActivity().findViewById(R.id.bottom_navigation);
-            if (nav != null) nav.setSelectedItemId(R.id.nav_profile);
-        });
+        ivProfileIcon.setOnClickListener(v -> navigateToProfile(false));
+        ivNotificationIcon.setOnClickListener(v -> navigateToProfile(true));
+    }
 
-        ivNotificationIcon.setOnClickListener(v -> {
-            getParentFragmentManager().beginTransaction().replace(R.id.fragment_container, ProfileFragment.newInstance(true)).addToBackStack(null).commit();
-            BottomNavigationView nav = getActivity().findViewById(R.id.bottom_navigation);
-            if (nav != null) nav.setSelectedItemId(R.id.nav_profile);
-        });
+    private void navigateToProfile(boolean isNotif) {
+        getParentFragmentManager().beginTransaction().replace(R.id.fragment_container, ProfileFragment.newInstance(isNotif)).addToBackStack(null).commit();
+        ((BottomNavigationView)requireActivity().findViewById(R.id.bottom_navigation)).setSelectedItemId(R.id.nav_profile);
     }
 
     private void showResumeWorkoutDialog() {
-        new AlertDialog.Builder(getContext())
-            .setTitle("Resume Workout")
-            .setMessage("Do you want to continue where you left off?")
-            .setPositiveButton("Continue", (dialog, which) -> {
-                startActivity(new Intent(getActivity(), LiveSessionActivity.class));
-            })
-            .setNegativeButton("Discard", (dialog, which) -> {
-                SharedPreferences.Editor editor = requireActivity().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit();
-                editor.clear();
-                editor.apply();
-                updateStartButton();
-            })
-            .show();
+        new AlertDialog.Builder(requireContext()).setTitle("Resume Workout").setMessage("Do you want to continue where you left off?")
+                .setPositiveButton("Continue", (dialog, which) -> startActivity(new Intent(getActivity(), LiveSessionActivity.class)))
+                .setNegativeButton("Discard", (dialog, which) -> {
+                    requireActivity().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit().clear().apply();
+                    updateStartButton();
+                }).show();
     }
 
     private void startWorkout() {
-        if (exerciseList == null || exerciseList.isEmpty() || isRestDay) {
-            Toast.makeText(getContext(), "No workout planned for today!", Toast.LENGTH_SHORT).show();
+        if (exerciseList.isEmpty() || isRestDay) {
+            Toast.makeText(getContext(), "No workout planned!", Toast.LENGTH_SHORT).show();
             return;
         }
-
-        double durationInMinutes = parseDurationInMinutes(selectedTime);
         Intent intent = new Intent(getActivity(), LiveSessionActivity.class);
         intent.putExtra("exerciseList", (Serializable) exerciseList);
         intent.putExtra("userWeight", userWeight);
         intent.putExtra("selectedDate", selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
-        intent.putExtra("workoutDuration", durationInMinutes);
+        intent.putExtra("workoutDuration", parseDurationInMinutes(selectedTime));
         startActivity(intent);
     }
 
@@ -388,19 +351,14 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
             try {
                 Exercise e = new Exercise();
                 e.setTitle((String) m.get("title"));
-                if (m.get("sets") != null) e.setSets(((Long) m.get("sets")).intValue());
-                if (m.get("reps") != null) e.setReps(((Long) m.get("reps")).intValue());
-                if (m.get("kg") != null) e.setKg(((Long) m.get("kg")).intValue());
-                if (m.get("category") != null) e.setCategory(Exercise.Category.valueOf((String) m.get("category")));
-                if (m.get("bodyPart") != null) e.setBodyPart(Exercise.BodyPart.valueOf((String) m.get("bodyPart")));
-                if (m.get("muscleTargets") != null) e.setMuscleTargets((List<String>) m.get("muscleTargets"));
-
-                if (m.get("imageResId") != null) {
-                    e.setImageResId(((Long) m.get("imageResId")).intValue());
-                } else if (m.get("imageUrl") != null) {
-                    e.setImageUrl((String) m.get("imageUrl"));
-                }
-
+                if (m.get("sets") != null) e.setSets(((Number) m.get("sets")).intValue());
+                if (m.get("reps") != null) e.setReps(((Number) m.get("reps")).intValue());
+                if (m.get("kg") != null) e.setKg(((Number) m.get("kg")).intValue());
+                e.setCategory(Exercise.Category.valueOf((String) m.get("category")));
+                e.setBodyPart(Exercise.BodyPart.valueOf((String) m.get("bodyPart")));
+                e.setMuscleTargets((List<String>) m.get("muscleTargets"));
+                if (m.get("imageResId") != null) e.setImageResId(((Number) m.get("imageResId")).intValue());
+                else e.setImageUrl((String) m.get("imageUrl"));
                 if (m.get("met") != null) e.setMet(((Number) m.get("met")).doubleValue());
                 e.setAddedToWorkout(true);
                 if (e.getTitle() != null) list.add(e);
@@ -427,38 +385,44 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
         restDayCard = view.findViewById(R.id.rest_day_card);
         btnStartWorkout = view.findViewById(R.id.btn_start_workout);
         tvRestDayMessage = view.findViewById(R.id.tv_rest_day_message);
+        mainScrollView = view.findViewById(R.id.main_scroll_view);
     }
 
     private void saveWorkoutsForDate(LocalDate date) {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) return;
-        String dateId = date.format(DateTimeFormatter.ISO_LOCAL_DATE);
         Map<String, Object> data = new HashMap<>();
         data.put("isRestDay", isRestDay);
         data.put("workoutName", selectedWorkout);
-        data.put("exercises", exerciseList);
+        data.put("exercises", exerciseList.stream().map(this::exerciseToMap).collect(Collectors.toList()));
         data.put("time", selectedTime);
         data.put("equipment", selectedEquipment);
-        FirebaseFirestore.getInstance().collection("users").document(user.getUid())
-                .collection("workouts").document(dateId).set(data);
+        FirebaseFirestore.getInstance().collection("users").document(user.getUid()).collection("workouts").document(date.format(DateTimeFormatter.ISO_LOCAL_DATE)).set(data);
+    }
+
+    private Map<String, Object> exerciseToMap(Exercise e) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("title", e.getTitle());
+        map.put("sets", e.getSets());
+        map.put("reps", e.getReps());
+        map.put("kg", e.getKg());
+        map.put("category", e.getCategory() != null ? e.getCategory().name() : null);
+        map.put("bodyPart", e.getBodyPart() != null ? e.getBodyPart().name() : null);
+        map.put("muscleTargets", e.getMuscleTargets());
+        map.put("imageUrl", e.getImageUrl());
+        map.put("imageResId", e.getImageResId());
+        map.put("met", e.getMet());
+        map.put("addedToWorkout", e.isAddedToWorkout());
+        return map;
     }
 
     private void setupCalendar() {
         rvCalendar.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
         List<LocalDate> dates = new ArrayList<>();
         LocalDate today = LocalDate.now();
-
-        if (registrationDate == null) {
-            registrationDate = today.minusMonths(1);
-        }
-
-        long daysBetween = ChronoUnit.DAYS.between(registrationDate, today);
-
-        LocalDate start = registrationDate;
-        for (int i = 0; i < daysBetween + 30; i++) { // Show 30 days past today
-            dates.add(start.plusDays(i));
-        }
-
+        if (registrationDate == null) registrationDate = today.minusMonths(1);
+        long diff = ChronoUnit.DAYS.between(registrationDate, today);
+        for (int i = 0; i < diff + 30; i++) dates.add(registrationDate.plusDays(i));
         int pos = dates.indexOf(selectedDate);
         calendarAdapter = new CalendarAdapter(dates, pos, this);
         rvCalendar.setAdapter(calendarAdapter);
@@ -487,7 +451,7 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
     }
 
     private void showOptionsBottomSheet(String type) {
-        boolean isTime = type.equals("time");
+        boolean isTime = "time".equals(type);
         OptionsBottomSheetFragment sheet = OptionsBottomSheetFragment.newInstance(isTime ? "Duration" : "Equipment", isTime ? timeOptions : equipmentOptions, isTime ? selectedTime : selectedEquipment);
         sheet.setOnOptionSelectedListener(this);
         sheet.show(getParentFragmentManager(), "Options");
@@ -514,14 +478,9 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
 
     @Override
     public void onOptionSelected(String option) {
-        if (timeOptions.contains(option)) {
-            selectedTime = option;
-        } else if (equipmentOptions.contains(option)) {
-            selectedEquipment = option;
-        } else {
-            swapWorkout(option);
-            return;
-        }
+        if (timeOptions.contains(option)) selectedTime = option;
+        else if (equipmentOptions.contains(option)) selectedEquipment = option;
+        else { swapWorkout(option); return; }
         saveWorkoutsForDate(selectedDate);
         updateGenericUI();
     }
@@ -530,75 +489,37 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
     public void onSetAsDefault(String option) {
         if (timeOptions.contains(option)) {
             SharedPreferences prefs = requireActivity().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-            String oldDefaultTime = prefs.getString(KEY_DEFAULT_TIME, "45 min"); // Capture the old default
-            String newDefaultTime = option;
-
-            if (oldDefaultTime.equals(newDefaultTime)) { // No change needed
-                selectedTime = newDefaultTime;
+            String old = prefs.getString(KEY_DEFAULT_TIME, "45 min");
+            if (old.equals(option)) return;
+            prefs.edit().putString(KEY_DEFAULT_TIME, option).apply();
+            this.globalDefaultTime = option;
+            this.selectedTime = option;
+            updateWorkoutsToNewDefault(old, option, () -> {
                 updateGenericUI();
                 saveWorkoutsForDate(selectedDate);
-                return;
-            }
-
-            // 1. Save new default to SharedPreferences
-            prefs.edit().putString(KEY_DEFAULT_TIME, newDefaultTime).apply();
-
-            // 2. Update local variables
-            this.globalDefaultTime = newDefaultTime;
-            this.selectedTime = newDefaultTime;
-
-            // 3. Batch update Firestore for future workouts
-            updateWorkoutsToNewDefault(oldDefaultTime, newDefaultTime);
-
-            // 4. Update UI and save current day
-            updateGenericUI();
-            saveWorkoutsForDate(selectedDate);
-
-            Toast.makeText(getContext(), "Default time updated for all workouts.", Toast.LENGTH_SHORT).show();
-
+                if (getContext() != null) Toast.makeText(getContext(), "Default time updated.", Toast.LENGTH_SHORT).show();
+            });
         }
     }
 
-    private void updateWorkoutsToNewDefault(String oldDefault, String newDefault) {
+    private void updateWorkoutsToNewDefault(String old, String next, Runnable onComplete) {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) return;
-
         String today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
-
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("users").document(user.getUid()).collection("workouts")
-                .whereGreaterThanOrEqualTo(FieldPath.documentId(), today) // Correctly query by document ID
-                .whereEqualTo("time", oldDefault)
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    if (queryDocumentSnapshots.isEmpty()) {
-                        Log.d(TAG, "No future workouts found with the old default time. Nothing to update.");
-                        return;
-                    }
-
-                    WriteBatch batch = db.batch();
-                    for (DocumentSnapshot doc : queryDocumentSnapshots) {
-                        batch.update(doc.getReference(), "time", newDefault);
-                    }
-
-                    batch.commit().addOnSuccessListener(aVoid -> {
-                        Log.d(TAG, "Successfully updated " + queryDocumentSnapshots.size() + " workouts to the new default time.");
-                    }).addOnFailureListener(e -> {
-                        Log.e(TAG, "Error committing batch update for default time", e);
-                    });
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error finding workouts with old default time", e);
-                });
+        db.collection("users").document(user.getUid()).collection("workouts").whereGreaterThanOrEqualTo(FieldPath.documentId(), today).whereEqualTo("time", old).get().addOnSuccessListener(snaps -> {
+            if (snaps.isEmpty()) { onComplete.run(); return; }
+            WriteBatch batch = db.batch();
+            for (DocumentSnapshot d : snaps) batch.update(d.getReference(), "time", next);
+            batch.commit().addOnSuccessListener(aVoid -> onComplete.run()).addOnFailureListener(e -> onComplete.run());
+        }).addOnFailureListener(e -> onComplete.run());
     }
 
-    private void swapWorkout(String workoutName) {
-        selectedWorkout = workoutName;
+    private void swapWorkout(String name) {
+        selectedWorkout = name;
         exerciseList.clear();
-        WorkoutPlan plan = WorkoutPlanDatabase.getWorkoutPlan(workoutName);
-        if (plan != null) {
-            exerciseList.addAll(plan.getExercises());
-        }
+        WorkoutPlan plan = WorkoutPlanDatabase.getWorkoutPlan(name);
+        if (plan != null) exerciseList.addAll(plan.getExercises());
         isRestDay = false;
         saveWorkoutsForDate(selectedDate);
         updateGenericUI();
@@ -612,16 +533,26 @@ public class HomeFragment extends Fragment implements ExerciseAdapter.OnItemClic
     }
 
     @Override
-    public void onSave(Exercise ex, int pos) { exerciseList.set(pos, ex); saveWorkoutsForDate(selectedDate); updateGenericUI(); }
-
-    @Override
-    public void onRemove(Exercise ex, int pos) {
-        exerciseList.remove(pos);
-        selectedWorkout = exerciseList.isEmpty() ? "No Workout Planned" : "Custom Plan";
+    public void onSave(Exercise ex, int pos) {
+        exerciseList.set(pos, ex);
         saveWorkoutsForDate(selectedDate);
         updateGenericUI();
     }
 
     @Override
-    public void onMoreClick(Exercise ex, int pos) { new EditExerciseDialog(ex, pos, this).show(getChildFragmentManager(), "Edit"); }
+    public void onRemove(Exercise ex, int pos) {
+        exerciseList.remove(pos);
+        if (exerciseList.isEmpty()) {
+            selectedWorkout = "No Workout Planned";
+            selectedTime = globalDefaultTime;
+            selectedEquipment = globalDefaultEquipment;
+        } else selectedWorkout = "Custom Plan";
+        saveWorkoutsForDate(selectedDate);
+        updateGenericUI();
+    }
+
+    @Override
+    public void onMoreClick(Exercise ex, int pos) {
+        new EditExerciseDialog(ex, pos, this).show(getChildFragmentManager(), "Edit");
+    }
 }

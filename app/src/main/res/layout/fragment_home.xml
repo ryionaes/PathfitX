@@ -58,6 +58,19 @@
             android:layout_height="24dp"
             android:src="@drawable/ic_notifications"
             app:tint="@color/prim_red" />
+
+        <TextView
+            android:id="@+id/tv_skip_tutorial"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Skip Tutorial"
+            android:textColor="@color/prim_red"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:padding="8dp"
+            android:layout_marginStart="8dp"
+            android:visibility="gone"
+            tools:visibility="visible"/>
     </LinearLayout>
 
     <!-- 2. Calendar Strip -->

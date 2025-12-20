@@ -1,6 +1,7 @@
 package com.example.pathfitx;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
@@ -28,6 +29,10 @@ import java.util.Map;
 public class GetGoals extends AppCompatActivity {
 
     private static final String TAG = "GetGoalsActivity";
+    private static final String PREFS_NAME = "UserPrefs";
+    private static final String REG_STEP_KEY = "REGISTRATION_STEP";
+    // REMOVED ONBOARDING_COMPLETE_KEY because this is no longer the final step
+
     // Variables
     private Button nextBtn;
     private ImageButton backBtn;
@@ -101,9 +106,17 @@ public class GetGoals extends AppCompatActivity {
                 .update(goalsData) // Use update to add/modify fields without overwriting the doc
                 .addOnSuccessListener(aVoid -> {
                     Log.d(TAG, "Goals successfully saved!");
-                    // Navigate to the next screen (GetInfo)
+
+                    SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putString(REG_STEP_KEY, "STEP_GOALS");
+                    // REMOVED editor.putBoolean(ONBOARDING_COMPLETE_KEY, true);
+                    editor.apply();
+
+                    // Navigate to the next screen (GetInfo) instead of WelcomePage
                     Intent intent = new Intent(GetGoals.this, GetInfo.class);
                     startActivity(intent);
+                    // Do NOT finishAffinity() here anymore because it's not the end
                 })
                 .addOnFailureListener(e -> {
                     Log.w(TAG, "Error updating document", e);

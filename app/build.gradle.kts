@@ -29,6 +29,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true
     }
 
     sourceSets {
@@ -39,6 +40,7 @@ android {
 }
 
 dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
@@ -64,4 +66,7 @@ dependencies {
 
     // GOOGLE SIGN IN (Added this line)
     implementation("com.google.android.gms:play-services-auth:21.4.0")
+
+    // Tutorial
+    implementation("com.getkeepsafe.taptargetview:taptargetview:1.13.3")
 }

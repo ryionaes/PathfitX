@@ -2,8 +2,10 @@ package com.example.pathfitx;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -13,13 +15,16 @@ import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -43,7 +48,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-public class LiveSessionActivity extends AppCompatActivity {
+// Tiyaking tugma sa LiveAdapter.java: OnSetCompletedListener (may 'ed')
+public class LiveSessionActivity extends AppCompatActivity implements LiveAdapter.OnSetCompletedListener {
 
     private static final String TAG = "LiveSessionActivity";
 
@@ -74,7 +80,6 @@ public class LiveSessionActivity extends AppCompatActivity {
     // Firebase
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
-    private FirebaseUser currentUser;
     private String userId;
     private boolean isFinishingWorkout = false;
 
@@ -84,7 +89,6 @@ public class LiveSessionActivity extends AppCompatActivity {
     private static final String KEY_SAVE_TYPE = "save_type";
     private static final String KEY_WORKOUT_LIST = "workout_list";
     private static final String KEY_TIME_SWAP_BUFF = "time_swap_buff";
-    private static final String KEY_START_TIME = "start_time";
     private static final String KEY_WORKOUT_NAME = "workout_name";
     private static final String KEY_USER_WEIGHT = "user_weight";
     private static final String KEY_SELECTED_DATE = "selected_date";
@@ -104,12 +108,20 @@ public class LiveSessionActivity extends AppCompatActivity {
         } else {
             initializeNewWorkout();
         }
+
+        // Handle Back Press using OnBackPressedDispatcher
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                showExitConfirmationDialog();
+            }
+        });
     }
 
     private void initFirebase() {
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
-        currentUser = mAuth.getCurrentUser();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) userId = currentUser.getUid();
     }
 
@@ -204,14 +216,24 @@ public class LiveSessionActivity extends AppCompatActivity {
         }
         progressBar.setMax(totalSets);
 
-        liveAdapter = new LiveAdapter(workoutList, (exercise, isChecked) -> {
-            completedSets += isChecked ? 1 : -1;
-            exercise.setCompletedSets(exercise.getCompletedSets() + (isChecked ? 1 : -1));
-            updateProgress();
-        });
+        // Ipasa ang 'this' (LiveSessionActivity) bilang listener
+        liveAdapter = new LiveAdapter(workoutList, this);
 
         rvLiveWorkout.setLayoutManager(new LinearLayoutManager(this));
         rvLiveWorkout.setAdapter(liveAdapter);
+        updateProgress();
+    }
+
+    // Tiyaking ang method name ay 'onSetCompleted' (may 'ed') para mag-match sa LiveAdapter.java
+    @Override
+    public void onSetCompleted(Exercise exercise, boolean isChecked) {
+        completedSets += isChecked ? 1 : -1;
+
+        // Safety checks para sa progress
+        if (completedSets < 0) completedSets = 0;
+        if (completedSets > totalSets) completedSets = totalSets;
+
+        exercise.setCompletedSets(exercise.getCompletedSets() + (isChecked ? 1 : -1));
         updateProgress();
     }
 
@@ -373,23 +395,36 @@ public class LiveSessionActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    public void onBackPressed() {
+    private void showExitConfirmationDialog() {
+        final boolean wasRunning = isRunning;
+        if (wasRunning) {
+            pauseWorkout();
+        }
+
         AlertDialog dialog = new AlertDialog.Builder(this)
-            .setTitle("Exit Workout")
-            .setMessage("Do you want to save your progress?")
-            .setPositiveButton("Save & Exit", (dialogInterface, which) -> {
-                isFinishingWorkout = true;
-                saveWorkoutState("deliberate");
-                finish();
-            })
-            .setNegativeButton("Discard & Exit", (dialogInterface, which) -> {
-                isFinishingWorkout = true;
-                clearSavedWorkoutState();
-                finish();
-            })
-            .setNeutralButton("Cancel", null)
-            .show();
+                .setTitle("Exit Workout")
+                .setMessage("Do you want to save your progress?")
+                .setPositiveButton("Save & Exit", (dialogInterface, which) -> {
+                    isFinishingWorkout = true;
+                    saveWorkoutState("deliberate");
+                    finish();
+                })
+                .setNegativeButton("Discard & Exit", (dialogInterface, which) -> {
+                    isFinishingWorkout = true;
+                    clearSavedWorkoutState();
+                    finish();
+                })
+                .setNeutralButton("Cancel", (dialogInterface, which) -> {
+                    if (wasRunning) {
+                        resumeWorkout();
+                    }
+                })
+                .setOnCancelListener(dialogInterface -> {
+                    if (wasRunning) {
+                        resumeWorkout();
+                    }
+                })
+                .show();
 
         dialog.setOnShowListener(d -> {
             Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);

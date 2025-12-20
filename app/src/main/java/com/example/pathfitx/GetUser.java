@@ -1,6 +1,7 @@
 package com.example.pathfitx;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -31,6 +32,9 @@ public class GetUser extends AppCompatActivity {
     private static final String TAG = "GetUserActivity";
     private static final String KEY_NAV_SOURCE = "NAV_SOURCE";
     private static final String SOURCE_PROFILE = "PROFILE";
+    private static final String PREFS_NAME = "UserPrefs";
+    private static final String REG_STEP_KEY = "REGISTRATION_STEP";
+
 
     private ImageButton backButton;
     private Button nextButton;
@@ -117,11 +121,17 @@ public class GetUser extends AppCompatActivity {
                         Log.d(TAG, "DocumentSnapshot successfully written!");
                         Toast.makeText(GetUser.this, "Username saved!", Toast.LENGTH_SHORT).show();
 
+                        // Update registration step
+                        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+                        SharedPreferences.Editor editor = prefs.edit();
+                        editor.putString(REG_STEP_KEY, "STEP_USER");
+                        editor.apply();
+
                         if (SOURCE_PROFILE.equals(navigationSource)) {
                             finish(); // Go back to the profile screen
                         } else {
                             // New User Flow: proceed to the next step
-                            Intent intent = new Intent(GetUser.this, GetGoals.class);
+                            Intent intent = new Intent(GetUser.this, GetGoals.class); // CHANGED to GetGoals
                             startActivity(intent);
                         }
                     }

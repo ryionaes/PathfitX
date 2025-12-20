@@ -1,6 +1,7 @@
 package com.example.pathfitx;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -26,6 +27,10 @@ import java.util.Map;
 public class GetHeight extends AppCompatActivity {
 
     private static final String TAG = "GetHeightActivity";
+    private static final String PREFS_NAME = "UserPrefs";
+    private static final String REG_STEP_KEY = "REGISTRATION_STEP";
+    private static final String ONBOARDING_COMPLETE_KEY = "IS_ONBOARDING_COMPLETE"; // Added for completion
+
     // UI Variables
     private ImageButton backButton;
     private Button nextButton;
@@ -88,15 +93,21 @@ public class GetHeight extends AppCompatActivity {
         Map<String, Object> finalData = new HashMap<>();
         finalData.put("height_cm", height);
         finalData.put("weight_kg", weight);
-        finalData.put("onboardingComplete", true); // Mark onboarding as complete
 
         db.collection("users").document(currentUser.getUid())
                 .update(finalData)
                 .addOnSuccessListener(aVoid -> {
                     Log.d(TAG, "Final user data saved successfully!");
-                    Intent intent = new Intent(GetHeight.this, WelcomePage.class);
+
+                    SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putString(REG_STEP_KEY, "STEP_HEIGHT");
+                    editor.putBoolean(ONBOARDING_COMPLETE_KEY, true); // Mark as complete here now
+                    editor.apply();
+
+                    Intent intent = new Intent(GetHeight.this, WelcomePage.class); // Changed to WelcomePage
                     startActivity(intent);
-                    finishAffinity(); // Clear the entire back stack
+                    finishAffinity(); // Finish all previous activities
                 })
                 .addOnFailureListener(e -> {
                     Log.w(TAG, "Error updating final data", e);
