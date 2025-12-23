@@ -548,12 +548,6 @@ public class ProfileFragment extends Fragment {
     private void showLogoutConfirmationDialog() {
         if (getContext() == null) return;
         new AlertDialog.Builder(getContext()).setTitle("Log Out").setMessage("Are you sure you want to log out?").setPositiveButton("Log Out", (dialog, which) -> {
-            
-            // Clear all shared preferences (tutorial steps, etc.) on logout
-            if (getActivity() != null) {
-                getActivity().getSharedPreferences("WorkoutPrefs", Context.MODE_PRIVATE).edit().clear().apply();
-            }
-
             FirebaseAuth.getInstance().signOut();
             if (getActivity() != null) {
                 Intent intent = new Intent(getActivity(), LoginActivity.class);

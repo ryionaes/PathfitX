@@ -67,6 +67,4 @@ dependencies {
     // GOOGLE SIGN IN (Added this line)
     implementation("com.google.android.gms:play-services-auth:21.4.0")
 
-    // Tutorial
-    implementation("com.getkeepsafe.taptargetview:taptargetview:1.13.3")
 }

@@ -53,15 +53,6 @@ public class HomeScreen extends AppCompatActivity implements OnDateSelectedListe
             loadFragment(HomeFragment.newInstance(selectedDate));
         }
 
-        // Handle navigation from tutorial
-        if (getIntent().hasExtra("navigateTo")) {
-            String destination = getIntent().getStringExtra("navigateTo");
-            if ("progress".equals(destination)) {
-                loadFragment(new ProgressFragment());
-                bottomNav.setSelectedItemId(R.id.nav_progress);
-            }
-        }
-
         checkForUnfinishedWorkout();
     }
 
